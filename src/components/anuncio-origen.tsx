@@ -56,7 +56,7 @@ export function AnuncioOrigen({ anuncio }: { anuncio: AnuncioDto }) {
   const [imagenRota, setImagenRota] = useState(false);
   const etiqueta = etiquetaDeOrigen(anuncio.sourceType);
   const titular = titularDeOrigen(anuncio.headline, anuncio.sourceType);
-  const fecha = new Date(anuncio.capturedAt).toLocaleDateString("es-MX", {
+  const fecha = new Date(anuncio.capturedAt).toLocaleDateString("pt-BR", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -69,7 +69,7 @@ export function AnuncioOrigen({ anuncio }: { anuncio: AnuncioDto }) {
     >
       <p className="flex items-center gap-1.5 text-[13px] font-medium text-info-text">
         <Megaphone className="h-4 w-4 shrink-0" strokeWidth={1.7} />
-        {etiqueta === "Anuncio" ? "Llegó por un anuncio" : "Llegó por una publicación"}
+        {anuncio.sourceType === "post" ? "Chegou por uma publicação" : "Chegou por um anúncio"}
       </p>
 
       <div className="mt-2 flex items-start gap-2.5">
@@ -77,7 +77,7 @@ export function AnuncioOrigen({ anuncio }: { anuncio: AnuncioDto }) {
           // eslint-disable-next-line @next/next/no-img-element -- adjunto privado servido con sesión; no hay host que optimizar
           <img
             src={`/api/media/${anuncio.imageAssetId}`}
-            alt={`Creativo: ${titular}`}
+            alt={`Criativo: ${titular}`}
             loading="lazy"
             onError={() => setImagenRota(true)}
             className="h-14 w-14 shrink-0 rounded border border-info-soft bg-background object-cover"
@@ -97,8 +97,8 @@ export function AnuncioOrigen({ anuncio }: { anuncio: AnuncioDto }) {
 
       <div className="mt-2 space-y-0.5 text-[11px] text-text-3">
         <p>
-          Primer mensaje · {fecha}
-          {anuncio.mediaType === "video" ? " · con video" : ""}
+          Primeira mensagem · {fecha}
+          {anuncio.mediaType === "video" ? " · com vídeo" : ""}
         </p>
         {anuncio.sourceId && (
           <p className="truncate font-mono" title={anuncio.sourceId}>
@@ -107,7 +107,7 @@ export function AnuncioOrigen({ anuncio }: { anuncio: AnuncioDto }) {
         )}
         {/* Solo la presencia, y solo en una instancia que atribuye: el valor
             del identificador de clic no sale del servidor. */}
-        {anuncio.hasCtwaClid && <p>Meta identificó el clic</p>}
+        {anuncio.hasCtwaClid && <p>A Meta identificou o clique</p>}
       </div>
 
       {anuncio.sourceUrl && (

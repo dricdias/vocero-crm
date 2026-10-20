@@ -83,7 +83,7 @@ export async function getAiCredentialSecret(
 export class AiCredentialError extends Error {
   constructor(readonly code: "sin_token") {
     super(
-      "No hay una llave guardada: pega la llave del proveedor para configurar la IA"
+      "Não há chave salva: cole a chave do provedor para configurar a IA"
     );
     this.name = "AiCredentialError";
   }

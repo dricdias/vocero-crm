@@ -22,7 +22,7 @@ export type ResolvedTheme = ThemePreference;
 
 export const THEME_LABELS: Record<ThemePreference, string> = {
   light: "Claro",
-  dark: "Oscuro",
+  dark: "Escuro",
 };
 
 /**

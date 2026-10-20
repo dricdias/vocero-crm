@@ -39,7 +39,7 @@ export const AI_PROVIDER_PRESETS: Record<AiProviderId, AiProviderPreset> = {
   },
   openai_compatible: {
     id: "openai_compatible",
-    label: "Otro compatible con OpenAI",
+    label: "Outro compatível com OpenAI",
     baseUrl: null,
     modelPlaceholder: "gpt-4.1-mini",
     tokenPlaceholder: "sk-…",
@@ -47,9 +47,9 @@ export const AI_PROVIDER_PRESETS: Record<AiProviderId, AiProviderPreset> = {
 };
 
 export const AI_STATUS_LABEL: Record<AiStatus, string> = {
-  active: "Activo",
-  paused_invalid_token: "Pausado: llave rechazada",
-  paused_no_credit: "Pausado: sin saldo",
+  active: "Ativo",
+  paused_invalid_token: "Pausado: chave rejeitada",
+  paused_no_credit: "Pausado: sem saldo",
 };
 
 /** A qué preset corresponde una base URL (la del entorno o una guardada). */

@@ -26,12 +26,12 @@ export default function RegisterPage() {
     if (err) {
       if (err.status === 403) {
         setError(
-          "El registro está cerrado: esta instancia ya tiene su organización. Pide acceso al propietario."
+          "O cadastro está fechado: esta instância já tem sua organização. Peça acesso ao proprietário."
         );
       } else if (err.status === 429) {
-        setError("Demasiados intentos. Espera unos minutos.");
+        setError("Muitas tentativas. Aguarde alguns minutos.");
       } else {
-        setError(err.message ?? "No se pudo crear la cuenta.");
+        setError(err.message ?? "Não foi possível criar a conta.");
       }
       return;
     }
@@ -44,16 +44,16 @@ export default function RegisterPage() {
   return (
     <Card className="shadow-md">
       <CardHeader>
-        <CardTitle>Crear cuenta</CardTitle>
+        <CardTitle>Criar conta</CardTitle>
         <CardDescription>
-          El primer registro crea la organización de esta instancia y queda
-          como propietario.
+          O primeiro cadastro cria a organização desta instância e fica
+          como proprietário.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Tu nombre</Label>
+            <Label htmlFor="name">Seu nome</Label>
             <Input
               id="name"
               required
@@ -62,7 +62,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Correo</Label>
+            <Label htmlFor="email">E-mail</Label>
             <Input
               id="email"
               type="email"
@@ -73,7 +73,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Contraseña</Label>
+            <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -86,12 +86,12 @@ export default function RegisterPage() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creando…" : "Crear cuenta"}
+            {loading ? "Criando…" : "Criar conta"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            ¿Ya tienes cuenta?{" "}
+            Já tem conta?{" "}
             <Link href="/login" className="text-primary hover:underline">
-              Inicia sesión
+              Entrar
             </Link>
           </p>
         </form>

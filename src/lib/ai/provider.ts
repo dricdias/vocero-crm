@@ -157,10 +157,10 @@ export function mensajeDeEstado(estado: EstadoIa): string | null {
       // «Apagado» no: el interruptor de la pantalla Agente puede decir
       // «Encendido». El problema no es que esté apagado, es que no tiene con
       // qué pensar.
-      return "Tu agente no puede contestar todavía: configura tu proveedor de IA en Ajustes → IA.";
+      return "Seu agente ainda não pode responder: configure seu provedor de IA em Configurações → IA.";
     case "token_invalido":
-      return "Tu agente está pausado: el proveedor rechazó tu llave. Revísala en Ajustes → IA.";
+      return "Seu agente está pausado: o provedor rejeitou sua chave. Verifique em Configurações → IA.";
     case "sin_saldo":
-      return "Tu agente está pausado: tu cuenta del proveedor de IA se quedó sin saldo. Recárgala y pulsa «Probar conexión» en Ajustes → IA.";
+      return "Seu agente está pausado: sua conta do provedor de IA ficou sem saldo. Recarregue e clique em «Testar conexão» em Configurações → IA.";
   }
 }

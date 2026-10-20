@@ -32,7 +32,7 @@ export default async function AppLayout({
   return (
     <AppShell
       branding={branding}
-      userName={authSession?.user.name ?? "Usuario"}
+      userName={authSession?.user.name ?? "Usuário"}
       role={session.role}
       theme={theme}
       // Se resuelve aquí, en el servidor: el cliente no ve `SOURCE_COMMIT`.

@@ -33,11 +33,11 @@ export function validateBodyVariables(body: string): string | null {
   const indexes = variableIndexes(body);
   if (indexes.length === 0) return null;
   if (indexes.length > MAX_TEMPLATE_VARIABLES) {
-    return `El cuerpo admite hasta ${MAX_TEMPLATE_VARIABLES} variables`;
+    return `O corpo aceita até ${MAX_TEMPLATE_VARIABLES} variáveis`;
   }
   for (let i = 0; i < indexes.length; i++) {
     if (indexes[i] !== i + 1) {
-      return `Las variables deben ir numeradas {{1}}, {{2}}, … sin saltos (falta {{${i + 1}}})`;
+      return `As variáveis devem ser numeradas {{1}}, {{2}}, … sem pular (falta {{${i + 1}}})`;
     }
   }
   return null;
@@ -53,18 +53,18 @@ export function templateWarnings(body: string): string[] {
   if (!text) return [];
   const warnings: string[] = [];
   if (/^\{\{\s*\d+\s*\}\}/.test(text)) {
-    warnings.push("Empieza con una variable: Meta suele rechazarlas. Pon un saludo antes, p. ej. «Hola {{1}}».");
+    warnings.push("Começa com uma variável: a Meta costuma rejeitar. Coloque uma saudação antes, ex.: «Olá {{1}}».");
   }
   if (/\{\{\s*\d+\s*\}\}[\s.!?¡¿]*$/.test(text)) {
-    warnings.push("Termina con una variable: Meta suele rechazarlas. Añade una frase después.");
+    warnings.push("Termina com uma variável: a Meta costuma rejeitar. Adicione uma frase depois.");
   }
   if (/\}\}\s*\{\{/.test(text)) {
-    warnings.push("Hay dos variables juntas: sepáralas con texto.");
+    warnings.push("Há duas variáveis juntas: separe-as com texto.");
   }
   const variables = countVariables(text);
   const words = text.replace(VARIABLE_REGEX, " ").split(/\s+/).filter(Boolean).length;
   if (variables > 0 && words < variables * 3) {
-    warnings.push("Tiene muchas variables para lo corto del mensaje: Meta pide más texto fijo alrededor.");
+    warnings.push("Tem variáveis demais para uma mensagem tão curta: a Meta pede mais texto fixo ao redor.");
   }
   return warnings;
 }

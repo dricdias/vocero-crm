@@ -38,7 +38,7 @@ export async function avisoIaDe(organizationId: string): Promise<AvisoIa> {
     // Las dos acaban en la misma pantalla, y decirlo evita el «¿y dónde?».
     accion:
       estado.motivo === "sin_configurar"
-        ? "Configurar la IA"
-        : "Revisar mi conexión",
+        ? "Configurar a IA"
+        : "Verificar minha conexão",
   };
 }

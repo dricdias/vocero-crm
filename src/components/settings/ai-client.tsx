@@ -143,7 +143,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo probar la conexión"),
+        text: await leerError(res, "Não foi possível testar a conexão"),
       });
       return;
     }
@@ -156,8 +156,8 @@ export function AiClient() {
     setMensaje({
       kind: "ok",
       text: data.reactivada
-        ? `Conexión correcta (${data.latencyMs} ms). Tu llave vuelve a estar activa.`
-        : `Conexión correcta (${data.latencyMs} ms)${token.trim() ? ". Pulsa Guardar para dejarla configurada." : "."}`,
+        ? `Conexão OK (${data.latencyMs} ms). Sua chave voltou a ficar ativa.`
+        : `Conexão OK (${data.latencyMs} ms)${token.trim() ? ". Clique em Salvar para deixá-la configurada." : "."}`,
     });
   }
 
@@ -173,7 +173,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo traer la lista de modelos"),
+        text: await leerError(res, "Não foi possível buscar a lista de modelos"),
       });
       return;
     }
@@ -186,14 +186,14 @@ export function AiClient() {
       setModelos(null);
       setMensaje({
         kind: "info",
-        text: data.mensaje ?? "Este proveedor no publica su lista de modelos.",
+        text: data.mensaje ?? "Este provedor não publica a lista de modelos.",
       });
       return;
     }
     setModelos(data.modelos);
     setMensaje({
       kind: "info",
-      text: `${data.modelos.length} modelos disponibles: escribe para filtrar en el campo Modelo.`,
+      text: `${data.modelos.length} modelos disponíveis: digite para filtrar no campo Modelo.`,
     });
   }
 
@@ -210,7 +210,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo guardar. Revisa los datos e inténtalo de nuevo."),
+        text: await leerError(res, "Não foi possível salvar. Verifique os dados e tente de novo."),
       });
       return;
     }
@@ -220,7 +220,7 @@ export function AiClient() {
     setToken("");
     setMensaje({
       kind: "ok",
-      text: "Guardado. Prueba la conexión y corre el Laboratorio antes de encender el agente con clientes reales.",
+      text: "Salvo. Teste a conexão e rode o Laboratório antes de ligar o agente com clientes reais.",
     });
   }
 
@@ -232,7 +232,7 @@ export function AiClient() {
     );
     setOcupado(null);
     if (!res?.ok) {
-      setMensaje({ kind: "error", text: "No se pudo quitar la llave." });
+      setMensaje({ kind: "error", text: "Não foi possível remover a chave." });
       return;
     }
     const data = (await res.json()) as Vista;
@@ -241,8 +241,8 @@ export function AiClient() {
     setMensaje({
       kind: "info",
       text: data.respaldoEntorno
-        ? "Llave eliminada. El agente sigue con las variables del entorno de la instancia."
-        : "Llave eliminada. Tu agente no puede contestar hasta que configures otra.",
+        ? "Chave removida. O agente continua com as variáveis de ambiente da instância."
+        : "Chave removida. Seu agente não pode responder até você configurar outra.",
     });
   }
 
@@ -250,34 +250,34 @@ export function AiClient() {
     <div className="max-w-2xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Proveedor de IA</CardTitle>
+          <CardTitle>Provedor de IA</CardTitle>
           <CardDescription>
-            Con qué piensa tu agente: el proveedor, el modelo y la llave que paga
-            el consumo. La llave se guarda cifrada y no vuelve a mostrarse
+            Com o que seu agente pensa: o provedor, o modelo e a chave que paga
+            o consumo. A chave é salva criptografada e não volta a ser exibida
             completa.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {vista === null ? (
-            <p className="text-sm text-muted-foreground">Cargando…</p>
+            <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : cred ? (
             <EstadoGuardado cred={cred} vista={vista} />
           ) : vista.respaldoEntorno ? (
             <div className="rounded-md border p-3 text-sm">
               <p>
-                Hoy el agente usa las variables del entorno de la instancia:{" "}
-                <code className="font-mono">{vista.respaldoEntorno.modelo || "sin modelo"}</code>{" "}
-                con la llave{" "}
+                Hoje o agente usa as variáveis de ambiente da instância:{" "}
+                <code className="font-mono">{vista.respaldoEntorno.modelo || "sem modelo"}</code>{" "}
+                com a chave{" "}
                 <code className="font-mono">••••{vista.respaldoEntorno.tokenLast4}</code>.
               </p>
               <p className="mt-1 text-muted-foreground">
-                Lo que guardes aquí manda sobre ellas, sin reiniciar nada.
+                O que você salvar aqui tem prioridade sobre elas, sem reiniciar nada.
               </p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Todavía no hay proveedor de IA: tu agente no puede contestar y los
-              mensajes llegan a la bandeja para que los atienda una persona.
+              Ainda não há provedor de IA: seu agente não pode responder e as
+              mensagens chegam à caixa de entrada para uma pessoa atender.
             </p>
           )}
 
@@ -285,7 +285,7 @@ export function AiClient() {
 
           <form onSubmit={guardar} className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ai-provider">Proveedor</Label>
+              <Label htmlFor="ai-provider">Provedor</Label>
               <select
                 id="ai-provider"
                 value={provider}
@@ -303,8 +303,8 @@ export function AiClient() {
               </select>
               <p className="text-xs text-muted-foreground">
                 {preset.baseUrl
-                  ? `Habla con ${preset.baseUrl}. Una sola llave da acceso a los modelos de todos los laboratorios.`
-                  : "Cualquier API con la forma de la de OpenAI: OpenAI, Groq, Together, un servidor propio…"}
+                  ? `Conecta com ${preset.baseUrl}. Uma única chave dá acesso aos modelos de todos os laboratórios.`
+                  : "Qualquer API no formato da OpenAI: OpenAI, Groq, Together, um servidor próprio…"}
               </p>
             </div>
 
@@ -319,8 +319,8 @@ export function AiClient() {
                   autoComplete="off"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Con o sin <code className="font-mono">/v1</code> al final: se
-                  completa solo.
+                  Com ou sem <code className="font-mono">/v1</code> no final: é
+                  completado automaticamente.
                 </p>
               </div>
             )}
@@ -342,7 +342,7 @@ export function AiClient() {
                   onClick={traerModelos}
                   disabled={ocupado !== null || faltaBase || faltaLlave}
                 >
-                  {ocupado === "modelos" ? "Trayendo…" : "Traer modelos"}
+                  {ocupado === "modelos" ? "Buscando…" : "Buscar modelos"}
                 </Button>
               </div>
               {modelos && (
@@ -355,14 +355,14 @@ export function AiClient() {
                 </datalist>
               )}
               <p className="text-xs text-muted-foreground">
-                El mismo modelo conversa con tus clientes y juzga en el
-                Laboratorio.
+                O mesmo modelo conversa com seus clientes e avalia no
+                Laboratório.
               </p>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="ai-token">
-                {cred ? "Reemplazar la llave" : "Llave del proveedor"}
+                {cred ? "Substituir a chave" : "Chave do provedor"}
               </Label>
               <Input
                 id="ai-token"
@@ -371,11 +371,11 @@ export function AiClient() {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={
-                  cred ? `•••• ${cred.tokenLast4} (déjalo vacío para conservarla)` : preset.tokenPlaceholder
+                  cred ? `•••• ${cred.tokenLast4} (deixe vazio para mantê-la)` : preset.tokenPlaceholder
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Se guarda cifrada en tu servidor. No la compartas por chat.
+                É salva criptografada no seu servidor. Não compartilhe por chat.
               </p>
             </div>
 
@@ -401,13 +401,13 @@ export function AiClient() {
                 onClick={probar}
                 disabled={ocupado !== null || !puedeProbar}
               >
-                {ocupado === "probar" ? "Probando…" : "Probar conexión"}
+                {ocupado === "probar" ? "Testando…" : "Testar conexão"}
               </Button>
               <Button
                 type="submit"
                 disabled={ocupado !== null || !puedeProbar}
               >
-                {ocupado === "guardar" ? "Guardando…" : "Guardar"}
+                {ocupado === "guardar" ? "Salvando…" : "Salvar"}
               </Button>
               {cred && (
                 <button
@@ -416,7 +416,7 @@ export function AiClient() {
                   disabled={ocupado !== null}
                   className="text-sm text-text-3 hover:text-foreground"
                 >
-                  Quitar
+                  Remover
                 </button>
               )}
             </div>
@@ -432,7 +432,7 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
     <div className="rounded-md border p-3 text-sm" data-ai-estado={cred.estado}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>
-          Llave conectada: <code className="font-mono">••••{cred.tokenLast4}</code>
+          Chave conectada: <code className="font-mono">••••{cred.tokenLast4}</code>
           {" · "}
           {AI_PROVIDER_PRESETS[cred.proveedor].label}
           {" · "}
@@ -450,7 +450,7 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
       )}
       {cred.motivo && (
         <p className="mt-1 text-xs text-muted-foreground">
-          El proveedor dijo: {cred.motivo}
+          O provedor disse: {cred.motivo}
         </p>
       )}
     </div>
@@ -461,44 +461,44 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
 function AyudaLlave({ provider }: { provider: AiProviderId }) {
   return (
     <details className="rounded-lg border p-3 text-sm">
-      <summary className="cursor-pointer font-medium">¿Cómo consigo mi llave?</summary>
+      <summary className="cursor-pointer font-medium">Como consigo minha chave?</summary>
       {provider === "openrouter" ? (
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
           <li>
-            Crea una cuenta del negocio en{" "}
+            Crie uma conta do negócio em{" "}
             <a className="underline" href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">
               openrouter.ai
             </a>
             .
           </li>
           <li>
-            En{" "}
+            Em{" "}
             <a className="underline" href="https://openrouter.ai/settings/credits" target="_blank" rel="noopener noreferrer">
               Credits
             </a>
-            , carga saldo. El consumo se cobra en esa cuenta.
+            , adicione saldo. O consumo é cobrado nessa conta.
           </li>
           <li>
             Abre{" "}
             <a className="underline" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">
               Keys
             </a>{" "}
-            → Create key y copia la llave.
+            → Create key e copie a chave.
           </li>
-          <li>Pégala aquí, pulsa «Probar conexión» y luego «Guardar».</li>
+          <li>Cole aqui, clique em «Testar conexão» e depois em «Salvar».</li>
         </ol>
       ) : (
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
-          <li>En el panel de tu proveedor, crea una API key con permiso para chat completions.</li>
-          <li>Copia su base URL (la raíz de la API, p. ej. <code className="font-mono">https://api.openai.com</code>).</li>
-          <li>Pega aquí la base URL, el modelo y la llave; «Probar conexión» confirma que todo encaja.</li>
+          <li>No painel do seu provedor, crie uma API key com permissão para chat completions.</li>
+          <li>Copie a base URL (a raiz da API, ex.: <code className="font-mono">https://api.openai.com</code>).</li>
+          <li>Cole aqui a base URL, o modelo e a chave; «Testar conexão» confirma que tudo funciona.</li>
         </ol>
       )}
       <p className="mt-3 text-muted-foreground">
-        Si prefieres dejarlo en el entorno de la instancia (
-        <code className="font-mono">OPENROUTER_API_TOKEN</code> y{" "}
-        <code className="font-mono">OPENROUTER_MODEL</code>), sigue funcionando
-        como respaldo mientras aquí no haya nada guardado.
+        Se preferir deixar no ambiente da instância (
+        <code className="font-mono">OPENROUTER_API_TOKEN</code> e{" "}
+        <code className="font-mono">OPENROUTER_MODEL</code>), continua funcionando
+        como reserva enquanto não houver nada salvo aqui.
       </p>
     </details>
   );

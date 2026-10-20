@@ -8,93 +8,96 @@
  *
  * Puro y sin dependencias: lo usan la API, la pantalla de Plantillas y el
  * selector de la Bandeja.
+ *
+ * pt-BR: nombres en portugués y el portugués de Brasil primero (es el idioma
+ * por defecto de esta versión).
  */
 
 export type TemplateLanguageGroup = "es" | "pt-en" | "otros";
 
 type Entry = { code: string; name: string; group: TemplateLanguageGroup };
 
-const ESPANOL: Entry[] = [
-  { code: "es_MX", name: "Español (México)", group: "es" },
-  { code: "es", name: "Español (general)", group: "es" },
-  { code: "es_AR", name: "Español (Argentina)", group: "es" },
-  { code: "es_CL", name: "Español (Chile)", group: "es" },
-  { code: "es_CO", name: "Español (Colombia)", group: "es" },
-  { code: "es_CR", name: "Español (Costa Rica)", group: "es" },
-  { code: "es_EC", name: "Español (Ecuador)", group: "es" },
-  { code: "es_ES", name: "Español (España)", group: "es" },
-  { code: "es_HN", name: "Español (Honduras)", group: "es" },
-  { code: "es_PA", name: "Español (Panamá)", group: "es" },
-  { code: "es_PE", name: "Español (Perú)", group: "es" },
-  { code: "es_DO", name: "Español (República Dominicana)", group: "es" },
-  { code: "es_UY", name: "Español (Uruguay)", group: "es" },
+const PORTUGUES_E_INGLES: Entry[] = [
+  { code: "pt_BR", name: "Português (Brasil)", group: "pt-en" },
+  { code: "pt_PT", name: "Português (Portugal)", group: "pt-en" },
+  { code: "en_US", name: "Inglês (EUA)", group: "pt-en" },
+  { code: "en", name: "Inglês (geral)", group: "pt-en" },
+  { code: "en_GB", name: "Inglês (Reino Unido)", group: "pt-en" },
+  { code: "en_CA", name: "Inglês (Canadá)", group: "pt-en" },
+  { code: "en_AU", name: "Inglês (Austrália)", group: "pt-en" },
+  { code: "en_IE", name: "Inglês (Irlanda)", group: "pt-en" },
+  { code: "en_IN", name: "Inglês (Índia)", group: "pt-en" },
+  { code: "en_JM", name: "Inglês (Jamaica)", group: "pt-en" },
+  { code: "en_NZ", name: "Inglês (Nova Zelândia)", group: "pt-en" },
+  { code: "en_SG", name: "Inglês (Singapura)", group: "pt-en" },
+  { code: "en_ZA", name: "Inglês (África do Sul)", group: "pt-en" },
+  { code: "en_AE", name: "Inglês (Emirados Árabes)", group: "pt-en" },
+  { code: "en_GH", name: "Inglês (Gana)", group: "pt-en" },
+  { code: "en_MY", name: "Inglês (Malásia)", group: "pt-en" },
+  { code: "en_QA", name: "Inglês (Catar)", group: "pt-en" },
+  { code: "en_UG", name: "Inglês (Uganda)", group: "pt-en" },
 ];
 
-const PORTUGUES_E_INGLES: Entry[] = [
-  { code: "pt_BR", name: "Portugués (Brasil)", group: "pt-en" },
-  { code: "pt_PT", name: "Portugués (Portugal)", group: "pt-en" },
-  { code: "en_US", name: "Inglés (EE. UU.)", group: "pt-en" },
-  { code: "en", name: "Inglés (general)", group: "pt-en" },
-  { code: "en_GB", name: "Inglés (Reino Unido)", group: "pt-en" },
-  { code: "en_CA", name: "Inglés (Canadá)", group: "pt-en" },
-  { code: "en_AU", name: "Inglés (Australia)", group: "pt-en" },
-  { code: "en_IE", name: "Inglés (Irlanda)", group: "pt-en" },
-  { code: "en_IN", name: "Inglés (India)", group: "pt-en" },
-  { code: "en_JM", name: "Inglés (Jamaica)", group: "pt-en" },
-  { code: "en_NZ", name: "Inglés (Nueva Zelanda)", group: "pt-en" },
-  { code: "en_SG", name: "Inglés (Singapur)", group: "pt-en" },
-  { code: "en_ZA", name: "Inglés (Sudáfrica)", group: "pt-en" },
-  { code: "en_AE", name: "Inglés (Emiratos Árabes)", group: "pt-en" },
-  { code: "en_GH", name: "Inglés (Ghana)", group: "pt-en" },
-  { code: "en_MY", name: "Inglés (Malasia)", group: "pt-en" },
-  { code: "en_QA", name: "Inglés (Catar)", group: "pt-en" },
-  { code: "en_UG", name: "Inglés (Uganda)", group: "pt-en" },
+const ESPANOL: Entry[] = [
+  { code: "es_MX", name: "Espanhol (México)", group: "es" },
+  { code: "es", name: "Espanhol (geral)", group: "es" },
+  { code: "es_AR", name: "Espanhol (Argentina)", group: "es" },
+  { code: "es_CL", name: "Espanhol (Chile)", group: "es" },
+  { code: "es_CO", name: "Espanhol (Colômbia)", group: "es" },
+  { code: "es_CR", name: "Espanhol (Costa Rica)", group: "es" },
+  { code: "es_EC", name: "Espanhol (Equador)", group: "es" },
+  { code: "es_ES", name: "Espanhol (Espanha)", group: "es" },
+  { code: "es_HN", name: "Espanhol (Honduras)", group: "es" },
+  { code: "es_PA", name: "Espanhol (Panamá)", group: "es" },
+  { code: "es_PE", name: "Espanhol (Peru)", group: "es" },
+  { code: "es_DO", name: "Espanhol (República Dominicana)", group: "es" },
+  { code: "es_UY", name: "Espanhol (Uruguai)", group: "es" },
 ];
 
 const OTROS: Entry[] = (
   [
-    ["af", "Afrikáans"], ["sq", "Albanés"], ["de", "Alemán"],
-    ["de_AT", "Alemán (Austria)"], ["de_CH", "Alemán (Suiza)"], ["ar", "Árabe"],
-    ["ar_EG", "Árabe (Egipto)"], ["ar_AE", "Árabe (Emiratos Árabes)"],
-    ["ar_LB", "Árabe (Líbano)"], ["ar_MA", "Árabe (Marruecos)"],
-    ["ar_QA", "Árabe (Catar)"], ["az", "Azerí"], ["be_BY", "Bielorruso"],
-    ["bn", "Bengalí"], ["bn_IN", "Bengalí (India)"], ["bg", "Búlgaro"],
-    ["kn", "Canarés"], ["ca", "Catalán"], ["cs", "Checo"],
-    ["zh_CN", "Chino (China)"], ["zh_HK", "Chino (Hong Kong)"],
-    ["zh_TW", "Chino (Taiwán)"], ["si_LK", "Cingalés"], ["ko", "Coreano"],
-    ["hr", "Croata"], ["da", "Danés"], ["prs_AF", "Darí"], ["sk", "Eslovaco"],
-    ["sl", "Esloveno"], ["et", "Estonio"], ["fil", "Filipino"],
-    ["fi", "Finés"], ["fr", "Francés"], ["fr_BE", "Francés (Bélgica)"],
-    ["fr_CA", "Francés (Canadá)"], ["fr_CI", "Francés (Costa de Marfil)"],
-    ["fr_MA", "Francés (Marruecos)"], ["fr_CH", "Francés (Suiza)"],
-    ["ka", "Georgiano"], ["el", "Griego"], ["gu", "Guyaratí"], ["ha", "Hausa"],
-    ["he", "Hebreo"], ["hi", "Hindi"], ["hu", "Húngaro"], ["id", "Indonesio"],
-    ["ga", "Irlandés"], ["it", "Italiano"], ["ja", "Japonés"], ["kk", "Kazajo"],
-    ["rw_RW", "Kinyarwanda"], ["ky_KG", "Kirguís"], ["lo", "Lao"],
-    ["lv", "Letón"], ["lt", "Lituano"], ["mk", "Macedonio"],
-    ["ml", "Malayalam"], ["ms", "Malayo"], ["mr", "Maratí"],
-    ["nl", "Neerlandés"], ["nl_BE", "Neerlandés (Bélgica)"], ["nb", "Noruego"],
-    ["pa", "Panyabí"], ["ps_AF", "Pastún"], ["fa", "Persa"], ["pl", "Polaco"],
-    ["ro", "Rumano"], ["ru", "Ruso"], ["sr", "Serbio"], ["sw", "Suajili"],
-    ["sv", "Sueco"], ["th", "Tailandés"], ["ta", "Tamil"], ["te", "Telugu"],
-    ["tr", "Turco"], ["uk", "Ucraniano"], ["ur", "Urdu"], ["uz", "Uzbeko"],
-    ["vi", "Vietnamita"], ["zu", "Zulú"],
+    ["af", "Africâner"], ["sq", "Albanês"], ["de", "Alemão"],
+    ["de_AT", "Alemão (Áustria)"], ["de_CH", "Alemão (Suíça)"], ["ar", "Árabe"],
+    ["ar_EG", "Árabe (Egito)"], ["ar_AE", "Árabe (Emirados Árabes)"],
+    ["ar_LB", "Árabe (Líbano)"], ["ar_MA", "Árabe (Marrocos)"],
+    ["ar_QA", "Árabe (Catar)"], ["az", "Azerbaijano"], ["be_BY", "Bielorrusso"],
+    ["bn", "Bengali"], ["bn_IN", "Bengali (Índia)"], ["bg", "Búlgaro"],
+    ["kn", "Canarês"], ["ca", "Catalão"], ["cs", "Tcheco"],
+    ["zh_CN", "Chinês (China)"], ["zh_HK", "Chinês (Hong Kong)"],
+    ["zh_TW", "Chinês (Taiwan)"], ["si_LK", "Cingalês"], ["ko", "Coreano"],
+    ["hr", "Croata"], ["da", "Dinamarquês"], ["prs_AF", "Dari"], ["sk", "Eslovaco"],
+    ["sl", "Esloveno"], ["et", "Estoniano"], ["fil", "Filipino"],
+    ["fi", "Finlandês"], ["fr", "Francês"], ["fr_BE", "Francês (Bélgica)"],
+    ["fr_CA", "Francês (Canadá)"], ["fr_CI", "Francês (Costa do Marfim)"],
+    ["fr_MA", "Francês (Marrocos)"], ["fr_CH", "Francês (Suíça)"],
+    ["ka", "Georgiano"], ["el", "Grego"], ["gu", "Guzerate"], ["ha", "Hauçá"],
+    ["he", "Hebraico"], ["hi", "Híndi"], ["hu", "Húngaro"], ["id", "Indonésio"],
+    ["ga", "Irlandês"], ["it", "Italiano"], ["ja", "Japonês"], ["kk", "Cazaque"],
+    ["rw_RW", "Quiniaruanda"], ["ky_KG", "Quirguiz"], ["lo", "Laosiano"],
+    ["lv", "Letão"], ["lt", "Lituano"], ["mk", "Macedônio"],
+    ["ml", "Malaiala"], ["ms", "Malaio"], ["mr", "Marati"],
+    ["nl", "Holandês"], ["nl_BE", "Holandês (Bélgica)"], ["nb", "Norueguês"],
+    ["pa", "Panjabi"], ["ps_AF", "Pashto"], ["fa", "Persa"], ["pl", "Polonês"],
+    ["ro", "Romeno"], ["ru", "Russo"], ["sr", "Sérvio"], ["sw", "Suaíli"],
+    ["sv", "Sueco"], ["th", "Tailandês"], ["ta", "Tâmil"], ["te", "Télugo"],
+    ["tr", "Turco"], ["uk", "Ucraniano"], ["ur", "Urdu"], ["uz", "Uzbeque"],
+    ["vi", "Vietnamita"], ["zu", "Zulu"],
   ] as const
 ).map(([code, name]) => ({ code, name, group: "otros" as const }));
 
 export const TEMPLATE_LANGUAGES: readonly Entry[] = [
-  ...ESPANOL,
   ...PORTUGUES_E_INGLES,
+  ...ESPANOL,
   ...OTROS,
 ];
 
 export const TEMPLATE_LANGUAGE_GROUPS: { id: TemplateLanguageGroup; label: string }[] = [
-  { id: "es", label: "Español" },
-  { id: "pt-en", label: "Portugués e inglés" },
-  { id: "otros", label: "Otros idiomas" },
+  { id: "pt-en", label: "Português e inglês" },
+  { id: "es", label: "Espanhol" },
+  { id: "otros", label: "Outros idiomas" },
 ];
 
-export const DEFAULT_TEMPLATE_LANGUAGE = "es_MX";
+export const DEFAULT_TEMPLATE_LANGUAGE = "pt_BR";
 
 const BY_CODE = new Map(TEMPLATE_LANGUAGES.map((l) => [l.code, l.name]));
 
@@ -102,7 +105,6 @@ export function isTemplateLanguage(code: string): boolean {
   return BY_CODE.has(code);
 }
 
-/** Nombre legible; un código desconocido (p. ej. sincronizado de Meta) se muestra tal cual. */
 export function templateLanguageName(code: string): string {
   return BY_CODE.get(code) ?? code;
 }

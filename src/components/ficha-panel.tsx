@@ -74,15 +74,15 @@ export function FichaPanel({
             className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-text-3 hover:bg-accent hover:text-foreground"
           >
             <Plus className="h-3 w-3" />
-            Agregar
+            Adicionar
           </button>
         )}
       </div>
 
       {entradas.length === 0 && !agregando && (
         <p className="text-xs leading-relaxed text-text-3">
-          Todavía vacía. Aquí aparece lo que tu agente va averiguando del lead
-          mientras conversa — y puedes escribirlo tú.
+          Ainda vazia. Aqui aparece o que seu agente vai descobrindo sobre o lead
+          enquanto conversa — e você também pode preencher.
         </p>
       )}
 
@@ -109,7 +109,7 @@ export function FichaPanel({
                     />
                     <button
                       onClick={() => void confirmarEdicion(clave)}
-                      aria-label="Guardar"
+                      aria-label="Salvar"
                       className="rounded p-1 text-text-3 hover:bg-accent hover:text-foreground"
                     >
                       <Check className="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ export function FichaPanel({
                       <button
                         disabled={guardando}
                         onClick={() => void guardar({ [clave]: null })}
-                        aria-label={`Quitar ${fichaLabel(clave)}`}
+                        aria-label={`Remover ${fichaLabel(clave)}`}
                         className="rounded p-1 text-text-3 hover:bg-accent hover:text-danger"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -165,9 +165,9 @@ export function FichaPanel({
             autoFocus
             value={claveNueva}
             onChange={(e) => setClaveNueva(e.target.value)}
-            placeholder="Qué dato (ej. presupuesto)"
+            placeholder="Qual dado (ex.: orçamento)"
             className="h-7 py-0 text-xs"
-            aria-label="Nombre del dato"
+            aria-label="Nome do dado"
           />
           <Input
             value={valorNuevo}
@@ -178,7 +178,7 @@ export function FichaPanel({
             }}
             placeholder="Valor"
             className="h-7 py-0 text-xs"
-            aria-label="Valor del dato"
+            aria-label="Valor do dado"
           />
           <div className="flex gap-1.5">
             <Button
@@ -187,7 +187,7 @@ export function FichaPanel({
               disabled={!claveNueva.trim() || !valorNuevo.trim() || guardando}
               onClick={() => void agregar()}
             >
-              Agregar
+              Adicionar
             </Button>
             <Button
               size="sm"

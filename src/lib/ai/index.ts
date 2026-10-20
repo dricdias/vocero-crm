@@ -69,7 +69,7 @@ export async function chatJson<T>(
     return {
       ok: false,
       error: "not_configured",
-      detail: "Sin modelo configurado (Ajustes → IA u OPENROUTER_MODEL)",
+      detail: "Nenhum modelo configurado (Configurações → IA ou OPENROUTER_MODEL)",
     };
   }
 
@@ -83,7 +83,7 @@ export async function chatJson<T>(
             {
               role: "system",
               content:
-                "STRICT: tu respuesta anterior no fue JSON válido según el esquema. Responde ÚNICAMENTE el objeto JSON, sin explicaciones ni markdown.",
+                "STRICT: sua resposta anterior não foi um JSON válido segundo o esquema. Responda SOMENTE o objeto JSON, sem explicações nem markdown.",
             },
           ];
     try {
@@ -148,11 +148,11 @@ export async function chatJson<T>(
 function detalleNoConfigurado(estado: Exclude<EstadoIa, { activa: true }>): string {
   switch (estado.motivo) {
     case "sin_configurar":
-      return "Sin proveedor de IA: configúralo en Ajustes → IA (u OPENROUTER_API_TOKEN en el entorno)";
+      return "Sem provedor de IA: configure em Configurações → IA (ou OPENROUTER_API_TOKEN no ambiente)";
     case "token_invalido":
-      return `La llave de IA (…${estado.last4}) está pausada: el proveedor la rechazó`;
+      return `A chave de IA (…${estado.last4}) está pausada: o provedor a rejeitou`;
     case "sin_saldo":
-      return `La llave de IA (…${estado.last4}) está pausada: la cuenta no tiene saldo`;
+      return `A chave de IA (…${estado.last4}) está pausada: a conta está sem saldo`;
   }
 }
 

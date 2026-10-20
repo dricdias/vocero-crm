@@ -38,7 +38,7 @@ export function ThemeToggle({
       type="button"
       onClick={cycle}
       aria-label={label}
-      title={`${label} (clic para cambiar)`}
+      title={`${label} (clique para alternar)`}
       className={cn(
         "rounded p-1 text-text-3 transition-colors hover:text-foreground",
         className

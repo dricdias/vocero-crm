@@ -22,13 +22,13 @@ export function fichaLabel(key: string): string {
 
 /** Cómo se muestra un valor. Los booleanos en Sí/No: nadie califica en `true`. */
 export function fichaValueText(value: FichaValue): string {
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
   if (typeof value === "number") return String(value);
   return value ?? "";
 }
 
-const SI = new Set(["si", "sí", "true", "1"]);
-const NO = new Set(["no", "false", "0"]);
+const SI = new Set(["si", "sí", "sim", "true", "1"]);
+const NO = new Set(["no", "não", "nao", "false", "0"]);
 
 /**
  * Lo que el dueño teclea, de vuelta a un valor guardable.
@@ -59,5 +59,5 @@ export function parseFichaValue(
 
 /** Claves ordenadas para que la ficha no baile de posición entre recargas. */
 export function fichaEntries(ficha: FichaDto): [string, FichaValue][] {
-  return Object.entries(ficha).sort(([a], [b]) => a.localeCompare(b, "es"));
+  return Object.entries(ficha).sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
 }

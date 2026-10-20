@@ -6,7 +6,7 @@
  * de un anuncio. Llamarlo "anuncio" haría pasar por pagado algo que no lo fue.
  */
 export function etiquetaDeOrigen(sourceType: string | null | undefined): string {
-  return sourceType === "post" ? "Publicación" : "Anuncio";
+  return sourceType === "post" ? "Publicação" : "Anúncio";
 }
 
 /**
@@ -25,5 +25,5 @@ export function titularDeOrigen(
   sourceType: string | null | undefined
 ): string {
   if (headline) return headline;
-  return sourceType === "post" ? "Publicación sin título" : "Anuncio sin título";
+  return sourceType === "post" ? "Publicação sem título" : "Anúncio sem título";
 }

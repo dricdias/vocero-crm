@@ -27,7 +27,7 @@ export default async function AuthLayout({
           <BrandLogo branding={branding} size="lg" />
           {vocero ? (
             <h1 className="text-[24px] font-bold leading-tight tracking-[-0.03em]">
-              El CRM{" "}
+              O CRM{" "}
               <span
                 className="bg-clip-text font-serif text-[1.18em] font-normal italic tracking-[-0.01em] text-transparent"
                 style={{
@@ -35,14 +35,14 @@ export default async function AuthLayout({
                     "linear-gradient(92deg, var(--accent) 12%, #00b4f0 88%)",
                 }}
               >
-                que es tuyo.
+                que é seu.
               </span>
             </h1>
           ) : (
             <div>
               <h1 className="sr-only">{branding.name}</h1>
               <p className="text-sm text-text-3">
-                {productName([...enabledChannels()])} con agente de IA
+                {productName([...enabledChannels()])} com agente de IA
               </p>
             </div>
           )}
