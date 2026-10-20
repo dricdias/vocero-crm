@@ -9,7 +9,7 @@ de skills, scripts ni plugins de ningún asistente.
 ## Principios inviolables
 
 - **Una instancia = un negocio.** Self-hosted; aun así, toda tabla de dominio lleva `organization_id` y toda consulta pasa por `scoped()`.
-- **Solo WhatsApp Cloud API oficial.** Nada de Baileys ni sesiones web. Todo tráfico a Meta pasa por `src/lib/meta/client.ts`.
+- **WhatsApp Cloud API por defecto.** Este fork admite Evolution Go solo tras `EVOLUTION_GO=on` (031, solicitado por el responsable). Meta pasa por `src/lib/meta/client.ts`; Evolution Go por `src/server/evolution/client.ts`. Al modificar este conector, leer `docs/evolution-go.md` y `specs/031-evolution-go/`.
 - **Secretos cifrados en reposo** (AES-256-GCM, `src/lib/crypto/`); jamás al cliente ni a logs. Los tokens de WhatsApp y del proveedor de IA solo enseñan sus últimos 4.
 - **El token de WhatsApp nunca sale del CRM.** Un bot externo conversa a través de `/api/bot/*`, no con Meta.
 - **Soberanía.** El núcleo depende solo de Postgres + WhatsApp Cloud API + un proveedor LLM OpenRouter-compatible opcional. Cualquier tercero entra como conector opcional tras bandera, apagado por defecto (`docs/adr-001-canales-opcionales.md`, `docs/adr-002-conectores-de-agenda.md`).

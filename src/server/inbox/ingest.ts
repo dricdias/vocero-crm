@@ -561,7 +561,7 @@ export function serializeMessage(
           fileSize: media.fileSize,
           caption: media.caption,
           fetchStatus: media.fetchStatus,
-          payload: media.payload,
+          payload: media.kind === "location" || media.kind === "contacts" ? media.payload : null,
         }
       : null,
     createdAt: (m.waTimestamp ?? m.createdAt).toISOString(),

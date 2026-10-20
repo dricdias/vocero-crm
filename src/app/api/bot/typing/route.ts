@@ -1,3 +1,4 @@
+import { getEvolutionByOrg } from "@/server/evolution/credentials";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, schema } from "@/lib/db";
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
   const wamid = msgs[0]?.waMessageId;
   if (!wamid) return Response.json({ ok: false, reason: "no_inbound" });
 
+  if (await getEvolutionByOrg(organizationId)) return Response.json({ok: false, reason: "unsupported"});
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
     return apiError(409, "no_connection", "O WhatsApp não está conectado");

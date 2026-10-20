@@ -12,6 +12,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *     conexión, 422/503 con el motivo de Meta, 200 con el resultado.
  */
 
+vi.mock("@/server/whatsapp/connection-lock", () => ({withWhatsappConnectionLock: async (_org: string, operation: () => Promise<unknown>) => operation()}));
+vi.mock("@/server/evolution/credentials", () => ({getEvolutionByOrg: async () => null}));
+
 const env = vi.hoisted(() => ({
   APP_BASE_URL: "https://crm.ejemplo.test",
   META_WEBHOOK_VERIFY_TOKEN: "verify-abc",

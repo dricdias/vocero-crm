@@ -1,3 +1,4 @@
+import { evolutionBotMedia } from "@/server/evolution/bot-media";
 import { apiError } from "@/lib/api";
 import { requireBotKey, resolveInstanceOrg } from "@/server/bot/auth";
 import { getCredentialsByOrg } from "@/server/whatsapp/credentials";
@@ -26,12 +27,14 @@ export async function GET(
   if (!organizationId) {
     return apiError(409, "no_org", "A instância ainda não tem organização");
   }
+  const { mediaId } = await ctx.params;
+  if (mediaId.startsWith("evo:")) return evolutionBotMedia(organizationId, mediaId);
+
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
     return apiError(409, "no_connection", "O WhatsApp não está conectado");
   }
 
-  const { mediaId } = await ctx.params;
   if (!/^[\w.-]{1,64}$/.test(mediaId)) {
     return apiError(422, "invalid", "mediaId inválido");
   }

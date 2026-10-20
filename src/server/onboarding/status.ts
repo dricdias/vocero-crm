@@ -1,3 +1,4 @@
+import { getEvolutionByOrg } from "@/server/evolution/credentials";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
 import { estadoIaDe, mensajeDeEstado } from "@/lib/ai/provider";
@@ -67,11 +68,13 @@ export async function onboardingStatus(
     .from(schema.kbEntry)
     .where(scoped(schema.kbEntry.organizationId, organizationId))
     .limit(1);
-  const [channel] = await db
+  const [metaChannel] = await db
     .select({ status: schema.metaCredentials.status })
     .from(schema.metaCredentials)
     .where(scoped(schema.metaCredentials.organizationId, organizationId))
     .limit(1);
+  const evolution = await getEvolutionByOrg(organizationId, db);
+  const channel = evolution ?? metaChannel;
   const ia = await estadoIaDe(organizationId);
 
   const steps: ReadinessStep[] = [

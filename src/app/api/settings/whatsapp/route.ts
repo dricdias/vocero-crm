@@ -1,3 +1,8 @@
+import { withWhatsappConnectionLock } from "@/server/whatsapp/connection-lock";
+import { evolutionEnabled } from "@/server/evolution/flag";
+import { canConfigure } from "@/lib/auth/roles";
+import type { SessionContext } from "@/lib/auth/session";
+import { getEvolutionByOrg } from "@/server/evolution/credentials";
 import { z } from "zod";
 import { apiError, parseBody, withAuth } from "@/lib/api";
 import {
@@ -50,8 +55,14 @@ const putSchema = z.object({
  * reintentar (o pegar la URL a mano, que sigue a la vista).
  */
 export const PUT = withAuth(async (session, req: Request) => {
+  if (!canConfigure(session.role)) return apiError(403, "forbidden", "Somente o administrador pode configurar o WhatsApp");
+  return evolutionEnabled() ? withWhatsappConnectionLock(session.organizationId, () => saveMetaConnection(session, req)) : saveMetaConnection(session, req);
+});
+async function saveMetaConnection(session: SessionContext, req: Request): Promise<Response> {
   const body = await parseBody(req, putSchema);
   if (!body.ok) return body.response;
+
+  if (await getEvolutionByOrg(session.organizationId)) return apiError(409, "provider_conflict", "Desconecte o Evolution Go antes de ativar a Meta");
 
   const check = await testConnection(body.data.phoneNumberId, body.data.token);
   if (!check.ok) {
@@ -81,7 +92,7 @@ export const PUT = withAuth(async (session, req: Request) => {
     displayPhoneNumber: check.displayPhoneNumber,
     webhook,
   });
-});
+}
 
 /**
  * Desconectar el número. Sin esto, conectar era una calle de un solo

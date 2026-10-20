@@ -1,3 +1,7 @@
+import { decryptSecret } from "@/lib/crypto";
+import { z } from "zod";
+import { getEvolutionByOrg } from "@/server/evolution/credentials";
+import { evolutionRequest } from "@/server/evolution/client";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { eq } from "drizzle-orm";
@@ -220,14 +224,24 @@ export async function ensureAssetAvailable(
   if (asset.fetchStatus === "available") return asset;
   if (!asset.waMediaId) return null; // location/contacts no tienen binario
 
-  const creds = await getCredentialsByOrg(organizationId);
-  if (!creds) return null;
-
   try {
-    const { data, mimeType, fileSize } = await downloadGraphMedia(
-      creds.token,
-      asset.waMediaId
-    );
+    let downloaded: {data: Buffer; mimeType: string | null; fileSize: number};
+    if (asset.waMediaId.startsWith("evo:")) {
+      const creds = await getEvolutionByOrg(organizationId);
+      const payload = z.object({evolutionCipher: z.string(), evolutionIv: z.string(), evolutionTag: z.string()}).safeParse(asset.payload);
+      if (!creds || !payload.success) return null;
+      const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
+      const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(result.base64);
+      if (!match) throw new MediaFetchError("O Evolution Go não retornou um arquivo válido");
+      const data = Buffer.from(match[2]!, "base64");
+      if (data.byteLength > MEDIA_LIMITS.document.maxBytes) throw new MediaFetchError("Anexo muito grande");
+      downloaded = {data, mimeType: match[1]!, fileSize: data.byteLength};
+    } else {
+      const creds = await getCredentialsByOrg(organizationId);
+      if (!creds) return null;
+      downloaded = await downloadGraphMedia(creds.token, asset.waMediaId);
+    }
+    const {data, mimeType, fileSize} = downloaded;
     const storagePath = await saveMediaFile(organizationId, assetId, data);
     const updated = await db
       .update(schema.mediaAsset)

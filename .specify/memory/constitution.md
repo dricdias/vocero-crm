@@ -52,6 +52,9 @@ TODOs diferidos:
 
 # Vocero CRM Constitution
 
+> Enmienda del fork 031 (2026-10-20), solicitada explícitamente por su responsable: se admite Evolution Go como transporte WhatsApp opcional, apagado por defecto (`EVOLUTION_GO=on`), con adaptador dedicado, credenciales cifradas y pruebas. Esta excepción amplía las referencias a Cloud API en este documento exclusivamente para dicho conector; no permite dependencias nuevas en el núcleo. Meta permanece predeterminado. Ver `specs/031-evolution-go/`.
+
+
 Vocero CRM es un CRM de WhatsApp con agente de IA, open source (MIT), self-hosted y
 gratuito, diseñado para que las agencias de IA lo desplieguen en el VPS de sus
 clientes: una instancia = un negocio. Esta constitución define las reglas no

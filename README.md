@@ -844,3 +844,7 @@ aprender a convertirte en Meta Tech Provider y monetizar con tu agencia de IA?
 de producción (webhook firmado, ingesta idempotente, cifrado de tokens) vienen
 de un proyecto de referencia privado en producción, portados y simplificados
 para este repo.
+
+### Evolution Go (fork)
+
+Con `EVOLUTION_GO=on`, Ajustes / WhatsApp permite conectar una instancia Evolution Go existente por QR, además de Meta. Ver [configuración, alcance y verificación](docs/evolution-go.md).
