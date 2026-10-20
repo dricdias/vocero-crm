@@ -36,7 +36,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       )
     )
     .returning();
-  if (!updated[0]) return apiError(404, "not_found", "Etapa no encontrada");
+  if (!updated[0]) return apiError(404, "not_found", "Etapa não encontrada");
   return Response.json({ stage: updated[0] });
 });
 
@@ -58,7 +58,7 @@ export const DELETE = withAuth(async (session, req: Request, ctx: Params) => {
     )
     .limit(1);
   const stage = rows[0];
-  if (!stage) return apiError(404, "not_found", "Etapa no encontrada");
+  if (!stage) return apiError(404, "not_found", "Etapa não encontrada");
   if (stage.kind !== "open") {
     return apiError(
       409,
@@ -84,7 +84,7 @@ export const DELETE = withAuth(async (session, req: Request, ctx: Params) => {
       return apiError(
         409,
         "stage_has_leads",
-        "La etapa tiene tarjetas: indica ?moveTo=<etapa destino> para reasignarlas"
+        "A etapa tem cartões: informe ?moveTo=<etapa destino> para realocá-los"
       );
     }
     const dest = await db
@@ -99,7 +99,7 @@ export const DELETE = withAuth(async (session, req: Request, ctx: Params) => {
       )
       .limit(1);
     if (!dest[0] || moveTo === id) {
-      return apiError(422, "invalid_move_to", "Etapa destino inválida");
+      return apiError(422, "invalid_move_to", "Etapa de destino inválida");
     }
     // Por la puerta única, un evento por lead: el embudo debe poder explicar
     // por qué treinta tarjetas cambiaron de columna el mismo minuto.

@@ -153,7 +153,7 @@ async function mensajesFallidos(organizationId: string, now: Date) {
     .limit(10);
 
   return rows.map((r) => ({
-    error: r.error ?? "Sin detalle",
+    error: r.error ?? "Sem detalhe",
     count: r.n,
     lastAt: r.lastAt.toISOString(),
   }));

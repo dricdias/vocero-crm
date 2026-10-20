@@ -422,15 +422,15 @@ export type RangeQuery =
 export function parseRangeQuery(from: string | null, to: string | null): RangeQuery {
   if (!from && !to) return { ok: true, range: null };
   if (!from || !to) {
-    return { ok: false, message: "Pide el rango con from y to juntos (AAAA-MM-DD)" };
+    return { ok: false, message: "Peça o intervalo com from e to juntos (AAAA-MM-DD)" };
   }
   if (!isIsoDate(from) || !isIsoDate(to)) {
-    return { ok: false, message: "Fechas inválidas: usa el formato AAAA-MM-DD" };
+    return { ok: false, message: "Datas inválidas: use o formato AAAA-MM-DD" };
   }
   const span = daysBetween(from, to);
-  if (span < 0) return { ok: false, message: "La fecha inicial va antes que la final" };
+  if (span < 0) return { ok: false, message: "A data inicial vem antes da final" };
   if (span + 1 > MAX_RANGE_DAYS) {
-    return { ok: false, message: `El rango máximo es de ${MAX_RANGE_DAYS} días` };
+    return { ok: false, message: `O intervalo máximo é de ${MAX_RANGE_DAYS} dias` };
   }
   return { ok: true, range: { from, to } };
 }

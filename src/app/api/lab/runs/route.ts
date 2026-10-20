@@ -45,7 +45,7 @@ export const POST = withAuth(async (session) => {
     return apiError(
       409,
       "ai_not_configured",
-      "Configura tu proveedor de IA en Ajustes → IA para correr el Laboratorio"
+      "Configure seu provedor de IA em Configurações → IA para rodar o Laboratório"
     );
   }
   try {
@@ -56,7 +56,7 @@ export const POST = withAuth(async (session) => {
       return apiError(
         409,
         "run_in_progress",
-        "Ya hay una corrida en curso; espera a que termine"
+        "Já há uma rodada em andamento; aguarde terminar"
       );
     }
     throw err;

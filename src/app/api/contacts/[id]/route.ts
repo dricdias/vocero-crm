@@ -23,7 +23,7 @@ type Params = { params: Promise<{ id: string }> };
 export const GET = withAuth(async (session, _req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const contact = await getContactById(session.organizationId, id);
-  if (!contact) return apiError(404, "not_found", "Contacto no encontrado");
+  if (!contact) return apiError(404, "not_found", "Contato não encontrado");
   const [stageRow, anuncio] = await Promise.all([
     getContactStage(session.organizationId, id),
     anuncioDelContacto(session.organizationId, id),
@@ -77,7 +77,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       contactId: id,
       ficha: body.data.ficha,
     });
-    if (!res) return apiError(404, "not_found", "Contacto no encontrado");
+    if (!res) return apiError(404, "not_found", "Contato não encontrado");
   }
 
   const set: Record<string, unknown> = { updatedAt: new Date() };
@@ -104,7 +104,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       )
     )
     .returning();
-  if (!updated[0]) return apiError(404, "not_found", "Contacto no encontrado");
+  if (!updated[0]) return apiError(404, "not_found", "Contato não encontrado");
   // 027: la pausa se lleva a la conversación que ya exista; sin esto no
   // tendría efecto hasta que naciera otra.
   if (body.data.aiPaused !== undefined) {

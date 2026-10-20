@@ -151,13 +151,13 @@ async function prepareSend(
     .limit(1);
   const row = rows[0];
   if (!row || row.conversation.organizationId !== organizationId) {
-    throw new SendError("meta_error", "Conversación no encontrada");
+    throw new SendError("meta_error", "Conversa não encontrada");
   }
 
   if (row.conversation.isTest) {
     throw new SendError(
       "sandbox_violation",
-      "Conversación de prueba del Laboratorio: el envío real está prohibido"
+      "Conversa de teste do Laboratório: o envio real é proibido"
     );
   }
 
@@ -170,20 +170,20 @@ async function prepareSend(
     if (!isChannelEnabled("instagram")) {
       throw new SendError(
         "not_connected",
-        "El canal de Instagram está desactivado en esta instancia"
+        "O canal do Instagram está desativado nesta instância"
       );
     }
     const igCreds = await getInstagramCredentialsByOrg(organizationId);
     if (!igCreds) {
       throw new SendError(
         "not_connected",
-        "No hay cuenta de Instagram conectada"
+        "Não há conta do Instagram conectada"
       );
     }
     if (igCreds.status === "reconnect_required") {
       throw new SendError(
         "reconnect_required",
-        "El token de Instagram expiró: reconecta la cuenta en Configuración"
+        "O token do Instagram expirou: reconecte a conta em Configurações"
       );
     }
     const igRecipient = row.contact.waIdentity.startsWith(IG_PREFIX)
@@ -208,20 +208,20 @@ async function prepareSend(
     if (!isChannelEnabled("messenger")) {
       throw new SendError(
         "not_connected",
-        "El canal de Messenger está desactivado en esta instancia"
+        "O canal do Messenger está desativado nesta instância"
       );
     }
     const fbCreds = await getMessengerCredentialsByOrg(organizationId);
     if (!fbCreds) {
       throw new SendError(
         "not_connected",
-        "No hay página de Facebook conectada"
+        "Não há página do Facebook conectada"
       );
     }
     if (fbCreds.status === "reconnect_required") {
       throw new SendError(
         "reconnect_required",
-        "El token de la página expiró: reconecta Messenger en Configuración"
+        "O token da página expirou: reconecte o Messenger em Configurações"
       );
     }
     const fbRecipient = row.contact.waIdentity.startsWith(FB_PREFIX)
@@ -248,17 +248,17 @@ async function prepareSend(
     if (!isChannelEnabled("tiktok")) {
       throw new SendError(
         "not_connected",
-        "El canal de TikTok está desactivado en esta instancia"
+        "O canal do TikTok está desativado nesta instância"
       );
     }
     const ttCreds = await getTiktokCredentialsByOrg(organizationId);
     if (!ttCreds) {
-      throw new SendError("not_connected", "No hay cuenta de TikTok conectada");
+      throw new SendError("not_connected", "Não há conta do TikTok conectada");
     }
     if (ttCreds.status === "reconnect_required") {
       throw new SendError(
         "reconnect_required",
-        "La llave de Zernio dejó de servir: reconecta TikTok en Configuración"
+        "A chave da Zernio deixou de funcionar: reconecte o TikTok em Configurações"
       );
     }
     if (
@@ -307,12 +307,12 @@ async function prepareSend(
 
   const credentials = await getCredentialsByOrg(organizationId);
   if (!credentials) {
-    throw new SendError("not_connected", "No hay número de WhatsApp conectado");
+    throw new SendError("not_connected", "Não há número de WhatsApp conectado");
   }
   if (credentials.status === "reconnect_required") {
     throw new SendError(
       "reconnect_required",
-      "El token de WhatsApp expiró: reconecta el número en Configuración"
+      "O token do WhatsApp expirou: reconecte o número em Configurações"
     );
   }
 
@@ -336,7 +336,7 @@ async function prepareSend(
   if (!destinatario || !recipient) {
     throw new SendError(
       "meta_error",
-      "El contacto no tiene teléfono ni identidad de WhatsApp utilizable"
+      "O contato não tem telefone nem identidade de WhatsApp utilizável"
     );
   }
 
@@ -483,7 +483,7 @@ export async function sendMediaMessage(input: {
   if (!sendCaps.outboundMedia) {
     throw new SendError(
       "meta_error",
-      `Todavía no se pueden enviar adjuntos por ${sendCaps.label}; manda el texto`
+      `Ainda não é possível enviar anexos pelo ${sendCaps.label}; envie o texto`
     );
   }
 
@@ -550,12 +550,12 @@ export async function sendMediaMessage(input: {
       await markReconnectRequired(input.organizationId);
       sendErr = new SendError(
         "reconnect_required",
-        "El token de WhatsApp expiró: reconecta el número en Configuración"
+        "O token do WhatsApp expirou: reconecte o número em Configurações"
       );
     } else {
       sendErr = new SendError(
         "upload_failed",
-        "No se pudo subir el adjunto a WhatsApp"
+        "Não foi possível enviar o anexo ao WhatsApp"
       );
     }
     // El contenido NO se pierde: mensaje failed con el asset ya en disco.
@@ -603,7 +603,7 @@ export async function sendStructured(
   if (!target.credentials) {
     throw new SendError(
       "meta_error",
-      "Este canal no admite ubicaciones ni contactos; manda el texto"
+      "Este canal não aceita localizações nem contatos; envie o texto"
     );
   }
 
@@ -662,7 +662,7 @@ export async function callGraphSend(
       { method: "POST", token: credentials.token, body: payload }
     );
     const id = res.messages?.[0]?.id;
-    if (!id) throw new SendError("meta_error", "Meta no devolvió ID de mensaje");
+    if (!id) throw new SendError("meta_error", "A Meta não retornou o ID da mensagem");
     return id;
   } catch (err) {
     if (err instanceof MetaApiError) {
@@ -670,11 +670,11 @@ export async function callGraphSend(
         await markReconnectRequired(credentials.organizationId);
         throw new SendError(
           "reconnect_required",
-          "El token de WhatsApp expiró: reconecta el número en Configuración"
+          "O token do WhatsApp expirou: reconecte o número em Configurações"
         );
       }
       if (err.status === 0 || err.status >= 500) {
-        throw new SendError("meta_unavailable", "Meta no está disponible ahora");
+        throw new SendError("meta_unavailable", "A Meta não está disponível agora");
       }
       throw new SendError("meta_error", err.message);
     }
@@ -698,7 +698,7 @@ async function callInstagramSend(
   if (!textFits("instagram", text)) {
     throw new SendError(
       "meta_error",
-      `${caps.label} no acepta mensajes de más de ${caps.maxTextBytes} bytes: acorta el texto`
+      `O ${caps.label} não aceita mensagens com mais de ${caps.maxTextBytes} bytes: encurte o texto`
     );
   }
 
@@ -722,13 +722,13 @@ async function callInstagramSend(
         await markInstagramReconnectRequired(creds.organizationId);
         throw new SendError(
           "reconnect_required",
-          "El token de Instagram expiró o fue revocado: reconecta la cuenta"
+          "O token do Instagram expirou ou foi revogado: reconecte a conta"
         );
       }
       if (err.status === 0 || err.status >= 500) {
         throw new SendError(
           "meta_unavailable",
-          "Instagram no está disponible en este momento; intenta de nuevo"
+          "O Instagram não está disponível no momento; tente de novo"
         );
       }
       throw new SendError("meta_error", err.message);
@@ -751,7 +751,7 @@ async function callMessengerSend(
   if (!textFits("messenger", text)) {
     throw new SendError(
       "meta_error",
-      `${caps.label} no acepta mensajes de más de ${caps.maxTextBytes} bytes: acorta el texto`
+      `O ${caps.label} não aceita mensagens com mais de ${caps.maxTextBytes} bytes: encurte o texto`
     );
   }
 
@@ -777,13 +777,13 @@ async function callMessengerSend(
         await markMessengerReconnectRequired(creds.organizationId);
         throw new SendError(
           "reconnect_required",
-          "El token de la página expiró o fue revocado: reconecta Messenger"
+          "O token da página expirou ou foi revogado: reconecte o Messenger"
         );
       }
       if (err.status === 0 || err.status >= 500) {
         throw new SendError(
           "meta_unavailable",
-          "Messenger no está disponible en este momento; intenta de nuevo"
+          "O Messenger não está disponível no momento; tente de novo"
         );
       }
       throw new SendError("meta_error", err.message);
@@ -814,13 +814,13 @@ async function callTiktokSend(target: SendTarget, text: string): Promise<string>
         await markTiktokReconnectRequired(creds.organizationId);
         throw new SendError(
           "reconnect_required",
-          "La llave de Zernio expiró o fue revocada: reconecta TikTok"
+          "A chave da Zernio expirou ou foi revogada: reconecte o TikTok"
         );
       }
       if (err.status === 0 || err.status >= 500) {
         throw new SendError(
           "meta_unavailable",
-          "TikTok no está disponible en este momento; intenta de nuevo"
+          "O TikTok não está disponível no momento; tente de novo"
         );
       }
       throw new SendError("meta_error", err.message);

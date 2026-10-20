@@ -31,7 +31,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       )
     )
     .returning();
-  if (!updated[0]) return apiError(404, "not_found", "Entrada no encontrada");
+  if (!updated[0]) return apiError(404, "not_found", "Entrada não encontrada");
   return Response.json({ entry: updated[0] });
 });
 
@@ -48,6 +48,6 @@ export const DELETE = withAuth(async (session, _req: Request, ctx: Params) => {
       )
     )
     .returning();
-  if (!deleted[0]) return apiError(404, "not_found", "Entrada no encontrada");
+  if (!deleted[0]) return apiError(404, "not_found", "Entrada não encontrada");
   return Response.json({ deleted: true });
 });

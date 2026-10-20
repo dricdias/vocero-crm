@@ -29,7 +29,7 @@ export async function testConnection(
         ok: false,
         code: "meta_error",
         message:
-          "Meta no devolvió el número: verifica que el Phone Number ID sea correcto",
+          "A Meta não retornou o número: verifique se o Phone Number ID está correto",
       };
     }
     return {
@@ -44,14 +44,14 @@ export async function testConnection(
           ok: false,
           code: "invalid_token",
           message:
-            "El token no es válido o expiró. Verifica que corresponde a este número (modo directo: token de usuario del sistema; modo agencia: token entregado por tu backend).",
+            "O token não é válido ou expirou. Verifique se ele corresponde a este número (modo direto: token de usuário do sistema; modo agência: token entregue pelo seu backend).",
         };
       }
       if (err.status === 0 || err.status >= 500) {
         return {
           ok: false,
           code: "meta_unavailable",
-          message: "Meta no está disponible en este momento; intenta de nuevo",
+          message: "A Meta não está disponível no momento; tente de novo",
         };
       }
       return { ok: false, code: "meta_error", message: err.message };
@@ -152,7 +152,7 @@ export async function registerWebhookForNumber(opts: {
     try {
       await graphRequest(`${wabaId}/subscribed_apps`, { method: "POST", token });
     } catch (err) {
-      return registrationError(err, "No se pudo suscribir la app a la cuenta de WhatsApp");
+      return registrationError(err, "Não foi possível inscrever o app na conta do WhatsApp");
     }
   }
 
@@ -168,7 +168,7 @@ export async function registerWebhookForNumber(opts: {
       },
     });
   } catch (err) {
-    return registrationError(err, "Meta no aceptó la dirección del webhook");
+    return registrationError(err, "A Meta não aceitou o endereço do webhook");
   }
 
   try {
@@ -181,12 +181,12 @@ export async function registerWebhookForNumber(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta aceptó el webhook pero no lo confirma en el número. Vuelve a intentarlo en unos minutos.",
+          "A Meta aceitou o webhook mas não o confirma no número. Tente de novo em alguns minutos.",
       };
     }
     return { ok: true, appWithoutWebhook: !res.webhook_configuration.application };
   } catch (err) {
-    return registrationError(err, "No se pudo confirmar el webhook en Meta");
+    return registrationError(err, "Não foi possível confirmar o webhook na Meta");
   }
 }
 
@@ -272,14 +272,14 @@ function registrationError(err: unknown, context: string): WebhookRegistration {
     return {
       ok: false,
       code: "invalid_token",
-      message: `${context}: el token no es válido o expiró.`,
+      message: `${context}: o token não é válido ou expirou.`,
     };
   }
   if (err.status === 0 || err.status >= 500) {
     return {
       ok: false,
       code: "meta_unavailable",
-      message: `${context}: Meta no está disponible en este momento; intenta de nuevo.`,
+      message: `${context}: a Meta não está disponível no momento; tente de novo.`,
     };
   }
   // 200 y 10 son los de permisos: el token puede enviar mensajes pero no
@@ -288,7 +288,7 @@ function registrationError(err: unknown, context: string): WebhookRegistration {
     return {
       ok: false,
       code: "missing_permission",
-      message: `${context}: el token no tiene el permiso whatsapp_business_management sobre esta cuenta.`,
+      message: `${context}: o token não tem a permissão whatsapp_business_management nesta conta.`,
     };
   }
   return { ok: false, code: "meta_error", message: `${context}: ${err.message}` };
@@ -308,8 +308,8 @@ function pathOf(url: string): string {
 
 function hostOf(uri: string): string {
   try {
-    return new URL(uri).host || "host desconocido";
+    return new URL(uri).host || "host desconhecido";
   } catch {
-    return "URL no válida";
+    return "URL inválida";
   }
 }

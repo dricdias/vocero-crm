@@ -59,7 +59,7 @@ export async function graphRequest<T>(
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
     });
   } catch (cause) {
-    throw new MetaApiError("No se pudo contactar la API de Meta", {
+    throw new MetaApiError("Não foi possível contatar a API da Meta", {
       status: 0,
       details: cause,
     });
@@ -76,7 +76,7 @@ export async function graphRequest<T>(
   if (!res.ok) {
     const err = (json as { error?: { message?: string; code?: number; type?: string } })
       ?.error;
-    throw new MetaApiError(err?.message ?? `Meta respondió ${res.status}`, {
+    throw new MetaApiError(err?.message ?? `A Meta respondeu ${res.status}`, {
       status: res.status,
       code: err?.code ?? null,
       type: err?.type ?? null,

@@ -163,7 +163,7 @@ async function escalamientos(
       const key = r.reason ?? "sin_motivo";
       return {
         key,
-        label: HANDOFF_LABEL[key] ?? "Sin motivo registrado",
+        label: HANDOFF_LABEL[key] ?? "Sem motivo registrado",
         count: r.n,
       };
     })

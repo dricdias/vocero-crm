@@ -492,7 +492,7 @@ export function motivosDePerdida(desenlaces: Desenlace[]): LossReasonRowDto[] {
     const reason = d.lossReason ?? "sin_registro";
     const row = acc.get(reason) ?? {
       reason,
-      label: d.lossReason ? LOSS_REASON_LABEL[d.lossReason] : "Sin motivo registrado",
+      label: d.lossReason ? LOSS_REASON_LABEL[d.lossReason] : "Sem motivo registrado",
       count: 0,
     };
     row.count += 1;

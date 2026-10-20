@@ -23,7 +23,7 @@ export function withAuth<Args extends unknown[]>(
       session = await requireSession();
     } catch (err) {
       if (err instanceof UnauthorizedError) {
-        return apiError(401, "unauthorized", "No autenticado");
+        return apiError(401, "unauthorized", "Não autenticado");
       }
       throw err;
     }
@@ -31,7 +31,7 @@ export function withAuth<Args extends unknown[]>(
       return await handler(session, ...args);
     } catch (err) {
       console.error("[api] error no controlado:", err);
-      return apiError(500, "internal", "Error interno");
+      return apiError(500, "internal", "Erro interno");
     }
   };
 }
@@ -47,7 +47,7 @@ export async function parseBody<T>(
   } catch {
     return {
       ok: false,
-      response: apiError(422, "invalid_body", "El body debe ser JSON válido"),
+      response: apiError(422, "invalid_body", "O body deve ser um JSON válido"),
     };
   }
   const parsed = schema.safeParse(raw);

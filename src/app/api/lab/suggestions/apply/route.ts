@@ -35,7 +35,7 @@ export const POST = withAuth(async (session, req: Request) => {
       )
     )
     .limit(1);
-  if (!cases[0]) return apiError(404, "not_found", "Caso no encontrado");
+  if (!cases[0]) return apiError(404, "not_found", "Caso não encontrado");
 
   const inserted = await db
     .insert(schema.kbEntry)

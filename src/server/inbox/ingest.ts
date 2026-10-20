@@ -264,7 +264,7 @@ export async function processMessagesValue(value: WebhookValue): Promise<void> {
     // en el wizard — el evento llega pero no hay a qué organización enrutarlo.
     console.warn(
       `[webhook] evento para phone_number_id desconocido (${phoneNumberId}): ` +
-        "guarda la conexión en Configuración → WhatsApp para recibir mensajes"
+        "salve a conexão em Configurações → WhatsApp para receber mensagens"
     );
     return;
   }

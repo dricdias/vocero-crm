@@ -316,7 +316,7 @@ export async function getOrCreateContactByIdentity(
 /** Nombre de respaldo cuando no hay nombre de perfil: nunca el BSUID crudo. */
 function displayFallback(resolved: ResolvedIdentity): string {
   if (resolved.phone) return resolved.phone;
-  return "Contacto de WhatsApp";
+  return "Contato do WhatsApp";
 }
 
 /**
@@ -324,5 +324,5 @@ function displayFallback(resolved: ResolvedIdentity): string {
  * PSID crudos, que en la bandeja no le dicen nada al operador.
  */
 function channelFallback(channel: Channel): string {
-  return `Contacto de ${CHANNEL_LABEL[channel] ?? channel}`;
+  return `Contato do ${CHANNEL_LABEL[channel] ?? channel}`;
 }

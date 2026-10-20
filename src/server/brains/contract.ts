@@ -233,12 +233,12 @@ export function clasificarRespuesta(status: number): ResultadoEntrega {
     return {
       ok: false,
       reintentable: true,
-      detalle: `el cerebro respondió ${status}`,
+      detalle: `o cérebro respondeu ${status}`,
     };
   }
   return {
     ok: false,
     reintentable: false,
-    detalle: `el cerebro respondió ${status} (no se reintenta)`,
+    detalle: `o cérebro respondeu ${status} (sem nova tentativa)`,
   };
 }

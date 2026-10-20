@@ -82,17 +82,17 @@ export async function createTemplate(
 
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
-    throw new TemplateError("not_connected", "Conecta tu número de WhatsApp primero");
+    throw new TemplateError("not_connected", "Conecte seu número de WhatsApp primeiro");
   }
   if (creds.status === "reconnect_required") {
-    throw new TemplateError("reconnect_required", "Reconecta tu número antes de crear plantillas");
+    throw new TemplateError("reconnect_required", "Reconecte seu número antes de criar templates");
   }
 
   const name = input.name
     .toLowerCase()
     .replace(/\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
-  if (!name) throw new TemplateError("invalid", "Nombre de plantilla inválido");
+  if (!name) throw new TemplateError("invalid", "Nome de template inválido");
 
   // Meta pide un ejemplo por variable: si faltan, rechaza la plantilla. Uno
   // realista («Ana», «martes 14») ayuda a que la aprueben; si el dueño no
@@ -130,10 +130,10 @@ export async function createTemplate(
     if (err instanceof MetaApiError) {
       if (err.isAuthError) {
         await markReconnectRequired(organizationId);
-        throw new TemplateError("reconnect_required", "El token expiró: reconecta el número");
+        throw new TemplateError("reconnect_required", "O token expirou: reconecte o número");
       }
       if (err.status === 0 || err.status >= 500) {
-        throw new TemplateError("meta_unavailable", "Meta no está disponible ahora");
+        throw new TemplateError("meta_unavailable", "A Meta não está disponível agora");
       }
       throw new TemplateError("meta_error", err.message);
     }
@@ -192,7 +192,7 @@ function mapMetaStatus(
 export async function syncTemplates(organizationId: string): Promise<number> {
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
-    throw new TemplateError("not_connected", "Conecta tu número de WhatsApp primero");
+    throw new TemplateError("not_connected", "Conecte seu número de WhatsApp primeiro");
   }
 
   let data: {
@@ -206,9 +206,9 @@ export async function syncTemplates(organizationId: string): Promise<number> {
     if (err instanceof MetaApiError) {
       if (err.isAuthError) {
         await markReconnectRequired(organizationId);
-        throw new TemplateError("reconnect_required", "El token expiró: reconecta el número");
+        throw new TemplateError("reconnect_required", "O token expirou: reconecte o número");
       }
-      throw new TemplateError("meta_unavailable", "No se pudo consultar Meta");
+      throw new TemplateError("meta_unavailable", "Não foi possível consultar a Meta");
     }
     throw err;
   }
@@ -300,9 +300,9 @@ export async function sendTemplate(input: {
     )
     .limit(1);
   const template = templates[0];
-  if (!template) throw new TemplateError("not_found", "Plantilla no encontrada");
+  if (!template) throw new TemplateError("not_found", "Template não encontrado");
   if (template.status !== "approved") {
-    throw new TemplateError("invalid", "Solo se pueden enviar plantillas aprobadas");
+    throw new TemplateError("invalid", "Só é possível enviar templates aprovados");
   }
   // Meta exige EXACTAMENTE un parámetro por variable del cuerpo: si sobran o
   // falta alguno responde 132000 (plantilla y parámetros no coinciden).
@@ -316,8 +316,8 @@ export async function sendTemplate(input: {
     throw new TemplateError(
       "invalid",
       variableCount === 1
-        ? "La plantilla requiere el valor de {{1}}"
-        : `La plantilla requiere ${variableCount} valores: falta {{${n}}}`
+        ? "O template precisa do valor de {{1}}"
+        : `O template precisa de ${variableCount} valores: falta {{${n}}}`
     );
   }
 
@@ -337,19 +337,19 @@ export async function sendTemplate(input: {
     )
     .limit(1);
   const row = rows[0];
-  if (!row) throw new TemplateError("not_found", "Conversación no encontrada");
+  if (!row) throw new TemplateError("not_found", "Conversa não encontrada");
   if (row.conversation.isTest) {
     // Aserción dura del sandbox (FR-031)
     throw new SendError(
       "sandbox_violation",
-      "Conversación de prueba del Laboratorio: el envío real está prohibido"
+      "Conversa de teste do Laboratório: o envio real é proibido"
     );
   }
 
   const creds = await getCredentialsByOrg(input.organizationId);
-  if (!creds) throw new TemplateError("not_connected", "Sin número conectado");
+  if (!creds) throw new TemplateError("not_connected", "Nenhum número conectado");
   if (creds.status === "reconnect_required") {
-    throw new TemplateError("reconnect_required", "Reconecta el número");
+    throw new TemplateError("reconnect_required", "Reconecte o número");
   }
 
   // 003: destinatario = teléfono normalizado o BSUID.
@@ -362,7 +362,7 @@ export async function sendTemplate(input: {
   if (!destinatario) {
     throw new TemplateError(
       "meta_error",
-      "El contacto no tiene teléfono ni identidad de WhatsApp utilizable"
+      "O contato não tem telefone nem identidade de WhatsApp utilizável"
     );
   }
 

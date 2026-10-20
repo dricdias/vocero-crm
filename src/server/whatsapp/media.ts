@@ -77,12 +77,12 @@ export class MediaValidationError extends Error {
  */
 export function validateOutgoing(mime: string, sizeBytes: number) {
   if (!/^[\w.-]+\/[\w.+-]+$/.test(mime)) {
-    throw new MediaValidationError("unsupported_type", "Tipo de archivo no reconocido");
+    throw new MediaValidationError("unsupported_type", "Tipo de arquivo não reconhecido");
   }
   if (isForbiddenUploadMime(mime)) {
     throw new MediaValidationError(
       "unsupported_type",
-      "Los archivos HTML y SVG no se pueden enviar como adjunto: un navegador los abriría como página. Conviértelo a PDF o a imagen"
+      "Arquivos HTML e SVG não podem ser enviados como anexo: um navegador os abriria como página. Converta para PDF ou imagem"
     );
   }
   const kind = kindFromMime(mime);
@@ -90,7 +90,7 @@ export function validateOutgoing(mime: string, sizeBytes: number) {
   if (sizeBytes > limit.maxBytes) {
     throw new MediaValidationError(
       "too_large",
-      `El archivo excede el límite de ${limit.label}`
+      `O arquivo excede o limite de ${limit.label}`
     );
   }
   return kind;
@@ -167,11 +167,11 @@ export async function downloadGraphMedia(
     meta = await graphRequest<GraphMediaMeta>(waMediaId, { token });
   } catch (err) {
     const gone = err instanceof MetaApiError && err.status === 404;
-    throw new MediaFetchError("Meta no entregó la metadata del adjunto", gone);
+    throw new MediaFetchError("A Meta não entregou os metadados do anexo", gone);
   }
-  if (!meta.url) throw new MediaFetchError("Meta no entregó URL del adjunto");
+  if (!meta.url) throw new MediaFetchError("A Meta não entregou a URL do anexo");
   if (meta.file_size && meta.file_size > maxBytes) {
-    throw new MediaFetchError("El adjunto excede el límite de tamaño", true);
+    throw new MediaFetchError("O anexo excede o limite de tamanho", true);
   }
 
   let res: Response;
@@ -180,17 +180,17 @@ export async function downloadGraphMedia(
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch {
-    throw new MediaFetchError("No se pudo descargar el adjunto");
+    throw new MediaFetchError("Não foi possível baixar o anexo");
   }
   if (!res.ok) {
     throw new MediaFetchError(
-      `La descarga devolvió ${res.status}`,
+      `O download retornou ${res.status}`,
       res.status === 404 || res.status === 410
     );
   }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.byteLength > maxBytes) {
-    throw new MediaFetchError("El adjunto excede el límite de tamaño", true);
+    throw new MediaFetchError("O anexo excede o limite de tamanho", true);
   }
   return {
     data: buf,
@@ -284,7 +284,7 @@ export async function uploadGraphMedia(
       body: form,
     });
   } catch (cause) {
-    throw new MetaApiError("No se pudo contactar la API de Meta", {
+    throw new MetaApiError("Não foi possível contatar a API da Meta", {
       status: 0,
       details: cause,
     });
@@ -297,7 +297,7 @@ export async function uploadGraphMedia(
   if (!res.ok) {
     const err = (json as { error?: { message?: string; code?: number; type?: string } })
       ?.error;
-    throw new MetaApiError(err?.message ?? `Meta respondió ${res.status}`, {
+    throw new MetaApiError(err?.message ?? `A Meta respondeu ${res.status}`, {
       status: res.status,
       code: err?.code ?? null,
       type: err?.type ?? null,
@@ -306,7 +306,7 @@ export async function uploadGraphMedia(
   }
   const id = (json as { id?: string })?.id;
   if (!id) {
-    throw new MetaApiError("Meta no devolvió ID del media subido", {
+    throw new MetaApiError("A Meta não retornou o ID da mídia enviada", {
       status: res.status,
     });
   }

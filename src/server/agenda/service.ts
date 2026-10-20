@@ -124,7 +124,7 @@ export async function createSessionBooking(input: {
       )
       .limit(1);
     const conv = rows[0];
-    if (!conv) throw new BookingError("not_found", "Conversación no encontrada");
+    if (!conv) throw new BookingError("not_found", "Conversa não encontrada");
     isTest = conv.isTest;
     contactId = contactId ?? conv.contactId;
   }
@@ -373,7 +373,7 @@ export async function rescheduleForConversation(input: {
     )
     .limit(1);
   const conv = convRows[0];
-  if (!conv) throw new BookingError("not_found", "Conversación no encontrada");
+  if (!conv) throw new BookingError("not_found", "Conversa não encontrada");
 
   // Mismas reglas que al crear: el instante nuevo tiene que haberse ofrecido.
   const offers = await getOffers(input.organizationId, input.conversationId);

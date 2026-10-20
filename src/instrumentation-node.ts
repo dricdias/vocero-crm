@@ -40,7 +40,7 @@ export async function cleanupOrphanRuns(): Promise<void> {
       .update(schema.agentTestRun)
       .set({
         status: "failed",
-        error: "Interrumpida por un reinicio del servidor",
+        error: "Interrompida por uma reinicialização do servidor",
         finishedAt: new Date(),
       })
       .where(eq(schema.agentTestRun.status, "running"))

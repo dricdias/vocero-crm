@@ -34,7 +34,7 @@ export async function startRun(organizationId: string): Promise<string> {
   } catch (err) {
     // Violación del índice parcial UNIQUE → ya hay una corrida activa.
     if (isUniqueViolation(err)) {
-      throw new RunConflictError("Ya hay una corrida en curso");
+      throw new RunConflictError("Já há uma rodada em andamento");
     }
     throw err;
   }

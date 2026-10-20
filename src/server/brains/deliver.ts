@@ -304,8 +304,8 @@ export async function entregar(
       ok: false,
       reintentable: true,
       detalle: controller.signal.aborted
-        ? `el cerebro no contestó en ${Math.round((opts.timeoutMs ?? TIMEOUT_ENTREGA_MS) / 1000)} s`
-        : "no se pudo conectar con el cerebro",
+        ? `o cérebro não respondeu em ${Math.round((opts.timeoutMs ?? TIMEOUT_ENTREGA_MS) / 1000)} s`
+        : "não foi possível conectar ao cérebro",
     };
   } finally {
     clearTimeout(timer);

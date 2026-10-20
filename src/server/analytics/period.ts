@@ -27,7 +27,7 @@ export const DEFAULT_DAYS = 30;
 export const MAX_DAYS = 366;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const FORMATO = "Fechas inválidas: usa el formato AAAA-MM-DD";
+const FORMATO = "Datas inválidas: use o formato AAAA-MM-DD";
 
 /** Rango en instantes UTC + su equivalente del periodo anterior. */
 export type ResolvedPeriod = {
@@ -108,12 +108,12 @@ export function resolvePeriod(input: {
     throw new PeriodError(FORMATO);
   }
   if (daysApart(from, to) < 0) {
-    throw new PeriodError("La fecha inicial va antes que la final");
+    throw new PeriodError("A data inicial vem antes da final");
   }
 
   const days = daysApart(from, to) + 1;
   if (days > MAX_DAYS) {
-    throw new PeriodError(`El rango máximo es de ${MAX_DAYS} días`);
+    throw new PeriodError(`O intervalo máximo é de ${MAX_DAYS} dias`);
   }
 
   // El periodo anterior tiene la MISMA duración y termina justo antes: así la

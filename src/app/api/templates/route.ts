@@ -29,7 +29,7 @@ const createSchema = z.object({
   language: z
     .string()
     .trim()
-    .refine(isTemplateLanguage, "Meta no acepta plantillas en ese idioma"),
+    .refine(isTemplateLanguage, "A Meta não aceita templates nesse idioma"),
   category: z.enum(["UTILITY", "MARKETING"]),
   body: z.string().trim().min(1).max(1024),
   examples: z.array(z.string().trim().max(200)).max(10).optional(),

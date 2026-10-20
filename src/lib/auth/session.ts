@@ -9,7 +9,7 @@ export type SessionContext = {
 };
 
 export class UnauthorizedError extends Error {
-  constructor(message = "No autenticado") {
+  constructor(message = "Não autenticado") {
     super(message);
     this.name = "UnauthorizedError";
   }

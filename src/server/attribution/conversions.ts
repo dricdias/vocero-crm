@@ -29,9 +29,9 @@ export const QUALIFIED_EVENT = "QualifiedLead";
 export const PURCHASE_EVENT = "Purchase";
 
 const NO_CLID_REASON =
-  "sin ctwa_clid: la conversación no vino de un anuncio de WhatsApp";
+  "sem ctwa_clid: a conversa não veio de um anúncio de WhatsApp";
 const NOT_CONFIGURED_REASON =
-  "atribución no configurada: falta el dataset de Meta o la conexión de WhatsApp";
+  "atribuição não configurada: falta o dataset da Meta ou a conexão do WhatsApp";
 
 type EmitOutcome = "sent" | "failed" | "skipped" | "dedup" | "error";
 
