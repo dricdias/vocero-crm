@@ -1,3 +1,5 @@
+import { readAgiSupport } from "@/server/agi-support/reader";
+import { renderAgiSupport } from "@/server/agi-support/context";
 import { asc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { apiError } from "@/lib/api";
@@ -39,5 +41,5 @@ export async function GET(req: Request) {
     .where(eq(schema.kbEntry.organizationId, organizationId))
     .orderBy(asc(schema.kbEntry.createdAt));
 
-  return Response.json(serializeBotProfile(profile, kb));
+  return Response.json(serializeBotProfile(profile, kb, renderAgiSupport(await readAgiSupport())));
 }

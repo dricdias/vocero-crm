@@ -12,7 +12,7 @@ type KbEntry = typeof schema.kbEntry.$inferSelect;
  * no por este endpoint. `resources` nace vacío para que el shape del consumidor
  * no cambie cuando existan recursos alternativos reales.
  */
-export function serializeBotProfile(profile: AgentProfile, kb: KbEntry[]) {
+export function serializeBotProfile(profile: AgentProfile, kb: KbEntry[], supportKnowledge = "") {
   return {
     profile: {
       name: profile.name,
@@ -21,7 +21,7 @@ export function serializeBotProfile(profile: AgentProfile, kb: KbEntry[]) {
       escalationRules: profile.escalationRules ?? null,
       greeting: profile.greeting ?? null,
     },
-    kb: renderKb(kb),
+    kb: [renderKb(kb), supportKnowledge].filter(Boolean).join("\n\n"),
     resources: [] as { label: string; url: string }[],
   };
 }

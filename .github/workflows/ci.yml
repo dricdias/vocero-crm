@@ -42,15 +42,18 @@ jobs:
             channels: ""
             agenda: ""
             evolution: ""
+            agi_support: ""
           - name: completo
             channels: "whatsapp,instagram,messenger,tiktok"
             agenda: "on"
             evolution: "on"
+            agi_support: "on"
 
     env:
       CHANNELS: ${{ matrix.config.channels }}
       AGENDA: ${{ matrix.config.agenda }}
       EVOLUTION_GO: ${{ matrix.config.evolution }}
+      AGI_SUPPORT: ${{ matrix.config.agi_support }}
 
     steps:
       - uses: actions/checkout@v7

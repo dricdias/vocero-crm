@@ -848,3 +848,7 @@ para este repo.
 ### Evolution Go (fork)
 
 Con `EVOLUTION_GO=on`, Ajustes / WhatsApp permite conectar una instancia Evolution Go existente por QR, además de Meta. Ver [configuración, alcance y verificación](docs/evolution-go.md).
+
+### Central de Ajuda do Agi (opcional, fork pt-BR)
+
+O agente pode consultar os guias editoriais do Agi sem acessar contas ou conversas privadas. [Configuracao e limites](docs/agi-support.md).
