@@ -1,4 +1,5 @@
 import { chatCompletionsUrl, modelsUrl } from "@/lib/ai/presets";
+import { describeChatReadFailure, readChatBody } from "@/lib/ai/response";
 
 /**
  * Sonda del proveedor para Ajustes → IA: «Probar conexión» y «Traer modelos».
@@ -75,20 +76,19 @@ export async function probeProvider(input: {
         model: input.model,
         messages: [{ role: "user", content: "Responda apenas: ok" }],
         max_tokens: 5,
+        stream: false,
       }),
       signal: controller.signal,
     });
     if (res.ok) {
-      const json = (await res.json().catch(() => null)) as {
-        choices?: { message?: { content?: string } }[];
-      } | null;
-      if (!json?.choices?.length) {
+      const body = await res.text().catch(() => "");
+      const read = readChatBody(body, res.headers.get("content-type"));
+      if (!read.ok) {
         return {
           ok: false,
           code: "provider_error",
           httpStatus: res.status,
-          message:
-            "O provedor respondeu, mas não no formato da API da OpenAI (sem `choices`)",
+          message: describeChatReadFailure(read),
         };
       }
       return { ok: true, latencyMs: Date.now() - inicio };

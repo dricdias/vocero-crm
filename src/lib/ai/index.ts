@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import { chatCompletionsUrl } from "@/lib/ai/presets";
+import { readChatBody } from "@/lib/ai/response";
 import {
   resolveAiProvider,
   type AiProvider,
@@ -172,21 +173,21 @@ async function callProvider(
         Authorization: `Bearer ${provider.token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ model, messages }),
+      body: JSON.stringify({ model, messages, stream: false }),
       signal: controller.signal,
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new ProviderHttpError(res.status, text);
     }
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const content = json.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || content.length === 0) {
-      throw new Error("respuesta del proveedor sin contenido");
+    const read = readChatBody(
+      await res.text(),
+      res.headers.get("content-type")
+    );
+    if (!read.ok) {
+      throw new Error(`respuesta del proveedor sin contenido: ${read.detail}`);
     }
-    return content;
+    return read.content;
   } finally {
     clearTimeout(timer);
   }
