@@ -19,6 +19,9 @@ const STAGE_DOT: Record<string, string> = {
   Nuevo: "var(--text-3)",
   "En conversación": "var(--accent)",
   Interesado: "var(--warning)",
+  Novo: "var(--text-3)",
+  "Em conversa": "var(--accent)",
+  Interessado: "var(--warning)",
   Cliente: "var(--success)",
   Perdido: "var(--danger)",
 };
@@ -58,7 +61,7 @@ function InboxEmptyState({
     <EmptyState
       icon={Inbox}
       className="h-full"
-      title="Sin conversaciones todavía"
+      title="Nenhuma conversa ainda"
       description={emptyInboxDescription(channels.map((ch) => CHANNEL_LABEL[ch]))}
       action={
         !failed && (
@@ -69,7 +72,7 @@ function InboxEmptyState({
             onClick={() => void seed()}
           >
             <Sparkles className="h-4 w-4" strokeWidth={1.7} />
-            {seeding ? "Cargando demo…" : "Cargar datos de demostración"}
+            {seeding ? "Carregando demo…" : "Carregar dados de demonstração"}
           </Button>
         )
       }
@@ -142,10 +145,10 @@ export function ConversationList({
   // queda, para poder salir de él aunque el contador baje a cero.
   const filtros: { id: typeof filter; label: string; count: number }[] = [
     { id: "all", label: "Todas", count: inInbox.length },
-    { id: "unread", label: "No leídas", count: unreadCount },
+    { id: "unread", label: "Não lidas", count: unreadCount },
   ];
   if (deAnuncios.length > 0 || filter === "anuncios") {
-    filtros.push({ id: "anuncios", label: "Anuncios", count: deAnuncios.length });
+    filtros.push({ id: "anuncios", label: "Anúncios", count: deAnuncios.length });
   }
   // Con un solo canal encendido no hay bandejas que distinguir: ni marca en
   // los renglones ni filtro. La pantalla queda exactamente como antes de 014.
@@ -167,7 +170,7 @@ export function ConversationList({
     <div className="flex h-full flex-col">
       <header className="border-b px-4 pb-3 pt-4">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="text-[17px] font-bold tracking-tight">Bandeja</h2>
+          <h2 className="text-[17px] font-bold tracking-tight">Caixa de entrada</h2>
           <span className="font-mono text-[12px] text-text-3">{conversations.length}</span>
           {multiChannel && (
             <div className="ml-auto flex items-center gap-1">
@@ -180,8 +183,8 @@ export function ConversationList({
                     aria-pressed={on}
                     title={
                       on
-                        ? "Ver todas las bandejas"
-                        : `Ver solo ${CHANNEL_LABEL[ch]}`
+                        ? "Ver todas as caixas"
+                        : `Ver só ${CHANNEL_LABEL[ch]}`
                     }
                     className={cn(
                       "flex items-center gap-1 rounded-full border py-[3px] pl-[5px] pr-2 text-[11.5px] font-medium transition-colors",
@@ -207,8 +210,8 @@ export function ConversationList({
           <Search className="h-4 w-4 shrink-0 text-text-3" strokeWidth={1.7} />
           <input
             ref={inputRef}
-            placeholder="Buscar por nombre o teléfono…"
-            aria-label="Buscar conversación"
+            placeholder="Buscar por nome ou telefone…"
+            aria-label="Buscar conversa"
             defaultValue=""
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-transparent text-[13px] outline-none placeholder:text-text-3"
@@ -216,7 +219,7 @@ export function ConversationList({
           {query && (
             <button
               onClick={clearQuery}
-              aria-label="Limpiar búsqueda"
+              aria-label="Limpar busca"
               className="shrink-0 rounded-full p-0.5 text-text-3 hover:bg-accent hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -257,7 +260,7 @@ export function ConversationList({
           <select
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            aria-label="Filtrar por etapa del embudo"
+            aria-label="Filtrar por etapa do funil"
             className={cn(
               "ml-auto min-w-0 max-w-[42%] truncate rounded-full border px-2 py-[5px] text-[12.5px] font-semibold transition-colors",
               FOCO_SEPARADO,
@@ -266,7 +269,7 @@ export function ConversationList({
                 : "border-brand bg-brand text-brand-fg"
             )}
           >
-            <option value="all">Toda etapa</option>
+            <option value="all">Todas as etapas</option>
             {stages.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -278,7 +281,7 @@ export function ConversationList({
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <p className="p-6 text-center text-xs text-text-3">Cargando…</p>
+          <p className="p-6 text-center text-xs text-text-3">Carregando…</p>
         ) : conversations.length === 0 ? (
           <InboxEmptyState onSeeded={onSeeded} channels={channels} />
         ) : visible.length === 0 ? (
@@ -289,8 +292,8 @@ export function ConversationList({
             filter === "all" &&
             stage === "all" &&
             !conversations.some((c) => c.channel === inbox)
-              ? `Nadie ha escrito por ${CHANNEL_LABEL[inbox]} todavía.`
-              : "Sin resultados para este filtro."}
+              ? `Ninguém escreveu por ${CHANNEL_LABEL[inbox]} ainda.`
+              : "Nenhum resultado para este filtro."}
           </p>
         ) : (
           <ul>
@@ -368,7 +371,7 @@ export function ConversationList({
                         {c.handoffAt && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-warning-soft bg-warning-tint px-2 py-0.5 text-[11px] text-warning-text">
                             <UserRound className="h-3 w-3" strokeWidth={1.7} />
-                            Atención humana
+                            Atendimento humano
                           </span>
                         )}
                         {c.anuncio && (

@@ -55,7 +55,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
       <span className="flex items-start gap-1.5">
         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={1.7} />
         <span className="min-w-0">
-          <span className="block font-medium">{loc.name ?? "Ubicación"}</span>
+          <span className="block font-medium">{loc.name ?? "Localização"}</span>
           {loc.address && (
             <span className="block text-[12.5px] text-text-3">{loc.address}</span>
           )}
@@ -85,7 +85,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
             const name =
               typeof c.name === "string"
                 ? c.name
-                : c.name?.formatted_name ?? c.name?.first_name ?? "Contacto";
+                : c.name?.formatted_name ?? c.name?.first_name ?? "Contato";
             const phone = c.phones?.[0]?.phone ?? c.phone ?? null;
             return (
               <span key={i} className="flex items-center gap-1.5">
@@ -100,7 +100,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
             );
           })
         ) : (
-          <span className="text-text-3">Contacto compartido</span>
+          <span className="text-text-3">Contato compartilhado</span>
         )}
       </span>
     );
@@ -112,7 +112,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
         <Paperclip className="h-3.5 w-3.5" strokeWidth={1.7} />
         {mediaLabel(media.kind)}
         {media.fetchStatus === "failed"
-          ? " — contenido no disponible"
+          ? " — conteúdo indisponível"
           : " — descargando…"}
       </span>
     );
@@ -120,7 +120,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
 
   if (media.kind === "image" || media.kind === "sticker") {
     return (
-      <a href={src} target="_blank" rel="noreferrer noopener" title="Ver completa">
+      <a href={src} target="_blank" rel="noreferrer noopener" title="Ver inteira">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
@@ -169,13 +169,13 @@ function dayLabel(iso: string): string {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date(today.getTime() - 86400000);
-  if (d.toDateString() === today.toDateString()) return "Hoy";
-  if (d.toDateString() === yesterday.toDateString()) return "Ayer";
-  return d.toLocaleDateString("es-MX", { day: "numeric", month: "long" });
+  if (d.toDateString() === today.toDateString()) return "Hoje";
+  if (d.toDateString() === yesterday.toDateString()) return "Ontem";
+  return d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 }
 
 function bubbleTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("es-MX", {
+  return new Date(iso).toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -258,7 +258,7 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                   {m.aiGenerated && (
                     <span
                       className="inline-flex items-center gap-0.5 text-[10px] font-medium text-brand-ink"
-                      title="Respuesta generada por IA"
+                      title="Resposta gerada por IA"
                     >
                       <Sparkles className="h-3 w-3" strokeWidth={1.7} /> IA
                     </span>
@@ -266,7 +266,7 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                   {m.origin === "manual" && (
                     <span
                       className="inline-flex items-center gap-0.5 text-[10px] font-medium text-text-3"
-                      title="Enviado a mano desde la app de WhatsApp Business"
+                      title="Enviado manualmente pelo app WhatsApp Business"
                     >
                       <Smartphone className="h-3 w-3" strokeWidth={1.7} /> Celular
                     </span>
@@ -285,8 +285,8 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                       strokeWidth={1.8}
                     />
                     <span>
-                      <span className="font-semibold">No se entregó.</span>{" "}
-                      {m.error ?? "Meta no informó el motivo."}
+                      <span className="font-semibold">Não foi entregue.</span>{" "}
+                      {m.error ?? "A Meta não informou o motivo."}
                     </span>
                   </p>
                 )}

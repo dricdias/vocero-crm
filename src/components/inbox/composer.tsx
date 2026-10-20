@@ -148,7 +148,7 @@ export function Composer({
   async function submitLocation() {
     const coords = parseCoords(coordsRaw);
     if (!coords) {
-      setError("Coordenadas inválidas — pega «lat, long» o un enlace de Google Maps");
+      setError("Coordenadas inválidas — cole «lat, long» ou um link do Google Maps");
       return;
     }
     setSending(true);
@@ -174,7 +174,7 @@ export function Composer({
 
   async function submitContact() {
     if (!contactName.trim() || contactPhone.trim().length < 5) {
-      setError("El contacto necesita nombre y teléfono");
+      setError("O contato precisa de nome e telefone");
       return;
     }
     setSending(true);
@@ -206,11 +206,11 @@ export function Composer({
         <div className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
           <div>
-            <p className="font-medium">La ventana de 48 horas de TikTok está cerrada.</p>
+            <p className="font-medium">A janela de 48 horas do TikTok está fechada.</p>
             <p className="opacity-80">
-              TikTok solo deja contestar dentro de las 48 horas siguientes al
-              último mensaje del cliente, y no permite reabrir la conversación.
-              Podrás escribirle cuando vuelva a mandar un mensaje.
+              O TikTok só deixa responder dentro das 48 horas seguintes à
+              última mensagem do cliente, e não permite reabrir a conversa.
+              Você poderá escrever quando a pessoa mandar uma nova mensagem.
             </p>
           </div>
         </div>
@@ -232,11 +232,11 @@ export function Composer({
         >
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
           <div>
-            <p className="font-medium">La ventana de atención de {canal} está cerrada.</p>
+            <p className="font-medium">A janela de atendimento do {canal} está fechada.</p>
             <p className="opacity-80">
-              {canal} deja contestar hasta 7 días después del último mensaje
-              del cliente, y no tiene plantillas para reabrir la conversación.
-              Podrás escribirle cuando vuelva a mandar un mensaje.
+              O {canal} deixa responder até 7 dias depois da última mensagem
+              do cliente, e não tem templates para reabrir a conversa.
+              Você poderá escrever quando a pessoa mandar uma nova mensagem.
             </p>
           </div>
         </div>
@@ -250,11 +250,11 @@ export function Composer({
         <div className="mb-3 flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
           <div>
-            <p className="font-medium">La ventana de 24 horas está cerrada.</p>
+            <p className="font-medium">A janela de 24 horas está fechada.</p>
             <p className="opacity-80">
-              WhatsApp solo permite texto libre dentro de las 24 horas
-              siguientes al último mensaje del cliente. Para retomar la
-              conversación, envía una plantilla aprobada.
+              O WhatsApp só permite texto livre dentro das 24 horas
+              seguintes à última mensagem do cliente. Para retomar a
+              conversa, envie um template aprovado.
             </p>
           </div>
         </div>
@@ -276,9 +276,9 @@ export function Composer({
         >
           <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.7} />
           <p>
-            <span className="font-semibold">Solo puede contestar una persona.</span>{" "}
-            Pasaron más de 24 horas desde el último mensaje del cliente: {canal}{" "}
-            te deja responder a ti hasta 7 días, al agente ya no.
+            <span className="font-semibold">Só uma pessoa pode responder.</span>{" "}
+            Passaram mais de 24 horas desde a última mensagem do cliente: o {canal}{" "}
+            deixa você responder por até 7 dias, mas o agente não.
           </p>
         </div>
       )}
@@ -317,12 +317,12 @@ export function Composer({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{file.name}</p>
             <p className="text-xs text-text-3">
-              {formatBytes(file.size)} · el texto de abajo va como pie del adjunto
+              {formatBytes(file.size)} · o texto abaixo vai como legenda do anexo
             </p>
           </div>
           <button
             onClick={() => pickFile(null)}
-            aria-label="Quitar adjunto"
+            aria-label="Remover anexo"
             className="rounded p-1 text-text-3 hover:bg-secondary hover:text-foreground"
           >
             <X className="h-4 w-4" strokeWidth={1.7} />
@@ -333,7 +333,7 @@ export function Composer({
       {panel === "location" && (
         <div className="mb-2.5 flex flex-wrap items-end gap-2 rounded-md border bg-subtle p-2.5">
           <label className="min-w-0 flex-1 text-xs text-text-2">
-            Coordenadas o enlace de Google Maps
+            Coordenadas ou link do Google Maps
             <input
               value={coordsRaw}
               onChange={(e) => setCoordsRaw(e.target.value)}
@@ -342,11 +342,11 @@ export function Composer({
             />
           </label>
           <label className="min-w-0 flex-1 text-xs text-text-2">
-            Nombre del lugar (opcional)
+            Nome do lugar (opcional)
             <input
               value={placeName}
               onChange={(e) => setPlaceName(e.target.value)}
-              placeholder="Oficina AISHIA"
+              placeholder="Escritório Central"
               className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
             />
           </label>
@@ -355,7 +355,7 @@ export function Composer({
             disabled={sending}
             className="rounded-full bg-brand px-3.5 py-1.5 text-sm font-semibold text-brand-fg shadow-sm hover:bg-brand-hover disabled:opacity-40"
           >
-            Enviar ubicación
+            Enviar localização
           </button>
           <button
             onClick={() => setPanel(null)}
@@ -370,20 +370,20 @@ export function Composer({
       {panel === "contact" && (
         <div className="mb-2.5 flex flex-wrap items-end gap-2 rounded-md border bg-subtle p-2.5">
           <label className="min-w-0 flex-1 text-xs text-text-2">
-            Nombre
+            Nome
             <input
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
-              placeholder="Xavier Pérez"
+              placeholder="João Silva"
               className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
             />
           </label>
           <label className="min-w-0 flex-1 text-xs text-text-2">
-            Teléfono
+            Telefone
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="+52 462 123 4567"
+              placeholder="+55 11 91234-5678"
               className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
             />
           </label>
@@ -418,8 +418,8 @@ export function Composer({
             {conversation.composer.media && (
               <button
                 onClick={() => fileRef.current?.click()}
-                aria-label="Adjuntar archivo"
-                title="Adjuntar imagen, video, audio o documento"
+                aria-label="Anexar arquivo"
+                title="Anexar imagem, vídeo, áudio ou documento"
                 className="rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Paperclip className="h-[18px] w-[18px]" strokeWidth={1.7} />
@@ -429,8 +429,8 @@ export function Composer({
               <>
                 <button
                   onClick={() => setPanel(panel === "location" ? null : "location")}
-                  aria-label="Enviar ubicación"
-                  title="Enviar ubicación"
+                  aria-label="Enviar localização"
+                  title="Enviar localização"
                   className={cn(
                     "rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground",
                     panel === "location" && "bg-secondary text-brand"
@@ -440,8 +440,8 @@ export function Composer({
                 </button>
                 <button
                   onClick={() => setPanel(panel === "contact" ? null : "contact")}
-                  aria-label="Compartir contacto"
-                  title="Compartir contacto"
+                  aria-label="Compartilhar contato"
+                  title="Compartilhar contato"
                   className={cn(
                     "rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground",
                     panel === "contact" && "bg-secondary text-brand"
@@ -455,7 +455,7 @@ export function Composer({
         )}
         <textarea
           ref={taRef}
-          placeholder={file ? "Pie del adjunto (opcional)…" : "Escribe una respuesta…"}
+          placeholder={file ? "Legenda do anexo (opcional)…" : "Escreva uma resposta…"}
           value={text}
           rows={1}
           onChange={(e) => {
@@ -486,8 +486,8 @@ export function Composer({
         {error ? <p className="text-xs text-destructive">{error}</p> : <span />}
         <p className="font-mono text-[10.5px] tracking-[0.04em] text-text-3">
           {soloPersona
-            ? `Ventana humana · quedan ${formatRemainingLong(human!.remainingMs)}`
-            : `Ventana abierta · quedan ${formatRemaining(conversation.windowRemainingMs)}`}
+            ? `Janela humana · restam ${formatRemainingLong(human!.remainingMs)}`
+            : `Janela aberta · restam ${formatRemaining(conversation.windowRemainingMs)}`}
         </p>
       </div>
     </div>
