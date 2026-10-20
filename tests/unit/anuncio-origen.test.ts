@@ -396,9 +396,9 @@ describe("fuente y etiquetas", () => {
     expect(cuentaComoAnuncio({ sourceType: "ad" })).toBe(true);
     expect(cuentaComoAnuncio({ sourceType: null })).toBe(true);
     expect(cuentaComoAnuncio(null)).toBe(false);
-    expect(etiquetaDeOrigen("post")).toBe("Publicación");
-    expect(etiquetaDeOrigen("ad")).toBe("Anuncio");
-    expect(titularDeOrigen(null, "ad")).toBe("Anuncio sin título");
+    expect(etiquetaDeOrigen("post")).toBe("Publicação");
+    expect(etiquetaDeOrigen("ad")).toBe("Anúncio");
+    expect(titularDeOrigen(null, "ad")).toBe("Anúncio sem título");
     expect(titularDeOrigen("Promo", "post")).toBe("Promo");
   });
 });

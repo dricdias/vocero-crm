@@ -25,21 +25,21 @@ describe("lo que el compositor ofrece por canal (D1)", () => {
 describe("la bandeja vacía nombra los canales encendidos (D2)", () => {
   it("une los canales como se dice", () => {
     expect(channelList(["WhatsApp"])).toBe("WhatsApp");
-    expect(channelList(["WhatsApp", "Instagram"])).toBe("WhatsApp o Instagram");
+    expect(channelList(["WhatsApp", "Instagram"])).toBe("WhatsApp ou Instagram");
     expect(channelList(["WhatsApp", "Instagram", "Messenger"])).toBe(
-      "WhatsApp, Instagram o Messenger"
+      "WhatsApp, Instagram ou Messenger"
     );
   });
 
   it("con solo WhatsApp, el texto de siempre", () => {
     expect(emptyInboxDescription(["WhatsApp"])).toBe(
-      "Cuando alguien escriba a tu número de WhatsApp, su conversación aparecerá aquí en tiempo real."
+      "Quando alguém escrever para o seu número de WhatsApp, a conversa vai aparecer aqui em tempo real."
     );
   });
 
   it("con varios canales, los nombra todos", () => {
     expect(emptyInboxDescription(["WhatsApp", "Instagram", "Messenger", "TikTok"])).toBe(
-      "Cuando alguien te escriba por WhatsApp, Instagram, Messenger o TikTok, su conversación aparecerá aquí en tiempo real."
+      "Quando alguém te escrever por WhatsApp, Instagram, Messenger ou TikTok, a conversa vai aparecer aqui em tempo real."
     );
   });
 });

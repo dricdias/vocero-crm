@@ -18,16 +18,16 @@ describe("idiomas de plantilla", () => {
     expect([...codes].sort()).toEqual([...META].sort());
   });
 
-  it("el español va primero y el de México es el predeterminado", () => {
+  it("el portugués de Brasil va primero y es el predeterminado", () => {
     expect(TEMPLATE_LANGUAGES[0]?.code).toBe(DEFAULT_TEMPLATE_LANGUAGE);
-    expect(DEFAULT_TEMPLATE_LANGUAGE).toBe("es_MX");
-    expect(TEMPLATE_LANGUAGE_GROUPS[0]?.id).toBe("es");
+    expect(DEFAULT_TEMPLATE_LANGUAGE).toBe("pt_BR");
+    expect(TEMPLATE_LANGUAGE_GROUPS[0]?.id).toBe("pt-en");
   });
 
   it("valida y nombra", () => {
     expect(isTemplateLanguage("es_CO")).toBe(true);
     expect(isTemplateLanguage("es_LA")).toBe(false);
-    expect(templateLanguageName("pt_BR")).toBe("Portugués (Brasil)");
+    expect(templateLanguageName("pt_BR")).toBe("Português (Brasil)");
     // Un código que llegue sincronizado de Meta y no conozcamos se muestra tal cual.
     expect(templateLanguageName("xx_YY")).toBe("xx_YY");
   });
@@ -46,6 +46,6 @@ describe("templateWarnings", () => {
 
   it("avisa de variables juntas y de mucho hueco para poco texto", () => {
     expect(templateWarnings("Hola, tu cita es {{1}} {{2}} en nuestra clínica de siempre").some((w) => /juntas/.test(w))).toBe(true);
-    expect(templateWarnings("Hola {{1}} y {{2}} y {{3}} ok").some((w) => /muchas variables/.test(w))).toBe(true);
+    expect(templateWarnings("Hola {{1}} y {{2}} y {{3}} ok").some((w) => /variáveis demais/.test(w))).toBe(true);
   });
 });

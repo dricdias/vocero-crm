@@ -30,7 +30,7 @@ describe("countVariables / validateBodyVariables (FR-050)", () => {
 
   it("numeración con salto → inválida", () => {
     expect(validateBodyVariables("Hola {{1}}, tu pedido {{3}} llegó")).toMatch(
-      /sin saltos/
+      /sem pular/
     );
   });
 
@@ -40,7 +40,7 @@ describe("countVariables / validateBodyVariables (FR-050)", () => {
 
   it("más de 10 variables → inválida", () => {
     const body = Array.from({ length: 11 }, (_, i) => `x {{${i + 1}}}`).join(" ");
-    expect(validateBodyVariables(body)).toMatch(/hasta 10/);
+    expect(validateBodyVariables(body)).toMatch(/até 10/);
   });
 });
 

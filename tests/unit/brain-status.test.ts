@@ -212,10 +212,10 @@ describe("textos compartidos", () => {
   it("«Nea» solo si su /health habla el contrato de Nea", () => {
     const conNea = status({ botKeyConfigured: true, health: EN_LINEA });
     expect(externalBrainName(conNea)).toBe("Nea");
-    expect(externalAnswerLabel(conNea)).toBe("Responde tu cerebro externo (Nea)");
+    expect(externalAnswerLabel(conNea)).toBe("Quem responde é seu cérebro externo (Nea)");
     const sinNombre = status({ botKeyConfigured: true, lastSeenAt: HACE_3_MIN });
     expect(externalBrainName(sinNombre)).toBeNull();
-    expect(externalAnswerLabel(sinNombre)).toBe("Responde tu cerebro externo");
+    expect(externalAnswerLabel(sinNombre)).toBe("Quem responde é seu cérebro externo");
   });
 
   it("«responde tu cerebro externo» solo si no está caído; el aviso doble no espera a eso", () => {
@@ -246,11 +246,11 @@ describe("textos compartidos", () => {
 
   it("haceCuanto", () => {
     const t = NOW.getTime();
-    expect(haceCuanto(new Date(t - 20_000).toISOString(), t)).toBe("hace unos segundos");
-    expect(haceCuanto(new Date(t + 60_000).toISOString(), t)).toBe("hace unos segundos");
-    expect(haceCuanto(HACE_3_MIN.toISOString(), t)).toBe("hace 3 min");
-    expect(haceCuanto(new Date(t - 2 * 3_600_000).toISOString(), t)).toBe("hace 2 h");
-    expect(haceCuanto(HACE_25_H.toISOString(), t)).toBe("hace 1 día");
+    expect(haceCuanto(new Date(t - 20_000).toISOString(), t)).toBe("há alguns segundos");
+    expect(haceCuanto(new Date(t + 60_000).toISOString(), t)).toBe("há alguns segundos");
+    expect(haceCuanto(HACE_3_MIN.toISOString(), t)).toBe("há 3 min");
+    expect(haceCuanto(new Date(t - 2 * 3_600_000).toISOString(), t)).toBe("há 2 h");
+    expect(haceCuanto(HACE_25_H.toISOString(), t)).toBe("há 1 dia");
   });
 });
 

@@ -39,7 +39,7 @@ describe("validateOutgoing (límites de la Cloud API)", () => {
       expect(() => validateOutgoing(mime, 1024), mime).toThrowError(
         expect.objectContaining({
           code: "unsupported_type",
-          message: expect.stringContaining("HTML y SVG"),
+          message: expect.stringContaining("HTML e SVG"),
         })
       );
     }

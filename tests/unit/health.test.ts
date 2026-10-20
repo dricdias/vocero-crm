@@ -158,7 +158,7 @@ describe("GET /api/health", () => {
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({
       ok: false,
-      error: { code: "db_unavailable", message: "Base de datos no disponible" },
+      error: { code: "db_unavailable", message: "Banco de dados indisponível" },
     });
   });
 });

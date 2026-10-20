@@ -12,15 +12,15 @@ import { AvisoIaBanner } from "@/components/avisos/aviso-ia";
 describe("Ajustes → IA", () => {
   it("ofrece la guía plegada, enlaza saldo y llaves, y pide la llave como contraseña", () => {
     const html = renderToStaticMarkup(React.createElement(AiClient));
-    expect(html).toContain("¿Cómo consigo mi llave?");
+    expect(html).toContain("Como consigo minha chave?");
     expect(html).not.toContain("<details open");
     expect(html).toContain('href="https://openrouter.ai/settings/credits"');
     expect(html).toContain('href="https://openrouter.ai/settings/keys"');
     expect(html).toContain('type="password"');
-    expect(html).toContain("Probar conexión");
-    expect(html).toContain("Traer modelos");
+    expect(html).toContain("Testar conexão");
+    expect(html).toContain("Buscar modelos");
     expect(html).toContain("OpenRouter");
-    expect(html).toContain("Otro compatible con OpenAI");
+    expect(html).toContain("Outro compatível com OpenAI");
     // El respaldo del entorno se explica sin mandar a editar el .env.
     expect(html).toContain("OPENROUTER_API_TOKEN");
     expect(html).not.toContain("reinic");

@@ -146,7 +146,7 @@ describe("la máquina de estados la dicta quien cobra", () => {
         motivo === "sin_configurar"
           ? { activa: false as const, motivo }
           : { activa: false as const, motivo, last4: "1234", desde: null };
-      expect(mensajeDeEstado(estado)).toContain("Ajustes → IA");
+      expect(mensajeDeEstado(estado)).toContain("Configurações → IA");
     }
   });
 });

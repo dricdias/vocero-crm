@@ -18,10 +18,10 @@ const labels = (groups: { items: { label: string }[] }[]) =>
 describe("barra lateral agrupada", () => {
   it("con todo apagado y como miembro: Trabajo, Agente y Resultados", () => {
     const groups = appNavGroups({ role: "member" });
-    expect(groups.map((g) => g.title)).toEqual(["Trabajo", "Agente", undefined]);
+    expect(groups.map((g) => g.title)).toEqual(["Trabalho", "Agente", undefined]);
     expect(labels(groups)).toEqual([
-      ["Bandeja", "Pipeline", "Contactos"],
-      ["Agente", "Laboratorio"],
+      ["Caixa de entrada", "Funil", "Contatos"],
+      ["Agente", "Laboratório"],
       ["Resultados"],
     ]);
   });
@@ -29,10 +29,10 @@ describe("barra lateral agrupada", () => {
   it("AGENDA añade Citas al final de Trabajo", () => {
     const [trabajo] = appNavGroups({ agenda: true, role: "member" });
     expect(trabajo!.items.map((i) => i.label)).toEqual([
-      "Bandeja",
-      "Pipeline",
-      "Contactos",
-      "Citas",
+      "Caixa de entrada",
+      "Funil",
+      "Contatos",
+      "Agendamentos",
     ]);
     expect(trabajo!.items.at(-1)!.href).toBe("/bookings");
   });
@@ -40,7 +40,7 @@ describe("barra lateral agrupada", () => {
   it("la guía de inicio abre el grupo Agente solo para quien configura", () => {
     for (const role of ["owner", "admin"]) {
       const agente = appNavGroups({ role })[1]!;
-      expect(agente.items[0]).toMatchObject({ href: "/onboarding", label: "Guía de inicio" });
+      expect(agente.items[0]).toMatchObject({ href: "/onboarding", label: "Guia de início" });
     }
     for (const role of ["member", null, undefined]) {
       const agente = appNavGroups({ role })[1]!;
@@ -72,38 +72,38 @@ describe("ajustes en tres secciones", () => {
 
   it("con todo apagado: Canales, Agente y Negocio con lo mínimo", () => {
     const sections = settingsSections({});
-    expect(sections.map((s) => s.title)).toEqual(["Canales", "Agente", "Negocio"]);
+    expect(sections.map((s) => s.title)).toEqual(["Canais", "Agente", "Negócio"]);
     expect(links(sections)).toEqual({
-      Canales: ["WhatsApp"],
+      Canais: ["WhatsApp"],
       Agente: ["IA"],
-      Negocio: ["Marca", "Plantillas", "Equipo"],
+      "Negócio": ["Marca", "Templates", "Equipe"],
     });
   });
 
   it("cada bandera añade su enlace en su sección y en ninguna otra", () => {
-    // 023: con un canal social, "Estado" abre la sección.
+    // 023: con un canal social, "Status" abre la sección.
     expect(links(settingsSections({ messenger: true }))).toEqual({
-      Canales: ["Estado", "WhatsApp", "Messenger"],
+      Canais: ["Status", "WhatsApp", "Messenger"],
       Agente: ["IA"],
-      Negocio: ["Marca", "Plantillas", "Equipo"],
+      "Negócio": ["Marca", "Templates", "Equipe"],
     });
-    expect(links(settingsSections({ instagram: true })).Canales).toEqual([
-      "Estado",
+    expect(links(settingsSections({ instagram: true })).Canais).toEqual([
+      "Status",
       "WhatsApp",
       "Instagram",
     ]);
     expect(
-      links(settingsSections({ instagram: true, messenger: true, tiktok: true })).Canales
-    ).toEqual(["Estado", "WhatsApp", "Instagram", "Messenger", "TikTok"]);
+      links(settingsSections({ instagram: true, messenger: true, tiktok: true })).Canais
+    ).toEqual(["Status", "WhatsApp", "Instagram", "Messenger", "TikTok"]);
     expect(links(settingsSections({ agenda: true }))).toEqual({
-      Canales: ["WhatsApp"],
+      Canais: ["WhatsApp"],
       Agente: ["IA", "Agenda"],
-      Negocio: ["Marca", "Plantillas", "Equipo"],
+      "Negócio": ["Marca", "Templates", "Equipe"],
     });
     expect(links(settingsSections({ atribucion: true }))).toEqual({
-      Canales: ["WhatsApp"],
+      Canais: ["WhatsApp"],
       Agente: ["IA"],
-      Negocio: ["Marca", "Plantillas", "Equipo", "Anuncios"],
+      "Negócio": ["Marca", "Templates", "Equipe", "Anúncios"],
     });
   });
 

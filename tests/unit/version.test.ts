@@ -136,7 +136,7 @@ describe("un commit que no salió del build se presenta como NO verificado", () 
     const m = await import("@/lib/version");
     const titulo = m.versionTitle("Clínica Sur", m.resolveCommit());
     expect(titulo).toContain("52c5034");
-    expect(titulo).toContain("no viene del build");
+    expect(titulo).toContain("não vem do build");
     expect(titulo).toContain("build arg SOURCE_COMMIT");
     // White-label también aquí: el nombre es el de la marca.
     expect(titulo.startsWith("Clínica Sur 1.3.0")).toBe(true);
@@ -148,7 +148,7 @@ describe("un commit que no salió del build se presenta como NO verificado", () 
     process.env.NEXT_PUBLIC_BUILD_COMMIT = "73e93c1bbbb";
     const m = await import("@/lib/version");
     expect(m.versionTitle("Clínica Sur", m.resolveCommit())).toBe(
-      "Clínica Sur 1.3.0, construido del commit 73e93c1"
+      "Clínica Sur 1.3.0, construído a partir do commit 73e93c1"
     );
     expect(m.versionTitle("Clínica Sur", { commit: "", verified: false })).toBe(
       "Clínica Sur 1.3.0"

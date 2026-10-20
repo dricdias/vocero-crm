@@ -238,7 +238,7 @@ describe("entregar — el POST firmado", () => {
     expect(r).toEqual({
       ok: false,
       reintentable: true,
-      detalle: "no se pudo conectar con el cerebro",
+      detalle: "não foi possível conectar ao cérebro",
     });
   });
 
@@ -249,6 +249,6 @@ describe("entregar — el POST firmado", () => {
       })) as typeof fetch;
     const r = await entregar(evento(), destino, { fetchImpl, timeoutMs: 30 });
     expect(r).toMatchObject({ ok: false, reintentable: true });
-    expect((r as { detalle: string }).detalle).toContain("no contestó");
+    expect((r as { detalle: string }).detalle).toContain("não respondeu");
   });
 });

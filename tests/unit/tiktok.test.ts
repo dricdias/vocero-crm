@@ -106,7 +106,7 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(windowMsFor("tiktok")).toBe(48 * HORA);
     // Al operador se le dice qué pasa Y qué lo arregla.
     expect(windowClosedMessage("tiktok")).toContain("TikTok");
-    expect(windowClosedMessage("tiktok")).toContain("vuelva a escribir");
+    expect(windowClosedMessage("tiktok")).toContain("escrever de novo");
   });
 
   it("los demás canales conservan su ventana de 24 h y no ganan topes", () => {
@@ -119,10 +119,10 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(capabilitiesFor("messenger").maxTextChars).toBeNull();
     // Sus textos de siempre no cambian.
     expect(windowClosedMessage("whatsapp")).toBe(
-      "La ventana de 24 horas está cerrada; usa una plantilla aprobada"
+      "A janela de 24 horas está fechada; use um template aprovado"
     );
     // 024: la extensión humana tiene tope (7 días) y su propio mensaje.
-    expect(windowClosedMessage("messenger")).toContain("7 días");
+    expect(windowClosedMessage("messenger")).toContain("7 dias");
   });
 
   it("el texto se mide en CARACTERES: 6,000, y un emoji cuenta uno", () => {
@@ -153,8 +153,8 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(cabeOtroMensaje("tiktok", 11)).toBe(false);
     // Un canal sin tope siempre deja pasar.
     expect(cabeOtroMensaje("whatsapp", 500)).toBe(true);
-    expect(outboundLimitMessage("tiktok")).toContain("10 mensajes");
-    expect(outboundLimitMessage("tiktok")).toContain("vuelva a escribir");
+    expect(outboundLimitMessage("tiktok")).toContain("10 mensagens");
+    expect(outboundLimitMessage("tiktok")).toContain("escrever de novo");
   });
 });
 

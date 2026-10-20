@@ -97,8 +97,8 @@ describe("motivosDePerdida", () => {
       desenlace({ leadId: "d", kind: "won" }),
     ]);
     expect(m).toEqual([
-      { reason: "precio", label: "Le pareció caro", count: 2 },
-      { reason: "sin_registro", label: "Sin motivo registrado", count: 1 },
+      { reason: "precio", label: "Achou caro", count: 2 },
+      { reason: "sin_registro", label: "Sem motivo registrado", count: 1 },
     ]);
   });
 });
@@ -156,8 +156,8 @@ describe("unirFuentes", () => {
       ["referido", 0, 1, 1],
       ["desconocida", 3, 0, 0],
     ]);
-    expect(filas[0]!.label).toBe("Anuncio");
-    expect(filas.at(-1)!.label).toBe("Sin identificar");
+    expect(filas[0]!.label).toBe("Anúncio");
+    expect(filas.at(-1)!.label).toBe("Não identificada");
     // La tasa de la fila es ventas entre prospectos, calculada en el servidor.
     expect(filas[0]!.winRate).toEqual({ value: 25, sample: 4, reliable: false });
     expect(filas.at(-1)!.winRate.value).toBeNull();
@@ -234,6 +234,6 @@ describe("escala y etiquetas de la serie", () => {
 
   it("fechas cortas en español", () => {
     expect(etiqueta("2026-08-13")).toBe("13 ago");
-    expect(etiqueta("2026-01")).toBe("ene 26");
+    expect(etiqueta("2026-01")).toBe("jan 26");
   });
 });

@@ -13,9 +13,9 @@ describe("describeSendError (fallo real del 2026-08-05)", () => {
 
   it("códigos conocidos de plantillas y ventana", () => {
     expect(describeSendError(131047)).toMatch(/24 h/);
-    expect(describeSendError(132001)).toMatch(/plantilla/i);
-    expect(describeSendError(132015)).toMatch(/pausada/i);
-    expect(describeSendError(131026)).toMatch(/no puede recibir/i);
+    expect(describeSendError(132001)).toMatch(/template/i);
+    expect(describeSendError(132015)).toMatch(/pausado/i);
+    expect(describeSendError(131026)).toMatch(/não pode receber/i);
   });
 
   it("código desconocido → conserva el texto crudo de Meta y el número", () => {
@@ -25,8 +25,8 @@ describe("describeSendError (fallo real del 2026-08-05)", () => {
   });
 
   it("sin código ni texto → mensaje honesto, nunca vacío", () => {
-    expect(describeSendError(null)).toBe("Meta rechazó el envío");
-    expect(describeSendError(undefined, "   ")).toBe("Meta rechazó el envío");
+    expect(describeSendError(null)).toBe("A Meta rejeitou o envio");
+    expect(describeSendError(undefined, "   ")).toBe("A Meta rejeitou o envio");
   });
 
   it("sin código pero con texto → usa el texto tal cual", () => {
