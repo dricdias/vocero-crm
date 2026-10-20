@@ -33,33 +33,33 @@ export function AdsSection({
   return (
     <Section
       id="origen"
-      title="Origen y anuncios"
-      hint="Por dónde llegan las conversaciones y qué anuncio trae gente que compra."
+      title="Origem e anúncios"
+      hint="Por onde chegam as conversas e qual anúncio traz gente que compra."
       loading={loading}
       error={error}
       hasData={!!data}
       empty={!!data?.empty}
-      emptyText="No empezó ninguna conversación en este periodo."
+      emptyText="Nenhuma conversa começou neste período."
     >
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:max-w-xl">
             <StatCard
-              label="Conversaciones nuevas"
+              label="Conversas novas"
               value={String(data.conversations.current)}
               compare={data.conversations}
             />
             <RateCard
-              label="Llegaron por un anuncio"
+              label="Chegaram por um anúncio"
               rate={data.adShare}
               unit="conversaciones"
             />
           </div>
 
           <div>
-            <Subhead>Por origen</Subhead>
+            <Subhead>Por origem</Subhead>
             <Filas
-              primera="Origen"
+              primera="Origem"
               filas={data.sources.map((s) => ({
                 key: s.value,
                 titulo: <span className="font-medium">{s.label}</span>,
@@ -69,14 +69,14 @@ export function AdsSection({
           </div>
 
           <div>
-            <Subhead>Por anuncio</Subhead>
+            <Subhead>Por anúncio</Subhead>
             {data.ads.length === 0 ? (
               <p className="text-sm text-text-3">
-                Ninguna conversación de este periodo llegó por un anuncio de Click a WhatsApp.
+                Nenhuma conversa deste período chegou por um anúncio de Click to WhatsApp.
               </p>
             ) : (
               <Filas
-                primera="Anuncio"
+                primera="Anúncio"
                 filas={data.ads.map((a) => ({
                   key: a.key,
                   titulo: <Anuncio anuncio={a} />,
@@ -89,13 +89,13 @@ export function AdsSection({
 
           <div className="space-y-1 text-[11px] text-text-3">
             <p>
-              «Ventas» son los prospectos del periodo que hoy están en Ganado; «Cierre» es
-              ventas entre prospectos, atenuado con menos de 10 (muestra chica).
+              «Vendas» são os prospects do período que hoje estão em Ganho; «Fechamento» é
+              vendas sobre prospects, atenuado com menos de 10 (amostra pequena).
             </p>
             <p>
-              El origen es el que capturaste en el contacto; si no hay, se deduce «Anuncio»
-              cuando Meta dijo de qué anuncio llegó. Aquí solo se cuenta: el costo por
-              prospecto y el retorno necesitarían el gasto de cada anuncio.
+              A origem é a que você registrou no contato; se não houver, é deduzido «Anúncio»
+              quando a Meta informou de qual anúncio veio. Aqui só se conta: o custo por
+              prospect e o retorno precisariam do gasto de cada anúncio.
             </p>
           </div>
         </div>
@@ -115,16 +115,16 @@ function Filas({ primera, filas }: { primera: string; filas: Fila[] }) {
           <li key={f.key} className="py-2.5" data-anuncio={f.sourceId ?? undefined}>
             {f.titulo}
             <dl className="mt-2 grid grid-cols-4 gap-2 text-center">
-              <Dato etiqueta="conversaciones" valor={f.conteos.conversations} />
-              <Dato etiqueta="prospectos" valor={f.conteos.leads} />
-              <Dato etiqueta="ventas" valor={f.conteos.won} />
+              <Dato etiqueta="conversas" valor={f.conteos.conversations} />
+              <Dato etiqueta="prospects" valor={f.conteos.leads} />
+              <Dato etiqueta="vendas" valor={f.conteos.won} />
               <div className="min-w-0">
                 <dt className="sr-only">Cierre</dt>
                 <dd className="text-sm font-semibold">
                   <TasaCorta rate={f.conteos.winRate} conDenominador={false} />
                 </dd>
                 <dd className="truncate text-[11px] text-text-3">
-                  {f.conteos.winRate.value === null ? "cierre" : `cierre de ${f.conteos.winRate.sample}`}
+                  {f.conteos.winRate.value === null ? "fechamento" : `fechamento de ${f.conteos.winRate.sample}`}
                 </dd>
               </div>
             </dl>
@@ -139,10 +139,10 @@ function Filas({ primera, filas }: { primera: string; filas: Fila[] }) {
               <th scope="col" className="py-1.5 pr-2 text-left font-medium">
                 {primera}
               </th>
-              <Num>Conversaciones</Num>
-              <Num>Prospectos</Num>
-              <Num>Ventas</Num>
-              <Num>Cierre</Num>
+              <Num>Conversas</Num>
+              <Num>Prospects</Num>
+              <Num>Vendas</Num>
+              <Num>Fechamento</Num>
             </tr>
           </thead>
           <tbody>
@@ -168,7 +168,7 @@ function Anuncio({ anuncio: a }: { anuncio: AdRowDto }) {
   const titular = titularDeOrigen(a.headline, a.sourceType);
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <MiniaturaDeAnuncio imageAssetId={a.imageAssetId} alt={`Creativo: ${titular}`} />
+      <MiniaturaDeAnuncio imageAssetId={a.imageAssetId} alt={`Criativo: ${titular}`} />
       <div className="min-w-0">
         <p className="truncate font-medium sm:max-w-[20rem]" title={titular}>
           {titular}
@@ -215,7 +215,7 @@ function TasaCorta({ rate, conDenominador = true }: { rate: RateDto; conDenomina
   return (
     <span
       className={cn(!rate.reliable && "text-text-3")}
-      title={`${rate.value}% de ${rate.sample} prospectos${rate.reliable ? "" : " · muestra chica"}`}
+      title={`${rate.value}% de ${rate.sample} prospects${rate.reliable ? "" : " · amostra pequena"}`}
     >
       {rate.value}%
       {conDenominador && <span className="ml-1 text-[11px] text-text-3">de {rate.sample}</span>}

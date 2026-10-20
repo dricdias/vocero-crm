@@ -25,29 +25,29 @@ export function BotSection({
   return (
     <Section
       id="agente"
-      title="El agente"
+      title="O agente"
       hint={
         agenda
-          ? "Si contesta, qué tan rápido, cuándo pasa a un humano y cómo salen las citas."
-          : "Si contesta, qué tan rápido y cuándo pasa la conversación a un humano."
+          ? "Se responde, com que rapidez, quando passa para um humano e como vão os agendamentos."
+          : "Se responde, com que rapidez e quando passa a conversa para um humano."
       }
       loading={loading}
       error={error}
       hasData={!!data}
       empty={!!data?.empty}
-      emptyText="Todavía no hay conversaciones en este periodo."
+      emptyText="Ainda não há conversas neste período."
     >
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-            <StatCard label="Conversaciones nuevas" value={String(data.conversations)} />
+            <StatCard label="Conversas novas" value={String(data.conversations)} />
             <RateCard
-              label="Contestó el agente"
+              label="O agente respondeu"
               rate={data.aiReplyRate}
-              unit="con mensaje del cliente"
+              unit="com mensagem do cliente"
             />
             <StatCard
-              label="Primera respuesta"
+              label="Primeira resposta"
               value={
                 data.firstResponseSeconds === null
                   ? "—"
@@ -55,12 +55,12 @@ export function BotSection({
               }
               hint={
                 data.firstResponseSample === 0
-                  ? "el agente aún no ha contestado a nadie"
-                  : `mediana de ${data.firstResponseSample} conversaciones`
+                  ? "o agente ainda não respondeu ninguém"
+                  : `mediana de ${data.firstResponseSample} conversas`
               }
             />
             <RateCard
-              label="Pasaron a un humano"
+              label="Passaram para um humano"
               rate={data.handoffRate}
               unit="conversaciones"
             />
@@ -68,23 +68,23 @@ export function BotSection({
 
           {agenda && data.sessions && (
             <div>
-              <Subhead>Citas del periodo</Subhead>
+              <Subhead>Agendamentos do período</Subhead>
               {data.sessions.booked === 0 ? (
-                <p className="text-sm text-text-3">Ninguna cita cae en este periodo.</p>
+                <p className="text-sm text-text-3">Nenhum agendamento neste período.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
                   <StatCard
-                    label="Citas"
+                    label="Agendamentos"
                     value={String(data.sessions.booked)}
                     hint={pendientes(data.sessions)}
                   />
-                  <StatCard label="Realizadas" value={String(data.sessions.done)} />
-                  <StatCard label="No llegaron" value={String(data.sessions.noShow)} />
-                  <StatCard label="Canceladas" value={String(data.sessions.cancelled)} />
+                  <StatCard label="Realizados" value={String(data.sessions.done)} />
+                  <StatCard label="Não compareceram" value={String(data.sessions.noShow)} />
+                  <StatCard label="Cancelados" value={String(data.sessions.cancelled)} />
                   <RateCard
-                    label="Asistencia"
+                    label="Comparecimento"
                     rate={data.sessions.showRate}
-                    unit="con desenlace"
+                    unit="com desfecho"
                   />
                 </div>
               )}
@@ -93,31 +93,31 @@ export function BotSection({
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <Subhead>Por qué pasó a un humano</Subhead>
+              <Subhead>Por que passou para um humano</Subhead>
               <BarChart
                 items={data.handoffs}
-                emptyText="Ninguna conversación del periodo pasó a un humano."
+                emptyText="Nenhuma conversa do período passou para um humano."
               />
             </div>
 
             <div>
-              <Subhead>Ficha del prospecto</Subhead>
+              <Subhead>Ficha do prospect</Subhead>
               {data.fichaCoverage === null ? (
                 // `null` NO es 0 %: es que el agente de esta instancia no escribe
                 // ficha. Enseñar 0 % sería acusarlo de no hacer algo que nunca se
                 // le pidió.
                 <p className="text-sm text-text-3">
-                  Nadie está llenando la ficha de los prospectos. La escribe un cerebro
-                  externo (<code className="font-mono text-xs">PUT /api/bot/ficha</code>) o
-                  tu equipo desde el panel de la conversación.
+                  Ninguém está preenchendo a ficha dos prospects. Quem escreve é um cérebro
+                  externo (<code className="font-mono text-xs">PUT /api/bot/ficha</code>) ou
+                  sua equipe pelo painel da conversa.
                 </p>
               ) : (
                 <>
                   <p className="text-sm">
-                    <Rate rate={data.fichaCoverage} unit="contactos nuevos" />
+                    <Rate rate={data.fichaCoverage} unit="contatos novos" />
                   </p>
                   <p className="mt-1 text-xs text-text-3">
-                    De los contactos que llegaron en este periodo, a cuántos les sacó datos.
+                    Dos contatos que chegaram neste período, de quantos ele obteve dados.
                   </p>
                 </>
               )}
@@ -133,7 +133,7 @@ export function BotSection({
 function pendientes(s: NonNullable<BotBlockDto["sessions"]>): string | undefined {
   const n = s.booked - s.done - s.noShow - s.cancelled;
   if (n <= 0) return undefined;
-  return n === 1 ? "1 sin desenlace todavía" : `${n} sin desenlace todavía`;
+  return n === 1 ? "1 ainda sem desfecho" : `${n} ainda sem desfecho`;
 }
 
 /** Segundos en algo que se lee de un vistazo. */

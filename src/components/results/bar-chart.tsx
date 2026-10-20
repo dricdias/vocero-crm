@@ -8,7 +8,7 @@
  */
 export function BarChart({
   items,
-  emptyText = "Sin datos en este periodo.",
+  emptyText = "Sem dados neste período.",
 }: {
   items: { key: string; label: string; count: number }[];
   emptyText?: string;
