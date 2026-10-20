@@ -11,6 +11,11 @@ describe("patrón de respaldo de handoff (FR-022 / SC-006)", () => {
     "me pasas a un asesor",
     "prefiero atención humana",
     "atencion humana por favor",
+    "quero falar com um humano",
+    "posso falar com um atendente?",
+    "preciso conversar com alguém",
+    "me passa para um atendente",
+    "prefiro atendimento humano",
   ])("dispara: %s", (text) => {
     expect(matchesHandoffIntent(text)).toBe(true);
   });
@@ -22,6 +27,9 @@ describe("patrón de respaldo de handoff (FR-022 / SC-006)", () => {
     "la persona que me atendió ayer fue amable",
     "mi humano favorito es mi hijo",
     "el asesor fiscal ya me cobró", // sin verbo de contacto ni "un asesor"
+    "somos 4 pessoas",
+    "a pessoa que me atendeu ontem foi gentil",
+    "vocês têm furadeiras?",
   ])("NO dispara: %s", (text) => {
     expect(matchesHandoffIntent(text)).toBe(false);
   });

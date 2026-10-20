@@ -35,8 +35,8 @@ export function aiMockAuthFailure(
 /** La lista de `GET /v1/models` del mock: suficiente para «Traer modelos». */
 export function aiMockModels(): { id: string; name: string }[] {
   return [
-    { id: "mock/agente", name: "Modelo de prueba (agente)" },
-    { id: "mock/juez", name: "Modelo de prueba (juez)" },
+    { id: "mock/agente", name: "Modelo de teste (agente)" },
+    { id: "mock/juez", name: "Modelo de teste (juiz)" },
   ];
 }
 
@@ -98,9 +98,9 @@ export function aiMockCompletion(messages: InMessage[]): string {
   if (system.includes(JUDGE_MARKER)) {
     const kbSection =
       lastUser
-        .split("CONOCIMIENTO CONFIGURADO:")[1]
+        .split("CONHECIMENTO CONFIGURADO:")[1]
         ?.split("TRANSCRIPT COMPLETO:")[0] ?? "";
-    const kbCoversWarranty = /garant|devoluc/i.test(kbSection);
+    const kbCoversWarranty = /garant|devoluc|devolu[cç]/i.test(kbSection);
     if (lastUser.includes("fuera_de_kb") && !kbCoversWarranty) {
       return JSON.stringify({
         veredicto: "rojo",
@@ -108,11 +108,11 @@ export function aiMockCompletion(messages: InMessage[]): string {
           {
             tipo: "fuera_de_kb",
             evidencia:
-              "El cliente preguntó por garantías y devoluciones y el conocimiento no lo cubre.",
+              "O cliente perguntou sobre garantia e devolução e o conhecimento não cobre isso.",
             sugerencia: {
-              pregunta: "¿Cuál es la política de garantías y devoluciones?",
+              pregunta: "Qual é a política de garantia e devolução?",
               respuesta:
-                "Aceptamos devoluciones dentro de los 30 días con ticket de compra; la garantía depende del fabricante.",
+                "Aceitamos devoluções em até 30 dias com o comprovante de compra; a garantia depende do fabricante.",
             },
           },
         ],
@@ -147,25 +147,25 @@ export function aiMockCompletion(messages: InMessage[]): string {
   const agendaEnseñada = messages.some(
     (m) => m.role === "system" && m.content.includes('"action":"offer_slots"')
   );
-  const quiereCita = /cita|agendar|agenda|horario|reserv/.test(text);
+  const quiereCita = /cita|agendar|agenda|horario|horário|reserv|marcar/.test(text);
   if (agendaEnseñada && quiereCita && huecos.length === 0) {
     return JSON.stringify({
       action: "offer_slots",
-      reply: "Claro, tengo estos horarios:",
+      reply: "Claro, tenho estes horários:",
     });
   }
-  const eligeUno = /primero|segundo|ese|esa|confirmo|quiero|me sirve/.test(text);
+  const eligeUno = /primero|primeiro|segundo|ese|esa|esse|essa|confirmo|quiero|quero|me sirve|serve/.test(text);
   if (huecos.length > 0 && eligeUno) {
     return JSON.stringify({
       action: "book_slot",
       startUtc: huecos[0],
-      reply: "¡Listo! Te agendé.",
+      reply: "Pronto! Agendei para você.",
     });
   }
 
   // Persona pide_humano (el regex de respaldo captura la frase canónica; esta
   // rama cubre variantes que llegan al modelo).
-  if (text.includes("humano") || text.includes("asesor")) {
+  if (text.includes("humano") || text.includes("asesor") || text.includes("atendente")) {
     return JSON.stringify({ action: "handoff", reason: "cliente" });
   }
 
@@ -173,18 +173,21 @@ export function aiMockCompletion(messages: InMessage[]): string {
   if (
     text.includes("lo compro") ||
     text.includes("quiero comprar") ||
-    text.includes("me lo llevo")
+    text.includes("me lo llevo") ||
+    text.includes("vou comprar") ||
+    text.includes("quero comprar") ||
+    text.includes("vou levar")
   ) {
     return JSON.stringify({
       action: "move_stage",
-      stage: "Interesado",
-      reply: "¡Excelente! Te aparto el producto y un compañero te confirma el pago.",
+      stage: "Interessado",
+      reply: "Excelente! Vou separar o produto e um colega confirma o pagamento com você.",
     });
   }
 
   const eco = lastUser.slice(0, 80);
   return JSON.stringify({
     action: "reply",
-    text: `Respuesta de prueba sobre: ${eco}`,
+    text: `Resposta de teste sobre: ${eco}`,
   });
 }

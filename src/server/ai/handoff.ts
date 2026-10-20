@@ -5,7 +5,7 @@
  * objeto humano — "somos 4 personas" NO matchea (test unitario).
  */
 export const HANDOFF_BACKUP_REGEX =
-  /(hablar|comunicar|contactar)[\s\S]{0,40}?(asesor|humano|persona|alguien)|un asesor|atenci[oó]n humana/i;
+  /(hablar|comunicar|contactar|falar|conversar|contatar|chamar)[\s\S]{0,40}?(asesor|humano|persona|alguien|atendente|pessoa|algu[eé]m|consultor|vendedor)|un asesor|um atendente|atenci[oó]n humana|atendimento humano/i;
 
 export function matchesHandoffIntent(text: string): boolean {
   return HANDOFF_BACKUP_REGEX.test(text);
@@ -25,4 +25,4 @@ export function matchesHandoffIntent(text: string): boolean {
  * un plazo ni un nombre que el CRM no conoce.
  */
 export const HANDOFF_BACKUP_ACK =
-  "Claro, te comunico con una persona del equipo. En breve te responden.";
+  "Claro, vou te transferir para uma pessoa da equipe. Em breve você recebe uma resposta.";
