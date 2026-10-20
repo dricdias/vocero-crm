@@ -32,14 +32,14 @@ export function LossReasonDialog({
     >
       <div
         role="dialog"
-        aria-label="Motivo de pérdida"
+        aria-label="Motivo da perda"
         className="w-full max-w-md rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 font-semibold">¿Por qué se perdió?</h3>
+        <h3 className="mb-1 font-semibold">Por que foi perdido?</h3>
         <p className="mb-4 text-xs text-text-3">
-          {leadName} pasa a Perdido. El motivo es lo único que después explica
-          qué cambiar: sin él, la gráfica de pérdidas no dice nada.
+          {leadName} passa para Perdido. O motivo é a única coisa que depois explica
+          o que mudar: sem ele, o gráfico de perdas não diz nada.
         </p>
 
         <div className="space-y-2">
@@ -70,7 +70,7 @@ export function LossReasonDialog({
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             maxLength={500}
-            placeholder="Se fue con una agencia local por la mitad del precio"
+            placeholder="Fechou com uma agência local pela metade do preço"
           />
         </div>
 

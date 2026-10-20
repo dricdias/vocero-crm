@@ -40,7 +40,7 @@ export type BoardLead = {
 
 export function PipelineClient() {
   const [stages, setStages] = useState<StageDto[]>([]);
-  const [currency, setCurrency] = useState("MXN");
+  const [currency, setCurrency] = useState("USD");
   const [leads, setLeads] = useState<BoardLead[]>([]);
   const [activeLead, setActiveLead] = useState<BoardLead | null>(null);
   const [managing, setManaging] = useState(false);
@@ -175,7 +175,7 @@ export function PipelineClient() {
       <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6 sm:py-4">
         <h2 className="text-[17px] font-bold tracking-tight">Pipeline</h2>
         <Button variant="outline" size="sm" onClick={() => setManaging(true)}>
-          <Settings2 className="h-4 w-4" /> Gestionar etapas
+          <Settings2 className="h-4 w-4" /> Gerenciar etapas
         </Button>
       </header>
 
@@ -348,11 +348,11 @@ function StageFooter({ leads, currency }: { leads: BoardLead[]; currency: string
     <div className="border-t px-3 py-2 text-[11px]">
       {conMonto === 0 ? (
         // Un "$0.00" aquí se lee como un error del sistema, no como un dato.
-        <p className="text-muted-foreground">Sin montos capturados</p>
+        <p className="text-muted-foreground">Nenhum valor registrado</p>
       ) : (
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-muted-foreground">
-            Total{sinMonto > 0 ? ` · ${sinMonto} sin monto` : ""}
+            Total{sinMonto > 0 ? ` · ${sinMonto} sem valor` : ""}
           </span>
           <span className="font-semibold tabular-nums">
             {formatMoneyCents(totalCents, currency)}
@@ -363,7 +363,7 @@ function StageFooter({ leads, currency }: { leads: BoardLead[]; currency: string
         // Descartarlos en silencio haría que el total mintiera sin que nadie
         // pudiera notarlo.
         <p className="mt-0.5 text-warning-text">
-          {otraMoneda} en otra moneda, fuera del total
+          {otraMoneda} em outra moeda, fora do total
         </p>
       )}
     </div>
@@ -403,7 +403,7 @@ function DraggableLead({
           onOpen(lead);
         }
       }}
-      aria-label={`Abrir el trato de ${lead.contact.name}`}
+      aria-label={`Abrir o negócio de ${lead.contact.name}`}
       className={cn(isDragging && "opacity-40")}
     >
       <LeadCard lead={lead} currency={currency} onEditAmount={onEditAmount} />
@@ -438,8 +438,8 @@ function LeadCard({
           </div>
           <p className="text-[11px] text-muted-foreground">
             {lead.lastActivityAt
-              ? `Actividad: ${formatTime(lead.lastActivityAt)}`
-              : "Sin actividad"}
+              ? `Atividade: ${formatTime(lead.lastActivityAt)}`
+              : "Sem atividade"}
           </p>
         </div>
         {lead.conversationId && (
@@ -447,7 +447,7 @@ function LeadCard({
             href={`/inbox?contact=${lead.contact.id}`}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            aria-label="Abrir conversación"
+            aria-label="Abrir conversa"
             className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <MessageSquareText className="h-4 w-4" />

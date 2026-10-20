@@ -64,19 +64,19 @@ export const ACCENT_PRESETS: Record<string, { label: string; set: AccentSet }> =
     set: { accent: "#0d5bff", hover: "#0a4de6", soft: "#d3e2ff", tint: "#ebf1ff", text: "#0038d8", fg: "#ffffff" },
   },
   "#3f5972": {
-    label: "Azul acero",
+    label: "Azul aço",
     set: { accent: "#3f5972", hover: "#334a60", soft: "#dde5ee", tint: "#f3f6f9", text: "#2b4056", fg: "#ffffff" },
   },
   "#4b5563": {
-    label: "Grafito",
+    label: "Grafite",
     set: { accent: "#4b5563", hover: "#3b4350", soft: "#e2e5ea", tint: "#f4f5f7", text: "#333a45", fg: "#ffffff" },
   },
   "#3f6b66": {
-    label: "Verde apagado",
+    label: "Verde suave",
     set: { accent: "#3f6b66", hover: "#335752", soft: "#dcebe8", tint: "#f2f8f6", text: "#2b4a46", fg: "#ffffff" },
   },
   "#5f5470": {
-    label: "Ciruela",
+    label: "Ameixa",
     set: { accent: "#5f5470", hover: "#4d4459", soft: "#e6e1ec", tint: "#f6f4f8", text: "#443c52", fg: "#ffffff" },
   },
 };

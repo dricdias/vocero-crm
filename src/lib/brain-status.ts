@@ -147,20 +147,20 @@ function healthKnown(h: BrainHealthDto | null): h is BrainHealthDto {
 export function externalAnswerLabel(status: BrainStatusDto): string {
   const name = externalBrainName(status);
   return name
-    ? `Responde tu cerebro externo (${name})`
-    : "Responde tu cerebro externo";
+    ? `Quem responde é seu cérebro externo (${name})`
+    : "Quem responde é seu cérebro externo";
 }
 
 /** «hace 3 min». Tolera relojes desfasados: el futuro es «hace unos segundos». */
 export function haceCuanto(iso: string, now: number = Date.now()): string {
   const s = Math.max(0, Math.floor((now - Date.parse(iso)) / 1000));
-  if (!Number.isFinite(s) || s < 60) return "hace unos segundos";
+  if (!Number.isFinite(s) || s < 60) return "há alguns segundos";
   const m = Math.floor(s / 60);
-  if (m < 60) return `hace ${m} min`;
+  if (m < 60) return `há ${m} min`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `hace ${h} h`;
+  if (h < 24) return `há ${h} h`;
   const d = Math.floor(h / 24);
-  return d === 1 ? "hace 1 día" : `hace ${d} días`;
+  return d === 1 ? "há 1 dia" : `há ${d} dias`;
 }
 
 /**

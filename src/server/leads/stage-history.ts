@@ -256,7 +256,7 @@ export async function relocateLeadsFromStage(input: {
       )
     )
     .limit(1);
-  const fromName = stageRows[0]?.name ?? "una etapa eliminada";
+  const fromName = stageRows[0]?.name ?? "uma etapa excluída";
 
   let moved = 0;
   for (const l of leads) {
@@ -269,7 +269,7 @@ export async function relocateLeadsFromStage(input: {
       // Si el destino resulta ser la etapa perdida, el motivo no se puede
       // inventar pero tampoco puede faltar: se registra lo que de verdad pasó.
       lossReason: "otro",
-      lossNote: `Reubicado al eliminar la etapa "${fromName}"`,
+      lossNote: `Realocado ao excluir a etapa "${fromName}"`,
     });
     if (res.ok) moved += 1;
   }

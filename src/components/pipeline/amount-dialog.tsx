@@ -45,14 +45,14 @@ export function AmountDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Monto y prioridad"
+      aria-label="Valor e prioridade"
     >
       <div className="w-full max-w-sm rounded-lg border bg-popover p-4 shadow-pop">
         <h3 className="font-semibold">Monto y prioridad</h3>
         <p className="mt-0.5 text-xs text-text-3">{leadName}</p>
 
         <label className="mt-3 block text-xs font-medium" htmlFor="monto">
-          Cuánto vale este trato ({currency})
+          Quanto vale este negócio ({currency})
         </label>
         <Input
           id="monto"
@@ -65,13 +65,13 @@ export function AmountDialog({
         />
         {invalido ? (
           <p className="mt-1 text-xs text-danger-text">
-            No reconozco ese número. Escríbelo como 12500 o 12,500.00
+            Não reconheço esse número. Escreva como 12500 ou 12,500.00
           </p>
         ) : (
           <p className="mt-1 text-xs text-text-3">
             {parsed === null
-              ? "Déjalo vacío para quitar el monto."
-              : `Se guardará como ${formatMoneyCents(parsed, currency)}`}
+              ? "Deixe vazio para remover o valor."
+              : `Será salvo como ${formatMoneyCents(parsed, currency)}`}
           </p>
         )}
 
@@ -87,7 +87,7 @@ export function AmountDialog({
             Cancelar
           </Button>
           <Button disabled={invalido} onClick={() => onSave(parsed)}>
-            Guardar
+            Salvar
           </Button>
         </div>
       </div>
