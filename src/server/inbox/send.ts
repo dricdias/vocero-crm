@@ -1,3 +1,5 @@
+import { getEvolutionByOrg, setEvolutionStatus, type EvolutionCredentials } from "@/server/evolution/credentials";
+import { sendEvolutionText, sendEvolutionMedia, EvolutionError } from "@/server/evolution/client";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
@@ -80,6 +82,7 @@ export class SendError extends Error {
 type SendResult = { messageId: string };
 
 type SendTarget = {
+  evolution?: EvolutionCredentials;
   conversation: typeof schema.conversation.$inferSelect;
   /** null cuando el destino no es WhatsApp (014). */
   credentials: Credentials | null;
@@ -305,6 +308,14 @@ async function prepareSend(
     );
   }
 
+  const evolution = await getEvolutionByOrg(organizationId);
+  if (evolution) {
+    if (evolution.status !== "connected") throw new SendError("reconnect_required", "Reconecte o Evolution Go em Configurações → WhatsApp");
+    const lid = /^evo-lid:(\d+)$/.exec(row.contact.waIdentity);
+    const recipient = row.contact.phone ? normalizeRecipient(row.contact.phone) : lid ? `${lid[1]}@lid` : null;
+    if (!recipient) throw new SendError("meta_error", "O Evolution Go exige um telefone ou uma identidade LID válida");
+    return {conversation: row.conversation, credentials: null, evolution, recipient, destinatario: {to: recipient}};
+  }
   const credentials = await getCredentialsByOrg(organizationId);
   if (!credentials) {
     throw new SendError("not_connected", "Não há número de WhatsApp conectado");
@@ -430,7 +441,9 @@ export async function sendText(input: {
     throw new SendError("text_too_long", textLimitMessage(canal));
   }
 
-  const waMessageId = target.instagram
+  const waMessageId = target.evolution
+    ? await callEvolutionSend(target, () => sendEvolutionText(target.evolution!, target.recipient, text))
+    : target.instagram
     ? await callInstagramSend(target, text)
     : target.messenger
       ? await callMessengerSend(target, text)
@@ -511,6 +524,10 @@ export async function sendMediaMessage(input: {
   const asset = assetRows[0]!;
 
   try {
+    let waMessageId: string;
+    if (target.evolution) {
+      waMessageId = await callEvolutionSend(target, () => sendEvolutionMedia(target.evolution!, target.recipient, kind, input.file, input.caption));
+    } else {
     const waMediaId = await uploadGraphMedia(credentials!, input.file);
     await db
       .update(schema.mediaAsset)
@@ -522,12 +539,13 @@ export async function sendMediaMessage(input: {
     if (kind === "document" && input.file.fileName) {
       mediaPayload.filename = input.file.fileName;
     }
-    const waMessageId = await callGraphSend(credentials!, {
+    waMessageId = await callGraphSend(credentials!, {
       messaging_product: "whatsapp",
       ...target.destinatario,
       type: kind,
       [kind]: mediaPayload,
     });
+    }
 
     const messageId = await persistOutbound({
       organizationId: input.organizationId,
@@ -826,5 +844,17 @@ async function callTiktokSend(target: SendTarget, text: string): Promise<string>
       throw new SendError("meta_error", err.message);
     }
     throw err;
+  }
+}
+
+/** Nunca hace fallback a Meta después de un intento Evolution Go. */
+async function callEvolutionSend(target: SendTarget, operation: () => Promise<string>): Promise<string> {
+  try { return await operation(); }
+  catch (error) {
+    if (error instanceof EvolutionError && (error.status === 401 || error.status === 403)) {
+      await setEvolutionStatus(target.evolution!.organizationId, false);
+      throw new SendError("reconnect_required", error.message);
+    }
+    throw new SendError("meta_unavailable", "O Evolution Go não confirmou o envio; verifique a conexão antes de tentar novamente");
   }
 }

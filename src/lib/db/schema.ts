@@ -1267,3 +1267,17 @@ export const dispatch = pgTable(
     index("dispatch_status_notbefore_idx").on(t.status, t.notBefore),
   ]
 );
+
+/** 031 — Conector opcional; no comparte tokens ni identificadores con Meta. */
+export const evolutionCredentials = pgTable("evolution_credentials", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  baseUrl: text("base_url").notNull(),
+  tokenCipher: text("token_cipher").notNull(),
+  tokenIv: text("token_iv").notNull(),
+  tokenTag: text("token_tag").notNull(),
+  webhookHash: text("webhook_hash").notNull(),
+  status: text("status", { enum: ["connected", "reconnect_required"] }).notNull().default("reconnect_required"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [uniqueIndex("evolution_credentials_org_uq").on(t.organizationId), uniqueIndex("evolution_credentials_hook_uq").on(t.webhookHash)]);

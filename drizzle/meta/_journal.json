@@ -148,6 +148,13 @@
       "when": 1791987903930,
       "tag": "0020_secreto_zernio_cifrado",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792468720250,
+      "tag": "0021_spooky_silk_fever",
+      "breakpoints": true
     }
   ]
 }

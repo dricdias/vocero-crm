@@ -1,3 +1,4 @@
+import { getEvolutionByOrg } from "@/server/evolution/credentials";
 import { eq, max } from "drizzle-orm";
 import { CHANNEL_ORDER, type Channel } from "@/lib/channels";
 import { getDb, schema } from "@/lib/db";
@@ -38,7 +39,7 @@ import {
 export type ChannelStatus = {
   channel: Channel;
   connected: boolean;
-  source: "meta" | "zernio" | null;
+  source: "meta" | "zernio" | "evolution" | null;
   /** La cuenta, el número o la página, como lo reconoce una persona. */
   account: string | null;
   status: "connected" | "reconnect_required" | null;
@@ -108,6 +109,7 @@ function saludDe(conn: ZernioConnection, lectura: Lectura): ChannelStatus["healt
 }
 
 export async function channelsStatus(organizationId: string): Promise<ChannelStatus[]> {
+  const evolution = await getEvolutionByOrg(organizationId);
   const encendidos = enabledChannels();
   const [ultimos, wa, ig, fb, zernio] = await Promise.all([
     lastInboundByChannel(organizationId),
@@ -131,10 +133,10 @@ export async function channelsStatus(organizationId: string): Promise<ChannelSta
     if (channel === "whatsapp") {
       filas.push({
         ...base,
-        connected: Boolean(wa),
-        source: wa ? "meta" : null,
-        account: wa?.displayPhoneNumber ?? null,
-        status: wa?.status ?? null,
+        connected: evolution ? evolution.status === "connected" : Boolean(wa),
+        source: evolution ? "evolution" : wa ? "meta" : null,
+        account: evolution ? "Evolution Go" : wa?.displayPhoneNumber ?? null,
+        status: evolution?.status ?? wa?.status ?? null,
         health: null,
       });
       continue;

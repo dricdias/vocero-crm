@@ -32,7 +32,7 @@ type Health = { level: Level; message: string };
 type Row = {
   channel: Channel;
   connected: boolean;
-  source: "meta" | "zernio" | null;
+  source: "meta" | "zernio" | "evolution" | null;
   account: string | null;
   status: "connected" | "reconnect_required" | null;
   lastInboundAt: string | null;
@@ -202,7 +202,7 @@ export function ChannelsClient() {
                     {r.channel !== "whatsapp" && (
                       <span className="text-text-2">
                         {" "}
-                        · {r.source === "zernio" ? "por Zernio" : "app propia de Meta"}
+                        · {r.source === "evolution" ? "por Evolution Go" : r.source === "zernio" ? "por Zernio" : "app propia de Meta"}
                       </span>
                     )}
                   </dd>

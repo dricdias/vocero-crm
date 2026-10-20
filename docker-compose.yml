@@ -41,6 +41,7 @@ services:
       # Opcionales: vacías = apagadas (guía de cada una en .env.example).
       CHANNELS: ${CHANNELS:-}
       AGENDA: ${AGENDA:-}
+      EVOLUTION_GO: ${EVOLUTION_GO:-}
       ATRIBUCION: ${ATRIBUCION:-}
       BOT_API_KEY: ${BOT_API_KEY:-}
       BRAIN_HEALTH_URL: ${BRAIN_HEALTH_URL:-}
