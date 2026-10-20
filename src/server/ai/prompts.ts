@@ -34,6 +34,7 @@ export const TURN_FORMAT_REMINDER =
 export function buildAgentSystemPrompt(input: {
   profile: AgentProfile;
   kb: KbEntry[];
+  supportKnowledge?: string;
   stages: { name: string }[];
   /**
    * 015 — ¿esta instancia tiene agenda? Apagada, el prompt no gasta ni un
@@ -64,7 +65,7 @@ export function buildAgentSystemPrompt(input: {
       ? `Regras de escalonamento para humano:\n${profile.escalationRules}`
       : null,
     profile.greeting ? `Saudação sugerida para conversas novas: ${profile.greeting}` : null,
-    `CONHECIMENTO DO NEGÓCIO (sua única fonte de verdade; se algo não está aqui, NÃO invente — diga que vai confirmar com a equipe ou escale):\n${renderKb(input.kb)}`,
+    `CONHECIMENTO DO NEGÓCIO (sua única fonte de verdade; se algo não está aqui, NÃO invente — diga que vai confirmar com a equipe ou escale):\n${[renderKb(input.kb), input.supportKnowledge].filter(Boolean).join("\n\n")}`,
     `Etapas do funil disponíveis: ${stageNames}`,
     [
       "Em cada turno responda SOMENTE um objeto JSON com UMA ação:",

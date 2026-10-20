@@ -27,6 +27,7 @@ type Profile = {
   greeting: string | null;
 };
 
+type SupportSource = {status: "ready" | "cached" | "unavailable" | "unconfigured"; articles: number; syncedAt: string | null};
 type KbEntry = {
   id: string;
   kind: "qa" | "block";
@@ -40,7 +41,7 @@ export function AgentClient() {
   const [aiConfigured, setAiConfigured] = useState(true);
   const [aiMensaje, setAiMensaje] = useState<string | null>(null);
   const [entries, setEntries] = useState<KbEntry[]>([]);
-  const [kbSize, setKbSize] = useState<{ chars: number; warnAt: number; warning: boolean } | null>(null);
+  const [kbSize, setKbSize] = useState<{ chars: number; warnAt: number; warning: boolean; support?: SupportSource } | null>(null);
   const [saved, setSaved] = useState(false);
   // «Quién responde»: se refresca solo, porque la última llamada del cerebro
   // externo y su /health cambian sin que nadie toque esta pantalla.
@@ -255,7 +256,7 @@ function KbSection({
   onChanged,
 }: {
   entries: KbEntry[];
-  kbSize: { chars: number; warnAt: number; warning: boolean } | null;
+  kbSize: { chars: number; warnAt: number; warning: boolean; support?: SupportSource } | null;
   onChanged: () => void;
 }) {
   const [question, setQuestion] = useState("");
@@ -307,6 +308,15 @@ function KbSection({
             </Badge>
           )}
         </div>
+        {kbSize?.support && (
+          <div className="rounded-md border bg-muted/30 p-3 text-sm" role="status">
+            <p className="font-medium">Central de Ajuda do Agi</p>
+            <p className="text-muted-foreground">
+              {kbSize.support.status === "ready" ? `${kbSize.support.articles} guias sincronizados. O agente seleciona os assuntos relevantes para cada pergunta.` : kbSize.support.status === "cached" ? `A fonte está indisponível; usando os ${kbSize.support.articles} últimos guias válidos sincronizados.` : kbSize.support.status === "unconfigured" ? "Falta configurar a URL e o token de leitura da Central de Ajuda no servidor." : "A Central de Ajuda está indisponível. O agente usará somente a base local confirmada."}
+            </p>
+            {kbSize.support.syncedAt && <p className="mt-1 text-xs text-muted-foreground">Última sincronização: {new Date(kbSize.support.syncedAt).toLocaleString("pt-BR")}</p>}
+          </div>
+        )}
         {kbSize?.warning && (
           <p className="text-xs text-warning-text">
             O conhecimento está chegando ao limite de contexto do modelo (a v1 o

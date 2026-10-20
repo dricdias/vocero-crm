@@ -1,3 +1,4 @@
+import { readAgiSupport } from "@/server/agi-support/reader";
 import { asc } from "drizzle-orm";
 import { withAuth } from "@/lib/api";
 import { getDb, schema } from "@/lib/db";
@@ -20,9 +21,11 @@ export const GET = withAuth(async (session) => {
     .where(scoped(schema.kbEntry.organizationId, session.organizationId))
     .orderBy(asc(schema.kbEntry.createdAt));
   const chars = renderKb(entries).length;
+  const support = await readAgiSupport();
   return Response.json({
     chars,
     warnAt: WARN_CHARS,
     warning: chars >= WARN_CHARS,
+    ...(support.status === "disabled" ? {} : {support: {status: support.status, articles: support.articles.length, syncedAt: support.syncedAt}}),
   });
 });

@@ -1,3 +1,5 @@
+import { readAgiSupport } from "@/server/agi-support/reader";
+import { renderAgiSupport } from "@/server/agi-support/context";
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
@@ -90,7 +92,7 @@ async function runAllCases(
     .select()
     .from(schema.kbEntry)
     .where(eq(schema.kbEntry.organizationId, organizationId));
-  const kbText = renderKb(kbEntries);
+  const kbText = [renderKb(kbEntries), renderAgiSupport(await readAgiSupport())].filter(Boolean).join("\n\n");
 
   const profileRows = await db
     .select()

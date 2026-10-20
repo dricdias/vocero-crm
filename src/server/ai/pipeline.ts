@@ -1,3 +1,5 @@
+import { readAgiSupport } from "@/server/agi-support/reader";
+import { renderAgiSupport } from "@/server/agi-support/context";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
@@ -272,10 +274,14 @@ export async function runAgentTurn(
   const ofertas = agenda ? await getOffers(organizationId, conversationId) : [];
   const mapaDeHuecos = mapaDeHuecosParaModelo(ofertas);
 
+  const support = await readAgiSupport();
+  const previousQuery = history.filter((m) => m.direction === "in" && m.id !== lastInbound.id).at(-1)?.text ?? "";
+  const supportKnowledge = renderAgiSupport(support, lastInbound.text ?? "", previousQuery);
+
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: buildAgentSystemPrompt({ profile, kb, stages, agenda }),
+      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge }),
     },
     ...history
       .filter((m) => m.text)
