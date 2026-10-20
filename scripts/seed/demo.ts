@@ -51,7 +51,7 @@ if (!force && !(await isDomainEmpty(db, org.id))) {
 
 const result = await seedDemo(db, org.id);
 console.log(
-  `[seed] Ferretería El Martillo cargada: ${result.contacts} contactos, ${result.kbEntries} entradas de KB, 1 corrida de ejemplo`
+  `[seed] Ferragem O Martelo carregada: ${result.contacts} contatos, ${result.kbEntries} entradas de KB, 1 rodada de exemplo`
 );
 await sql.end();
 process.exit(0);

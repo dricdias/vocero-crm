@@ -24,92 +24,92 @@ const DEMO_CONTACTS: {
 }[] = [
   {
     phone: "5215612340001",
-    name: "María Fernanda López",
-    stage: "Interesado",
-    notes: "Remodela su cocina; busca herramienta eléctrica.",
+    name: "Maria Fernanda Lopes",
+    stage: "Interessado",
+    notes: "Está reformando a cozinha; procura ferramenta elétrica.",
     thread: [
-      { dir: "in", text: "Hola, ¿tienen taladros inalámbricos?", hoursAgo: 5 },
-      { dir: "out", text: "¡Hola María! Sí: tenemos el Truper 20V en $1,899 MXN y el DeWalt 20V MAX en $3,450 MXN, ambos con batería incluida.", hoursAgo: 5, ai: true },
-      { dir: "in", text: "¿El Truper incluye brocas?", hoursAgo: 4 },
-      { dir: "out", text: "Incluye un juego básico de 5 brocas para concreto y madera. Si necesitas más, el juego de 30 piezas está en $349 MXN.", hoursAgo: 4, ai: true },
-      { dir: "in", text: "Perfecto, me interesa el Truper. ¿Me lo apartan?", hoursAgo: 3 },
+      { dir: "in", text: "Oi, vocês têm furadeira sem fio?", hoursAgo: 5 },
+      { dir: "out", text: "Oi, Maria! Temos sim: a Black+Decker 20V por US$ 99 e a DeWalt 20V MAX por US$ 179, as duas com bateria inclusa.", hoursAgo: 5, ai: true },
+      { dir: "in", text: "A Black+Decker vem com brocas?", hoursAgo: 4 },
+      { dir: "out", text: "Vem com um jogo básico de 5 brocas para concreto e madeira. Se precisar de mais, o jogo de 30 peças sai por US$ 19.", hoursAgo: 4, ai: true },
+      { dir: "in", text: "Perfeito, quero a Black+Decker. Vocês separam pra mim?", hoursAgo: 3 },
     ],
   },
   {
     phone: "5215612340002",
-    name: "Carlos Ramírez",
-    stage: "En conversación",
+    name: "Carlos Ramos",
+    stage: "Em conversa",
     thread: [
-      { dir: "in", text: "Buenas, ¿cuánto el bulto de cemento gris?", hoursAgo: 8 },
-      { dir: "out", text: "¡Hola Carlos! El bulto de 50 kg está en $245 MXN. Por 10 o más te queda en $232 MXN cada uno.", hoursAgo: 8, ai: true },
-      { dir: "in", text: "Ocupo 15 bultos, ¿hacen entrega en Naucalpan?", hoursAgo: 7 },
-      { dir: "out", text: "Sí, entregamos en toda la zona. El flete es de $150 MXN y llega el mismo día si confirmas antes de la 1 pm. Total: 15 × $232 + $150 = $3,630 MXN.", hoursAgo: 7, ai: true },
+      { dir: "in", text: "Boa tarde, quanto tá o saco de cimento?", hoursAgo: 8 },
+      { dir: "out", text: "Oi, Carlos! O saco de 50 kg está US$ 12. Levando 10 ou mais, fica US$ 11 cada.", hoursAgo: 8, ai: true },
+      { dir: "in", text: "Preciso de 15 sacos, vocês entregam em Kissimmee?", hoursAgo: 7 },
+      { dir: "out", text: "Entregamos sim, em toda a região. O frete é US$ 25 e chega no mesmo dia se confirmar antes das 13h. Total: 15 × US$ 11 + US$ 25 = US$ 190.", hoursAgo: 7, ai: true },
     ],
   },
   {
     phone: "5215612340003",
-    name: "Lupita Hernández",
+    name: "Lúcia Henriques",
     stage: "Cliente",
-    notes: "Compra recurrente para su taller de carpintería.",
+    notes: "Compra recorrente para a marcenaria dela.",
     thread: [
-      { dir: "in", text: "Hola de nuevo, ya me quedé sin barniz 😅", hoursAgo: 30 },
-      { dir: "out", text: "¡Hola Lupita! Te apartamos 2 litros del barniz marino que siempre llevas: $520 MXN. ¿Te los mando con tu pedido de lijas?", hoursAgo: 30, ai: true },
-      { dir: "in", text: "Sí porfa, junto todo en un solo envío", hoursAgo: 29 },
-      { dir: "out", text: "Listo, sale hoy mismo. Total: $780 MXN con las lijas. ¡Gracias por tu compra!", hoursAgo: 29, ai: true },
+      { dir: "in", text: "Oi de novo, acabou meu verniz 😅", hoursAgo: 30 },
+      { dir: "out", text: "Oi, Lúcia! Separamos 2 litros do verniz marítimo que você sempre leva: US$ 28. Mando junto com o seu pedido de lixas?", hoursAgo: 30, ai: true },
+      { dir: "in", text: "Sim, por favor, junta tudo numa entrega só", hoursAgo: 29 },
+      { dir: "out", text: "Pronto, sai hoje mesmo. Total: US$ 42 com as lixas. Obrigado pela compra!", hoursAgo: 29, ai: true },
     ],
   },
   {
     phone: "5215612340004",
-    name: "Jorge Castillo",
-    stage: "Nuevo",
+    name: "Jorge Castilho",
+    stage: "Novo",
     thread: [
-      { dir: "in", text: "ke onda, tienen pintura vinilica blanka de 19 lts?", hoursAgo: 2 },
-      { dir: "out", text: "¡Qué tal Jorge! Sí: la cubeta de 19 L de vinílica blanca está en $1,150 MXN (rinde ~90 m²). ¿La quieres mate o satinada?", hoursAgo: 2, ai: true },
+      { dir: "in", text: "eae, tem tinta latex branka de 18 lts?", hoursAgo: 2 },
+      { dir: "out", text: "Opa, Jorge! Tem sim: a lata de 18 L de látex branco está US$ 65 (rende ~90 m²). Você quer fosca ou acetinada?", hoursAgo: 2, ai: true },
     ],
   },
   {
     phone: "5215612340005",
-    name: "Ana Sofía Torres",
-    stage: "Interesado",
+    name: "Ana Sofia Torres",
+    stage: "Interessado",
     thread: [
-      { dir: "in", text: "Hola, vi su anuncio. ¿Manejan material eléctrico?", hoursAgo: 12 },
-      { dir: "out", text: "¡Hola Ana! Sí: cable, contactos, pastillas y centros de carga. ¿Qué necesitas para tu proyecto?", hoursAgo: 12, ai: true },
-      { dir: "in", text: "Necesito 100 m de cable calibre 12 y 10 contactos dobles", hoursAgo: 11 },
-      { dir: "out", text: "Te cotizo: rollo de 100 m cal. 12 THW $1,890 MXN + 10 contactos dobles Volteck $35 c/u = $2,240 MXN. ¿Te lo preparo?", hoursAgo: 11, ai: true },
-      { dir: "in", text: "Déjame confirmar con el electricista y te digo", hoursAgo: 10 },
+      { dir: "in", text: "Oi, vi o anúncio de vocês. Vocês trabalham com material elétrico?", hoursAgo: 12 },
+      { dir: "out", text: "Oi, Ana! Sim: cabos, tomadas, disjuntores e quadros de distribuição. Do que você precisa para o seu projeto?", hoursAgo: 12, ai: true },
+      { dir: "in", text: "Preciso de 100 m de cabo calibre 12 e 10 tomadas duplas", hoursAgo: 11 },
+      { dir: "out", text: "Segue o orçamento: rolo de 100 m cal. 12 THHN US$ 95 + 10 tomadas duplas Leviton US$ 2 cada = US$ 115. Quer que eu prepare?", hoursAgo: 11, ai: true },
+      { dir: "in", text: "Deixa eu confirmar com o eletricista e te aviso", hoursAgo: 10 },
     ],
   },
   {
     phone: "5215612340006",
-    name: "Roberto Mendoza",
+    name: "Roberto Mendes",
     stage: "Perdido",
-    notes: "Buscaba precio de mayoreo que no podemos igualar.",
+    notes: "Queria preço de atacado que não conseguimos igualar.",
     thread: [
-      { dir: "in", text: "¿A cómo la tonelada de varilla 3/8?", hoursAgo: 96 },
-      { dir: "out", text: "Hola Roberto: la tonelada de varilla 3/8 está en $17,800 MXN. ¿Para cuándo la necesitas?", hoursAgo: 96, ai: true },
-      { dir: "in", text: "Uy no, en otro lado me la dan en 16", hoursAgo: 95 },
-      { dir: "out", text: "Entiendo. Ese precio no lo alcanzamos, pero si tu proveedor queda mal aquí estamos con entrega el mismo día. ¡Éxito con la obra!", hoursAgo: 95, ai: true },
+      { dir: "in", text: "Quanto tá a tonelada de vergalhão 3/8?", hoursAgo: 96 },
+      { dir: "out", text: "Oi, Roberto: a tonelada de vergalhão 3/8 está US$ 890. Para quando você precisa?", hoursAgo: 96, ai: true },
+      { dir: "in", text: "Ih, não, em outro lugar me fazem por 800", hoursAgo: 95 },
+      { dir: "out", text: "Entendo. Esse preço a gente não consegue, mas se o seu fornecedor falhar estamos aqui com entrega no mesmo dia. Sucesso na obra!", hoursAgo: 95, ai: true },
     ],
   },
   {
     phone: "5215612340007",
-    name: "Paty Domínguez",
-    stage: "En conversación",
+    name: "Paty Domingues",
+    stage: "Em conversa",
     thread: [
-      { dir: "in", text: "Hola, ¿tienen impermeabilizante? Se me llueve la azotea 😩", hoursAgo: 26 },
-      { dir: "out", text: "¡Hola Paty! Claro: el impermeabilizante acrílico 5 años (cubeta 19 L) está en $1,680 MXN, cubre ~40 m². ¿De cuántos metros es tu azotea?", hoursAgo: 26, ai: true },
-      { dir: "in", text: "Como de 60 metros, ¿me alcanzaría con dos?", hoursAgo: 25 },
+      { dir: "in", text: "Oi, vocês têm impermeabilizante? Tá chovendo dentro de casa pela laje 😩", hoursAgo: 26 },
+      { dir: "out", text: "Oi, Paty! Claro: o impermeabilizante acrílico 5 anos (balde de 18 L) está US$ 89 e cobre ~40 m². Quantos metros tem a sua laje?", hoursAgo: 26, ai: true },
+      { dir: "in", text: "Uns 60 metros, dois baldes dão?", hoursAgo: 25 },
     ],
   },
   {
     phone: "5215612340008",
-    name: "Don Chuy Aguilar",
+    name: "Seu Chico Aguiar",
     stage: "Cliente",
     thread: [
-      { dir: "in", text: "Joven, mándeme la lista de lo de siempre para la cuadrilla", hoursAgo: 50 },
-      { dir: "out", text: "¡Con gusto Don Chuy! Su pedido habitual: 5 bultos de cemento, 2 de mortero, 1 rollo de alambre recocido y 3 kg de clavo. Total: $1,585 MXN. ¿Se lo mandamos a la obra de Av. Juárez?", hoursAgo: 50, ai: true },
-      { dir: "in", text: "Ándele, ahí mismo. Se paga contra entrega como siempre", hoursAgo: 49 },
-      { dir: "out", text: "Perfecto, sale en la camioneta de las 4. ¡Gracias Don Chuy!", hoursAgo: 49, ai: true },
+      { dir: "in", text: "Moço, me manda a lista de sempre pra equipe da obra", hoursAgo: 50 },
+      { dir: "out", text: "Com prazer, Seu Chico! O pedido de sempre: 5 sacos de cimento, 2 de argamassa, 1 rolo de arame recozido e 3 kg de prego. Total: US$ 92. Mandamos para a obra da Orange Ave.?", hoursAgo: 50, ai: true },
+      { dir: "in", text: "Isso, lá mesmo. Pago na entrega como sempre", hoursAgo: 49 },
+      { dir: "out", text: "Perfeito, sai na caminhonete das 16h. Obrigado, Seu Chico!", hoursAgo: 49, ai: true },
     ],
   },
 ];
@@ -118,15 +118,15 @@ const DEMO_KB: { kind: "qa" | "block"; question?: string; answer?: string; conte
   {
     kind: "block",
     content:
-      "Ferretería El Martillo — ferretería familiar con 20 años en la colonia Centro. Vendemos herramienta manual y eléctrica, material de construcción, pintura, plomería y material eléctrico. Atendemos a público general, maestros de obra y talleres.",
+      "Ferragem O Martelo — loja de ferragens familiar com 20 anos no centro da cidade. Vendemos ferramentas manuais e elétricas, material de construção, tintas, hidráulica e material elétrico. Atendemos o público em geral, mestres de obra e oficinas.",
   },
-  { kind: "qa", question: "¿Cuál es el horario?", answer: "Lunes a sábado de 8:00 a 19:00 y domingos de 9:00 a 14:00." },
-  { kind: "qa", question: "¿Dónde están ubicados?", answer: "Av. Hidalgo 245, colonia Centro. Hay estacionamiento gratuito para clientes en la calle lateral." },
-  { kind: "qa", question: "¿Hacen envíos a domicilio?", answer: "Sí: entrega el mismo día en la zona si confirmas antes de la 1 pm. Flete local $150 MXN; gratis en compras mayores a $3,000 MXN." },
-  { kind: "qa", question: "¿Qué métodos de pago aceptan?", answer: "Efectivo, tarjeta (crédito/débito), transferencia SPEI y pago contra entrega en pedidos locales." },
-  { kind: "qa", question: "¿Dan factura?", answer: "Sí, facturamos el mismo día. Envíanos tu constancia de situación fiscal y el ticket de compra." },
-  { kind: "qa", question: "¿Tienen precios de mayoreo?", answer: "Sí: en cemento, mortero y varilla hay precio especial a partir de 10 unidades; en pintura a partir de 5 cubetas. Pide tu cotización por WhatsApp." },
-  { kind: "qa", question: "¿Qué marcas de herramienta manejan?", answer: "Truper, Pretul, DeWalt, Makita y Ryobi en eléctrica; Volteck y Condulac en material eléctrico; Comex y Berel en pintura." },
+  { kind: "qa", question: "Qual é o horário?", answer: "Segunda a sábado das 8h às 19h e domingos das 9h às 14h." },
+  { kind: "qa", question: "Onde vocês ficam?", answer: "245 Orange Ave., no centro. Há estacionamento gratuito para clientes na rua lateral." },
+  { kind: "qa", question: "Vocês fazem entrega?", answer: "Sim: entrega no mesmo dia na região se confirmar antes das 13h. Frete local US$ 25; grátis em compras acima de US$ 150." },
+  { kind: "qa", question: "Quais formas de pagamento vocês aceitam?", answer: "Dinheiro, cartão (crédito/débito), Zelle e pagamento na entrega em pedidos locais." },
+  { kind: "qa", question: "Vocês emitem nota fiscal?", answer: "Sim, emitimos no mesmo dia. Envie os dados da empresa e o comprovante de compra." },
+  { kind: "qa", question: "Vocês têm preço de atacado?", answer: "Sim: em cimento, argamassa e vergalhão há preço especial a partir de 10 unidades; em tintas a partir de 5 latas. Peça seu orçamento pelo WhatsApp." },
+  { kind: "qa", question: "Quais marcas de ferramenta vocês trabalham?", answer: "Black+Decker, DeWalt, Makita e Ryobi em elétricas; Leviton e Eaton em material elétrico; Sherwin-Williams e Behr em tintas." },
   // HUECO INTENCIONAL: nada sobre garantías ni devoluciones (lo encuentra el Laboratorio).
 ];
 
@@ -177,7 +177,7 @@ export async function seedDemo(
     .where(eq(schema.pipelineStage.organizationId, organizationId));
   const stageByName = new Map(stages.map((s) => [s.name, s.id]));
   const fallbackStage = stages[0]?.id;
-  if (!fallbackStage) throw new Error("La organización no tiene etapas");
+  if (!fallbackStage) throw new Error("A organização não tem etapas");
 
   // --- Contactos + conversaciones + mensajes + leads ---
   const now = Date.now();
@@ -255,13 +255,13 @@ export async function seedDemo(
   await db
     .update(schema.agentProfile)
     .set({
-      name: "Martillito",
-      tone: "Cercano y práctico, de ferretería de confianza. Tutea al cliente.",
+      name: "Martelinho",
+      tone: "Próximo e prático, de loja de bairro de confiança. Trata o cliente por você.",
       instructions:
-        "Ayuda a cotizar y cerrar ventas. Da precios en MXN solo si están en el conocimiento. Si piden mayoreo, menciona los mínimos. Nunca inventes existencias.",
+        "Ajuda a fazer orçamentos e fechar vendas. Dá preços em US$ só se estiverem no conhecimento. Se pedirem atacado, menciona os mínimos. Nunca inventa estoque.",
       escalationRules:
-        "Escala a un humano si piden factura con datos fiscales complejos, si hay una queja de producto dañado o si lo piden explícitamente.",
-      greeting: "¡Hola! Soy Martillito, el asistente de Ferretería El Martillo 🔨",
+        "Escala para um humano se pedirem nota fiscal com dados complexos, se houver reclamação de produto com defeito ou se pedirem explicitamente.",
+      greeting: "Olá! Sou o Martelinho, o assistente da Ferragem O Martelo 🔨",
       updatedAt: new Date(),
     })
     .where(eq(schema.agentProfile.organizationId, organizationId));
@@ -287,10 +287,10 @@ export async function seedDemo(
       veredicto: "verde",
       hallazgos: [],
       transcript: [
-        { role: "cliente", text: "¿Tienen taladros inalámbricos disponibles?" },
-        { role: "agente", text: "¡Sí! Truper 20V en $1,899 MXN y DeWalt 20V MAX en $3,450 MXN." },
-        { role: "cliente", text: "Me convence, lo compro. ¿Cómo pago?" },
-        { role: "agente", text: "Aceptamos efectivo, tarjeta, SPEI o contra entrega. Te lo aparto ahora mismo." },
+        { role: "cliente", text: "Vocês têm furadeiras sem fio disponíveis?" },
+        { role: "agente", text: "Temos! Black+Decker 20V por US$ 99 e DeWalt 20V MAX por US$ 179." },
+        { role: "cliente", text: "Gostei, vou comprar. Como eu pago?" },
+        { role: "agente", text: "Aceitamos dinheiro, cartão, Zelle ou pagamento na entrega. Já separo para você." },
       ],
     },
     {
@@ -298,8 +298,8 @@ export async function seedDemo(
       veredicto: "verde",
       hallazgos: [],
       transcript: [
-        { role: "cliente", text: "¿Qué precio tiene el martillo?" },
-        { role: "agente", text: "Tenemos varios; el más pedido es el Truper de uña. ¿Te confirmo precio y existencia con el equipo?" },
+        { role: "cliente", text: "Qual o preço do martelo?" },
+        { role: "agente", text: "Temos vários; o mais pedido é o martelo de unha Stanley. Confirmo preço e estoque com a equipe?" },
       ],
     },
     {
@@ -309,12 +309,12 @@ export async function seedDemo(
         {
           tipo: "tono",
           evidencia:
-            "El agente respondió correcto pero algo frío ante 'es una porquería'; faltó empatizar antes de escalar.",
+            "O agente respondeu certo, mas meio frio diante de 'é uma porcaria'; faltou empatia antes de escalar.",
         },
       ],
       transcript: [
-        { role: "cliente", text: "Compré una lijadora la semana pasada y ya no prende, es una porquería" },
-        { role: "agente", text: "Lamento el problema. Paso tu caso a un compañero del equipo para resolverlo." },
+        { role: "cliente", text: "Comprei uma lixadeira semana passada e ela já não liga, é uma porcaria" },
+        { role: "agente", text: "Sinto muito pelo problema. Vou passar seu caso para um colega da equipe resolver." },
       ],
     },
     {
@@ -324,17 +324,17 @@ export async function seedDemo(
         {
           tipo: "fuera_de_kb",
           evidencia:
-            "El cliente preguntó por garantías y devoluciones y el conocimiento no lo cubre.",
+            "O cliente perguntou sobre garantia e devolução e o conhecimento não cobre isso.",
           sugerencia: {
-            pregunta: "¿Cuál es la política de garantías y devoluciones?",
+            pregunta: "Qual é a política de garantia e devolução?",
             respuesta:
-              "Aceptamos devoluciones dentro de los 30 días con ticket de compra; la garantía depende del fabricante.",
+              "Aceitamos devoluções em até 30 dias com o comprovante de compra; a garantia depende do fabricante.",
           },
         },
       ],
       transcript: [
-        { role: "cliente", text: "¿Cuál es su política de garantías y devoluciones?" },
-        { role: "agente", text: "Déjame confirmarlo con el equipo y te digo en un momento." },
+        { role: "cliente", text: "Qual é a política de garantia e devolução de vocês?" },
+        { role: "agente", text: "Deixa eu confirmar com a equipe e já te falo." },
       ],
     },
     {
@@ -342,8 +342,8 @@ export async function seedDemo(
       veredicto: "verde",
       hallazgos: [],
       transcript: [
-        { role: "cliente", text: "Prefiero que me atienda una persona, quiero hablar con un humano" },
-        { role: "agente", text: "(handoff: la conversación pasó a atención humana)" },
+        { role: "cliente", text: "Prefiro ser atendido por uma pessoa, quero falar com um humano" },
+        { role: "agente", text: "(handoff: a conversa passou para atendimento humano)" },
       ],
     },
     {
@@ -351,8 +351,8 @@ export async function seedDemo(
       veredicto: "verde",
       hallazgos: [],
       transcript: [
-        { role: "cliente", text: "ke onda, si benden pintura?" },
-        { role: "agente", text: "¡Claro! Manejamos Comex y Berel. ¿Qué necesitas pintar?" },
+        { role: "cliente", text: "eae, vcs vendem tinta?" },
+        { role: "agente", text: "Claro! Trabalhamos com Sherwin-Williams e Behr. O que você precisa pintar?" },
       ],
     },
   ];
