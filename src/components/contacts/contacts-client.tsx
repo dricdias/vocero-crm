@@ -94,10 +94,10 @@ export function ContactsClient() {
     <div className="flex h-full flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-[17px] font-bold tracking-tight">Contactos</h2>
+          <h2 className="text-[17px] font-bold tracking-tight">Contatos</h2>
           <Button size="sm" onClick={() => setCreando(true)}>
             <UserPlus className="mr-1.5 h-4 w-4" strokeWidth={1.8} />
-            Nuevo contacto
+            Novo contato
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setImportando(true)}>
             <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.8} />
@@ -112,16 +112,16 @@ export function ContactsClient() {
               onChange={(e) => setShowArchived(e.target.checked)}
               className="accent-primary"
             />
-            Ver archivados
+            Ver arquivados
           </label>
           {stages.length > 0 && (
             <select
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              aria-label="Filtrar por etapa del embudo"
+              aria-label="Filtrar por etapa do funil"
               className="h-9 rounded-md border border-input bg-card px-2 text-sm"
             >
-              <option value="all">Toda etapa</option>
+              <option value="all">Todas as etapas</option>
               {stages.map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -133,8 +133,8 @@ export function ContactsClient() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder="Buscar por nombre o teléfono…"
-              aria-label="Buscar contacto"
+              placeholder="Buscar por nome ou telefone…"
+              aria-label="Buscar contato"
               defaultValue=""
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-8 sm:w-72"
@@ -149,13 +149,13 @@ export function ContactsClient() {
             <EmptyState
               icon={Search}
               className="h-full"
-              title="Sin resultados"
+              title="Nenhum resultado"
               description={
                 <>
-                  Nadie coincide con
+                  Ninguém corresponde a
                   {query.trim() ? ` «${query.trim()}»` : ""}
-                  {query.trim() && stage !== "all" ? " en" : ""}
-                  {stage !== "all" ? ` la etapa «${stage}»` : ""}.
+                  {query.trim() && stage !== "all" ? " em" : ""}
+                  {stage !== "all" ? ` a etapa «${stage}»` : ""}.
                 </>
               }
             />
@@ -163,8 +163,8 @@ export function ContactsClient() {
             <EmptyState
               icon={Users}
               className="h-full"
-              title="Sin contactos"
-              description="Cada persona que escriba a tu WhatsApp quedará registrada aquí automáticamente."
+              title="Nenhum contato"
+              description="Cada pessoa que escrever para o seu WhatsApp ficará registrada aqui automaticamente."
             />
           )
         ) : (
@@ -187,15 +187,15 @@ export function ContactsClient() {
                       <Badge variant="outline">{c.stageName}</Badge>
                     )}
                     {c.archivedAt && (
-                      <Badge variant="secondary">Archivado</Badge>
+                      <Badge variant="secondary">Arquivado</Badge>
                     )}
                     {c.aiPaused && (
                       <Badge
                         variant="warning"
-                        title="El agente no le responde a este contacto: lo atiendes tú"
+                        title="O agente não responde a este contato: você atende"
                       >
                         <BotOff className="mr-1 h-3 w-3" strokeWidth={1.8} />
-                        Sin agente
+                        Sem agente
                       </Badge>
                     )}
                     {/* Solo la fuente que alguien capturó: presentar una
@@ -225,21 +225,21 @@ export function ContactsClient() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Escribir primero"
-                    title="Escribir primero (con plantilla)"
+                    aria-label="Escrever primeiro"
+                    title="Escrever primeiro (com template)"
                     onClick={() => setEscribiendo(c)}
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                   <Link href={`/inbox?contact=${c.id}`}>
-                    <Button variant="ghost" size="icon" aria-label="Abrir conversación">
+                    <Button variant="ghost" size="icon" aria-label="Abrir conversa">
                       <MessageSquareText className="h-4 w-4" />
                     </Button>
                   </Link>
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={c.archivedAt ? "Desarchivar" : "Archivar"}
+                    aria-label={c.archivedAt ? "Desarquivar" : "Arquivar"}
                     onClick={() => void patch(c.id, { archived: !c.archivedAt })}
                   >
                     {c.archivedAt ? (
@@ -271,15 +271,15 @@ export function ContactsClient() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Escribir primero"
+          aria-label="Escrever primeiro"
         >
           <div className="w-full max-w-md rounded-lg border bg-popover p-4 shadow-pop">
             <div className="mb-3 flex items-baseline justify-between gap-2">
               <h3 className="font-semibold">
-                Escribir a {escribiendo.name}
+                Escrever para {escribiendo.name}
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setEscribiendo(null)}>
-                Cerrar
+                Fechar
               </Button>
             </div>
             <StartConversation
@@ -342,11 +342,11 @@ function EditDialog({
         className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-4 font-semibold">Editar contacto</h3>
+        <h3 className="mb-4 font-semibold">Editar contato</h3>
         <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="edit-name">
-              Nombre
+              Nome
             </label>
             <Input
               id="edit-name"
@@ -374,9 +374,9 @@ function EditDialog({
               className="mt-0.5 accent-primary"
             />
             <span>
-              El agente no le responde
+              O agente não responde
               <span className="block text-[11px] text-text-3">
-                Sus mensajes llegan a la Bandeja y los atiendes tú.
+                As mensagens chegam à Caixa de entrada e você atende.
               </span>
             </span>
           </label>
@@ -397,7 +397,7 @@ function EditDialog({
               })
             }
           >
-            Guardar
+            Salvar
           </Button>
         </div>
       </div>

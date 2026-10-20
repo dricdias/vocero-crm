@@ -78,13 +78,13 @@ export async function onboardingStatus(
     pasoPerfil(profile, Boolean(kb)),
     {
       key: "ai",
-      label: "Proveedor de IA",
+      label: "Provedor de IA",
       status: ia.activa ? "ready" : "pending",
       nextAction: ia.activa
         ? ia.origen === "org"
-          ? "Llave guardada en Ajustes → IA"
-          : "Respaldo del entorno (OPENROUTER_*)"
-        : "Pega la llave de tu proveedor y elige el modelo en Ajustes → IA",
+          ? "Chave salva em Configurações → IA"
+          : "Reserva do ambiente (OPENROUTER_*)"
+        : "Cole a chave do seu provedor e escolha o modelo em Configurações → IA",
       href: "/settings/ai",
       // «Sin configurar» es lo obvio del paso; lo que sí hay que decir es por
       // qué una llave que el dueño YA pegó no sirve.
@@ -101,12 +101,12 @@ export async function onboardingStatus(
         channel?.status === "connected"
           ? "Número conectado"
           : channel
-            ? "Vuelve a conectar el número con un token vigente"
-            : "Vincular tu número",
+            ? "Conecte o número de novo com um token válido"
+            : "Vincular seu número",
       href: "/settings/whatsapp",
       problem:
         channel?.status === "reconnect_required"
-          ? "Meta dejó de aceptar el token de WhatsApp: vuelve a conectar el número."
+          ? "A Meta deixou de aceitar o token do WhatsApp: conecte o número de novo."
           : null,
     },
   ];
@@ -122,7 +122,7 @@ export async function onboardingStatus(
       label: "Agenda",
       status: "not_applicable",
       nextAction:
-        "La agenda no está encendida en esta instancia (variable AGENDA).",
+        "A agenda não está ligada nesta instância (variável AGENDA).",
       href: null,
       problem: null,
     });
@@ -144,11 +144,11 @@ function pasoPerfil(profile: Perfil | undefined, hayConocimiento: boolean): Read
     (Boolean(profile?.instructions?.trim()) || hayConocimiento);
   return {
     key: "profile",
-    label: "Configuración del agente",
+    label: "Configuração do agente",
     status: listo ? "ready" : "pending",
     nextAction: listo
-      ? "Nombre, instrucciones y conocimiento revisados"
-      : "Dale un nombre y escribe sus instrucciones o carga conocimiento del negocio",
+      ? "Nome, instruções e conhecimento revisados"
+      : "Dê um nome e escreva as instruções ou carregue conhecimento do negócio",
     href: "/agent",
     problem: null,
   };
@@ -181,13 +181,13 @@ async function pasoAgenda(organizationId: string, db: Db): Promise<ReadinessStep
 
   let problem: string | null = null;
   if (status === "unsupported") {
-    problem = `El conector «${settings?.connector}» no existe en esta instancia: elige otro en Ajustes → Agenda.`;
+    problem = `O conector «${settings?.connector}» não existe nesta instância: escolha outro em Configurações → Agenda.`;
   } else if (status === "pending" && settings && settings.connector !== "enlace-fijo") {
     const nombre = settings.connector === "zoom" ? "Zoom" : "Google";
     const cred = settings.connector === "zoom" ? zoom : google;
     problem = cred
-      ? `${nombre} rechazó la credencial guardada: vuelve a conectarlo en Ajustes → Agenda.`
-      : `Elegiste ${nombre} pero no está conectado: pega sus credenciales en Ajustes → Agenda.`;
+      ? `${nombre} rejeitou a credencial salva: conecte de novo em Configurações → Agenda.`
+      : `Você escolheu ${nombre}, mas ele não está conectado: cole as credenciais em Configurações → Agenda.`;
   }
 
   return {
@@ -196,8 +196,8 @@ async function pasoAgenda(organizationId: string, db: Db): Promise<ReadinessStep
     status,
     nextAction:
       status === "ready"
-        ? "Horarios y conector listos"
-        : "Guarda tus horarios y cómo se entrega la reunión en Ajustes → Agenda",
+        ? "Horários e conector prontos"
+        : "Salve seus horários e como a reunião é feita em Configurações → Agenda",
     href: "/settings/calendar",
     problem,
   };

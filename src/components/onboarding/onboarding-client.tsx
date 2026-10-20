@@ -29,7 +29,7 @@ export function OnboardingClient({
   // Antes del paso 1 el nombre es el de fábrica («Asistente») y se lee como
   // una palabra suelta, no como el nombre de alguien: se dice «tu agente».
   const agentReady = guide.steps.find((s) => s.key === "agent")?.done ?? false;
-  const agente = (agentReady && agentName) || "tu agente";
+  const agente = (agentReady && agentName) || "seu agente";
 
   async function encender() {
     setBusy(true);
@@ -44,7 +44,7 @@ export function OnboardingClient({
         error?: { message?: string };
       } | null;
       setError(
-        data?.error?.message ?? "No pudimos encender el agente. Inténtalo de nuevo."
+        data?.error?.message ?? "Não conseguimos ligar o agente. Tente de novo."
       );
       setBusy(false);
       return;
@@ -58,23 +58,23 @@ export function OnboardingClient({
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
         <header>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Guía de inicio
+            Guia de início
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            Deja listo tu CRM en {total} pasos
+            Deixe seu CRM pronto em {total} passos
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Hazlos en orden: cada botón te lleva a la pantalla que toca. Al
-            volver aquí verás tu avance.
+            Faça na ordem: cada botão leva você à tela certa. Ao
+            voltar aqui, você verá seu progresso.
           </p>
         </header>
 
-        <div aria-label="Avance">
+        <div aria-label="Progresso">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
-              {done} de {total} listos
+              {done} de {total} prontos
             </span>
-            {guide.complete && <span className="text-success-text">¡Completo!</span>}
+            {guide.complete && <span className="text-success-text">Completo!</span>}
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div
@@ -113,7 +113,7 @@ export function OnboardingClient({
                 <div className="min-w-0 flex-1">
                   <h2 className="font-semibold">
                     {step.title}
-                    <span className="sr-only">{step.done ? " (listo)" : " (pendiente)"}</span>
+                    <span className="sr-only">{step.done ? " (pronto)" : " (pendente)"}</span>
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
                   {!step.done && step.hint && (
@@ -125,7 +125,7 @@ export function OnboardingClient({
                         href={step.href}
                         className="text-sm text-muted-foreground underline underline-offset-2"
                       >
-                        Listo · revisar
+                        Pronto · revisar
                       </Link>
                     ) : (
                       <Link
@@ -156,27 +156,27 @@ export function OnboardingClient({
             <>
               <h2 className="font-semibold">
                 {agentReady && agentName
-                  ? `${agentName} ya está contestando`
-                  : "Tu agente ya está contestando"}
+                  ? `${agentName} já está respondendo`
+                  : "Seu agente já está respondendo"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                El agente está encendido y atiende a tus clientes por WhatsApp.
-                Puedes apagarlo cuando quieras desde Agente.
+                O agente está ligado e atende seus clientes pelo WhatsApp.
+                Você pode desligá-lo quando quiser em Agente.
               </p>
               <Link href="/inbox" className={cn(buttonVariants({ size: "sm" }), "mt-3")}>
-                Ir a la Bandeja <ArrowRight className="h-4 w-4" />
+                Ir para a Caixa de entrada <ArrowRight className="h-4 w-4" />
               </Link>
             </>
           ) : guide.complete ? (
             <>
-              <h2 className="font-semibold">¡Todo listo! Enciende a {agente}</h2>
+              <h2 className="font-semibold">Tudo pronto! Ligue o {agente}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Desde ese momento contestará a tus clientes por WhatsApp. Puedes
-                apagarlo cuando quieras desde Agente.
+                A partir daí ele vai responder seus clientes pelo WhatsApp. Você pode
+                desligá-lo quando quiser em Agente.
               </p>
               <Button className="mt-3" disabled={busy} onClick={() => void encender()}>
                 <Power className="h-4 w-4" />
-                {busy ? "Encendiendo…" : `Encender a ${agente}`}
+                {busy ? "Ligando…" : `Ligar o ${agente}`}
               </Button>
               {error && (
                 <p role="alert" className="mt-2 text-sm text-destructive">
@@ -188,13 +188,13 @@ export function OnboardingClient({
             <>
               <h2 className="flex items-center gap-2 font-semibold">
                 <Power className="h-4 w-4 text-muted-foreground" />
-                Al final: encender a {agente}
+                No final: ligar o {agente}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Tu agente empieza apagado: mientras no lo enciendas no le
-                contesta a nadie y los mensajes que lleguen los atiendes tú desde
-                la Bandeja. Cuando completes los {total} pasos, aquí aparece el
-                botón para encenderlo.
+                Seu agente começa desligado: enquanto você não ligar, ele não
+                responde ninguém e as mensagens que chegarem você atende pela
+                Caixa de entrada. Quando completar os {total} passos, aqui aparece o
+                botão para ligá-lo.
               </p>
             </>
           )}

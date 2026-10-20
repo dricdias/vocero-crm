@@ -51,29 +51,29 @@ export function guideFrom(status: OnboardingStatus): Guide {
   const steps: GuideStep[] = [
     {
       key: "agent",
-      title: "Configura tu agente",
+      title: "Configure seu agente",
       description:
-        "Ponle nombre y cuéntale a qué se dedica tu negocio. Si quieres ver un ejemplo primero, carga la demo desde la Bandeja y cámbiala por tus datos.",
+        "Dê um nome e conte o que seu negócio faz. Se quiser ver um exemplo antes, carregue a demo pela Caixa de entrada e troque pelos seus dados.",
       done: ready(profile),
       href: "/agent",
-      cta: "Ir a Agente",
+      cta: "Ir para Agente",
       hint: ready(profile) ? null : (profile?.nextAction ?? null),
     },
     {
       key: "ai",
-      title: "Vincula tu proveedor de IA",
+      title: "Vincule seu provedor de IA",
       description:
-        "Es la cuenta con la que tu agente piensa: OpenRouter o cualquier proveedor compatible con la API de OpenAI. La creas y la pagas tú; aquí solo pegas la llave y eliges el modelo.",
+        "É a conta com a qual seu agente pensa: OpenRouter ou qualquer provedor compatível com a API da OpenAI. Você cria e paga; aqui você só cola a chave e escolhe o modelo.",
       done: ready(ai),
       href: "/settings/ai",
-      cta: "Vincular proveedor",
+      cta: "Vincular provedor",
       hint: ai?.problem ?? null,
     },
     {
       key: "whatsapp",
-      title: "Vincula tu número de WhatsApp",
+      title: "Vincule seu número de WhatsApp",
       description:
-        "Conecta el número donde te escriben tus clientes. El CRM registra el webhook en Meta por ti al guardar.",
+        "Conecte o número onde seus clientes te escrevem. O CRM registra o webhook na Meta para você ao salvar.",
       done: ready(whatsapp),
       href: "/settings/whatsapp",
       cta: "Conectar WhatsApp",
@@ -85,9 +85,9 @@ export function guideFrom(status: OnboardingStatus): Guide {
   if (calendar && calendar.status !== "not_applicable") {
     steps.push({
       key: "calendar",
-      title: "Configura tu agenda",
+      title: "Configure sua agenda",
       description:
-        "Define tus horarios y cómo se entrega la reunión para que tu agente pueda agendar por ti.",
+        "Defina seus horários e como a reunião é feita para que seu agente possa agendar por você.",
       done: ready(calendar),
       href: "/settings/calendar",
       cta: "Configurar agenda",
