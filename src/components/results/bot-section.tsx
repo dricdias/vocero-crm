@@ -62,7 +62,7 @@ export function BotSection({
             <RateCard
               label="Passaram para um humano"
               rate={data.handoffRate}
-              unit="conversaciones"
+              unit="conversas"
             />
           </div>
 

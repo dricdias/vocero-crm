@@ -107,7 +107,7 @@ export function BrandingClient({
     router.refresh();
   }
 
-  if (!loaded) return <p className="text-sm text-text-3">Cargando…</p>;
+  if (!loaded) return <p className="text-sm text-text-3">Carregando…</p>;
 
   return (
     <div className="max-w-2xl space-y-6">

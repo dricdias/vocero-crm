@@ -52,7 +52,7 @@ export function AdsSection({
             <RateCard
               label="Chegaram por um anúncio"
               rate={data.adShare}
-              unit="conversaciones"
+              unit="conversas"
             />
           </div>
 

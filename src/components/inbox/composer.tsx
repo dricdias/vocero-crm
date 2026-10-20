@@ -392,7 +392,7 @@ export function Composer({
             disabled={sending}
             className="rounded-full bg-brand px-3.5 py-1.5 text-sm font-semibold text-brand-fg shadow-sm hover:bg-brand-hover disabled:opacity-40"
           >
-            Enviar contacto
+            Enviar contato
           </button>
           <button
             onClick={() => setPanel(null)}
