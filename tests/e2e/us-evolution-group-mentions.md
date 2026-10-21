@@ -10,6 +10,7 @@ Conector conectado, IA habilitada, guías Agi sincronizadas. Activar `EVOLUTION_
 2. A menciona a B: tampoco activa el agente.
 3. A selecciona el contacto del agente con @ y pregunta cómo recuperar contraseña: aparece conversación `A (grupo)` y respuesta en el grupo mencionando a A, basada en guías.
 4. A cita esa pregunta sin nueva mención: no dispara otro turno.
+   A usa Responder sobre la salida del agente a su atención, sin @: continúa el mismo atendimento. Probar cita en texto y en leyenda de imagen. B cita esa salida dirigida a A sin mencionar: no hereda ni activa el atendimento de A.
 5. B menciona al agente con otra duda: conversación independiente, sin historial ni datos de A.
 6. A escribe al privado del agente: el privado conserva su propio historial y funcionamiento.
 7. A envía imagen con leyenda y mención: se conserva el adjunto y la pregunta en su conversación de grupo.

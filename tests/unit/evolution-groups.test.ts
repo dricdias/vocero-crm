@@ -5,6 +5,8 @@ import { sendEvolutionText } from "@/server/evolution/client";
 
 vi.mock("@/server/inbox/ingest", () => ({ ingestInboundMessage: vi.fn() }));
 vi.mock("@/server/evolution/credentials", () => ({ setEvolutionStatus: vi.fn() }));
+vi.mock("@/server/evolution/replies", () => ({ confirmedGroupReply: vi.fn().mockResolvedValue(false) }));
+import { confirmedGroupReply } from "@/server/evolution/replies";
 import { ingestInboundMessage } from "@/server/inbox/ingest";
 import type { EvolutionCredentials } from "@/server/evolution/credentials";
 
@@ -15,7 +17,7 @@ const event = {
   Info: { ID: "GROUP1", Chat: group, Sender: sender, IsGroup: true, IsFromMe: false, Timestamp: 1792530000, PushName: "Ana" },
   Message: { extendedTextMessage: { text: "@15555550100 como recuperar a senha?", contextInfo: { mentionedJID: [bot] } } },
 };
-afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); vi.mocked(confirmedGroupReply).mockResolvedValue(false); });
 
 describe("Evolution Go: grupos por menção", () => {
   it("exige conector ativo e número válido para optar por grupos", () => {
@@ -113,5 +115,28 @@ describe("Evolution Go: grupos por menção", () => {
     const results = await Promise.all([groupBotAliases(access, bot), groupBotAliases(access, bot)]);
     expect(results).toEqual([[bot, "112233@lid"], [bot, "112233@lid"]]);
     expect(fetcher).toHaveBeenCalledOnce();
+  });
+  it.each(["context", "normalized"])("continua a resposta direta ao agente sem @ (%s)", async (shape) => {
+    vi.stubEnv("EVOLUTION_GO", "on");
+    vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
+    vi.mocked(confirmedGroupReply).mockResolvedValue(true);
+    const data = { ...event, ...(shape === "normalized" ? { quoted: { stanzaID: "OUT1" } } : {}), Message: { extendedTextMessage: { text: "Sim, é no Instagram", ...(shape === "context" ? { contextInfo: { stanzaID: "OUT1", quotedMessage: { conversation: "Qual conexão?" } } } : {}) } } };
+    await processEvolutionEvent({ organizationId: "org_reply" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data });
+    expect(confirmedGroupReply).toHaveBeenCalledWith("org_reply", group, sender, "OUT1");
+    expect(ingestInboundMessage).toHaveBeenCalledWith(expect.objectContaining({ organizationId: "org_reply", text: "Sim, é no Instagram", identity: expect.objectContaining({ identity: `evo-group:${group}:${sender}` }) }));
+  });
+  it("ignora resposta citada que não pertence ao atendimento do agente", async () => {
+    vi.stubEnv("EVOLUTION_GO", "on");
+    vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
+    await processEvolutionEvent({ organizationId: "org_reply_unknown" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data: { ...event, Message: { extendedTextMessage: { text: "sim", contextInfo: { stanzaID: "UNKNOWN", participant: bot, quotedMessage: { conversation: "falso" } } } } } });
+    expect(confirmedGroupReply).toHaveBeenCalled();
+    expect(ingestInboundMessage).not.toHaveBeenCalled();
+  });
+  it("respostas citadas também exigem ativação de grupos", async () => {
+    vi.stubEnv("EVOLUTION_GO", "on");
+    vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "");
+    await processEvolutionEvent({ organizationId: "org_reply_disabled" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data: { ...event, quoted: { stanzaID: "OUT1" }, Message: { conversation: "sim" } } });
+    expect(confirmedGroupReply).not.toHaveBeenCalled();
+    expect(ingestInboundMessage).not.toHaveBeenCalled();
   });
 });
