@@ -5,7 +5,7 @@ Solicitud: atender dudas de clientes en grupos solo al mencionar al agente. Opci
 ## Criterios
 
 - Solo `Info.IsGroup` con JID `@g.us`, remitente válido y `contextInfo.mentionedJID` del bot activa la ingesta. Se ignoran ecos, grupos sin mención y menciones citadas o dirigidas a terceros.
-- La identidad del bot es el número configurado. Los alias LID se confirman con `/user/info` del propio número, nunca se presupone que cualquier mención convoca al bot.
+- La identidad del bot es el número configurado. Los alias LID se confirman con `/user/check` del propio número, nunca se presupone que cualquier mención convoca al bot.
 - Cada grupo + participante tiene una identidad `evo-group:<group>:<sender>`, sin teléfono ni reconciliación con contactos individuales. Usa el flujo existente de ingesta, deduplicación, coalesce, handoff y ventana.
 - `channelThreadRef` contiene el JID de grupo. El remitente recibe la respuesta dentro del grupo, mencionado; nunca se envía al privado por accidente ni se deriva a Meta.
 - No hay migración: se reutilizan identidad opaca y threadRef existentes. El cuerpo del despacho y las rutas públicas no cambian. Bots externos deben tratar la nueva identidad como opaca; los envíos por conversación conservan el destino.

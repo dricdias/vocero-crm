@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { incomingEvolution, processEvolutionEvent } from "@/server/evolution/webhook";
-import { evolutionGroupTarget, groupBotJid } from "@/server/evolution/groups";
+import { evolutionGroupTarget, groupBotJid, groupBotAliases } from "@/server/evolution/groups";
 import { sendEvolutionText } from "@/server/evolution/client";
 
 vi.mock("@/server/inbox/ingest", () => ({ ingestInboundMessage: vi.fn() }));
@@ -66,12 +66,16 @@ describe("Evolution Go: grupos por menção", () => {
   it("resolve a menção LID pelo número configurado antes de ingerir", async () => {
     vi.stubEnv("EVOLUTION_GO", "on");
     vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
-    const fetcher = vi.fn().mockResolvedValue(Response.json({ message: "success", data: { Users: { [bot]: { LID: "998877@lid" } } } }));
+    const fetcher = vi.fn().mockImplementation(async (url: string) => {
+      if (url.endsWith("/user/info")) throw new DOMException("timeout", "TimeoutError");
+      return Response.json({ message: "success", data: { Users: [{ JID: bot, IsInWhatsapp: true, LID: "998877@lid" }] } });
+    });
     vi.stubGlobal("fetch", fetcher);
     const creds = { organizationId: "org_group", baseUrl: "https://evo.test", token: "secret-lid" } as EvolutionCredentials;
     await processEvolutionEvent(creds, { event: "Message", instanceToken: creds.token, data: { ...event, Message: { extendedTextMessage: { text: "senha?", contextInfo: { mentionedJID: ["998877@lid"] } } } } });
     expect(ingestInboundMessage).toHaveBeenCalledWith(expect.objectContaining({ organizationId: "org_group", threadRef: group }));
-    expect(fetcher.mock.calls[0]![0]).toBe("https://evo.test/user/info");
+    expect(fetcher.mock.calls[0]![0]).toBe("https://evo.test/user/check");
+    expect(JSON.parse(fetcher.mock.calls[0]![1].body)).toEqual({ number: ["15555550100"], formatJid: false });
   });
   it("falha fechada se a identidade LID não pode ser confirmada", async () => {
     vi.stubEnv("EVOLUTION_GO", "on");
@@ -93,8 +97,21 @@ describe("Evolution Go: grupos por menção", () => {
   it("não confia em LID de outro número retornado pelo gateway", async () => {
     vi.stubEnv("EVOLUTION_GO", "on");
     vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ message: "success", data: { Users: { "15555550101@s.whatsapp.net": { LID: "123456@lid" } } } })));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ message: "success", data: { Users: [{ JID: "15555550101@s.whatsapp.net", IsInWhatsapp: true, LID: "123456@lid" }] } })));
     await processEvolutionEvent({ organizationId: "org_other_lid", baseUrl: "https://evo.test", token: "other-lid" } as EvolutionCredentials, { event: "Message", instanceToken: "other-lid", data: { ...event, Message: { extendedTextMessage: { text: "oi", contextInfo: { mentionedJID: ["123456@lid"] } } } } });
     expect(ingestInboundMessage).not.toHaveBeenCalled();
+  });
+  it("não aceita LID quando o próprio número não foi confirmado", async () => {
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ message: "success", data: { Users: [{ JID: bot, IsInWhatsapp: false, LID: "123456@lid" }] } }));
+    vi.stubGlobal("fetch", fetcher);
+    expect(await groupBotAliases({ baseUrl: "https://evo.test", token: "not-confirmed" }, bot)).toEqual([bot]);
+  });
+  it("reutiliza a confirmação em consultas concorrentes", async () => {
+    const fetcher = vi.fn().mockImplementation(async () => Response.json({ message: "success", data: { Users: [{ JID: bot, IsInWhatsapp: true, LID: "112233@lid" }] } }));
+    vi.stubGlobal("fetch", fetcher);
+    const access = { baseUrl: "https://evo.test", token: "cached-checked-bot" };
+    const results = await Promise.all([groupBotAliases(access, bot), groupBotAliases(access, bot)]);
+    expect(results).toEqual([[bot, "112233@lid"], [bot, "112233@lid"]]);
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 });
