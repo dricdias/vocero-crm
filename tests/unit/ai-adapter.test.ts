@@ -85,6 +85,57 @@ describe("chatJson (reintentos y errores tipados)", () => {
     );
   }
 
+  it("solicita JSON para que una respuesta de soporte no termine como texto plano", async () => {
+    const fetchMock = vi.fn().mockImplementation((_url, init) => {
+      const body = JSON.parse(init.body as string);
+      return Promise.resolve(providerResponse(body.response_format?.type === "json_object"
+        ? '{"action":"reply","text":"O Max cuida dos dois."}'
+        : "O Max cuida dos dois: prepara campanhas na Meta e no Google Ads."));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await chatJson(schema, [{ role: "user", content: "O Max faz Google Ads? Responda em JSON." }]);
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("si el proveedor rechaza explícitamente response_format, conserva la compatibilidad", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('{"error":{"message":"Unsupported parameter: response_format"}}', { status: 400 }))
+      .mockResolvedValueOnce(providerResponse('{"action":"reply","text":"ok"}'));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await chatJson(schema, [{ role: "user", content: "JSON" }]);
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string).response_format).toEqual({ type: "json_object" });
+    expect(JSON.parse(fetchMock.mock.calls[1]![1]!.body as string)).not.toHaveProperty("response_format");
+  });
+
+  it("no retira el formato por un error de modelo ni acepta JSON fuera del esquema", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('{"error":{"message":"Unknown model"}}', { status: 400 }))
+      .mockResolvedValueOnce(providerResponse('{"action":"reply","text":42}'))
+      .mockResolvedValueOnce(providerResponse('{"action":"reply","text":"ok"}'));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await chatJson(schema, [{ role: "user", content: "JSON" }]);
+    expect(result.ok && result.data.text).toBe("ok");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const call of fetchMock.mock.calls) {
+      expect(JSON.parse(call[1]!.body as string).response_format).toEqual({ type: "json_object" });
+    }
+  });
+
+  it("mantiene la negociación durante reintentos sin compartirla con otro turno", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('response_format is not supported', { status: 422 }))
+      .mockResolvedValueOnce(providerResponse('texto sin JSON'))
+      .mockResolvedValueOnce(providerResponse('{"action":"reply","text":"ok"}'))
+      .mockResolvedValueOnce(providerResponse('{"action":"reply","text":"otro"}'));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await chatJson(schema, [{ role: "user", content: "JSON" }])).ok).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[2]![1]!.body as string)).not.toHaveProperty("response_format");
+    expect((await chatJson(schema, [{ role: "user", content: "JSON" }])).ok).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[3]![1]!.body as string).response_format).toEqual({ type: "json_object" });
+  });
+
   it("salida inválida al primer intento → reintenta con STRICT y triunfa", async () => {
     const fetchMock = vi
       .fn()
