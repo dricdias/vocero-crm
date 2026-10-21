@@ -75,6 +75,8 @@ export async function chatJson<T>(
   }
 
   let lastDetail = "";
+  // La negociación vale solo para este turno y este proveedor, nunca global.
+  const format = { jsonMode: true };
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const attemptMessages: ChatMessage[] =
       attempt === 1
@@ -92,7 +94,8 @@ export async function chatJson<T>(
         provider,
         model,
         attemptMessages,
-        opts?.timeoutMs
+        opts?.timeoutMs,
+        format
       );
       const extracted = extractJson(raw);
       if (extracted === null) {
@@ -161,21 +164,38 @@ async function callProvider(
   provider: AiProvider,
   model: string,
   messages: ChatMessage[],
-  timeoutMs = 60_000
+  timeoutMs = 60_000,
+  format = { jsonMode: true }
 ): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(chatCompletionsUrl(provider.baseUrl), {
+    const request = () => fetch(chatCompletionsUrl(provider.baseUrl), {
       method: "POST",
       headers: {
         // El token jamás se loguea; solo viaja en este header.
         Authorization: `Bearer ${provider.token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ model, messages, stream: false }),
+      body: JSON.stringify({
+        model, messages, stream: false,
+        ...(format.jsonMode ? { response_format: { type: "json_object" } } : {}),
+      }),
       signal: controller.signal,
     });
+    let res = await request();
+    if (format.jsonMode && (res.status === 400 || res.status === 422)) {
+      const text = await res.text().catch(() => "");
+      // Solo retiramos el parámetro si el proveedor dice que no lo admite.
+      // Un error de modelo, contexto o autenticación no es negociación.
+      if (/(?:response_format|json_object)/i.test(text) &&
+          /(?:unsupported|not supported|does not support|not available|unknown|unrecognized|not permitted|not allowed|extra inputs|extra_forbidden)/i.test(text)) {
+        format.jsonMode = false;
+        res = await request();
+      } else {
+        throw new ProviderHttpError(res.status, text);
+      }
+    }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new ProviderHttpError(res.status, text);
