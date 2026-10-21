@@ -5,6 +5,7 @@ import { normalizeMx } from "@/lib/meta/client";
 import { ingestInboundMessage } from "@/server/inbox/ingest";
 import { applyStatusUpdate } from "@/server/inbox/status";
 import { setEvolutionStatus, type EvolutionCredentials } from "./credentials";
+import { canonicalUserJid, groupBotAliases, groupBotJid } from "./groups";
 
 export const evolutionEventSchema = z.object({
   event: z.string(),
@@ -29,7 +30,10 @@ const messageSchema = z.object({
   Message: z
     .object({
       conversation: z.string().optional(),
-      extendedTextMessage: z.object({ text: z.string().optional() }).optional(),
+      extendedTextMessage: z
+        .object({ text: z.string().optional() })
+        .passthrough()
+        .optional(),
     })
     .passthrough(),
 });
@@ -39,20 +43,43 @@ const receiptSchema = z.object({
   Timestamp: z.union([z.string(), z.number()]).optional(),
 });
 
-/** Pura: los grupos, ecos propios y JID sin teléfono no activan el agente. */
-export function incomingEvolution(data: unknown) {
+/** No inspecciona quotedMessage: citar una mención no convoca al bot. */
+const mentionContextSchema = z.object({
+  contextInfo: z.object({ mentionedJID: z.array(z.string()).max(1024).optional() }).optional(),
+});
+function mentionsIn(message: Record<string, unknown>): string[] {
+  const contexts = [
+    "extendedTextMessage", "imageMessage", "videoMessage",
+    "documentMessage", "audioMessage", "stickerMessage",
+  ];
+  return contexts.flatMap((key) => {
+    const parsed = mentionContextSchema.safeParse(message[key]);
+    return parsed.success ? parsed.data.contextInfo?.mentionedJID ?? [] : [];
+  });
+}
+
+/** Pura: solo las menciones explícitas al bot abren un hilo de grupo. */
+export function incomingEvolution(data: unknown, botJids: readonly string[] = []) {
   const parsed = messageSchema.safeParse(data);
   if (!parsed.success) return null;
   const { Info: info, Message: message } = parsed.data;
   if (
     info.IsFromMe ||
-    info.IsGroup ||
-    !/^\d+(?::\d+)?@(s\.whatsapp\.net|lid)$/.test(info.Chat)
+    (!info.IsGroup && !/^\d+(?::\d+)?@(s\.whatsapp\.net|lid)$/.test(info.Chat))
   )
     return null;
+  const sender = info.Sender ? canonicalUserJid(info.Sender) : null;
+  if (info.IsGroup) {
+    const mentions = mentionsIn(message);
+    const bots = new Set(botJids.map(canonicalUserJid).filter(Boolean));
+    if (
+      !/^\d+(?:-\d+)?@g\.us$/.test(info.Chat) || !sender ||
+      !mentions.some((jid) => bots.has(canonicalUserJid(jid)))
+    ) return null;
+  }
   const rawId = info.Chat.split("@")[0]!.split(":")[0]!;
-  const phone = info.Chat.endsWith("@lid") ? null : normalizeMx(rawId);
-  const identity = phone ?? `evo-lid:${rawId}`;
+  const phone = info.IsGroup || info.Chat.endsWith("@lid") ? null : normalizeMx(rawId);
+  const identity = info.IsGroup ? `evo-group:${info.Chat}:${sender}` : phone ?? `evo-lid:${rawId}`;
   const timestamp =
     typeof info.Timestamp === "number"
       ? info.Timestamp
@@ -83,8 +110,9 @@ export function incomingEvolution(data: unknown) {
       identity,
       phone,
       waUserId: null,
-      profileName: info.PushName ?? null,
+      profileName: info.IsGroup ? `${info.PushName || "Participante"} (grupo)` : info.PushName ?? null,
     },
+    ...(info.IsGroup ? { threadRef: info.Chat } : {}),
     waMessageId: `evo:${info.ID}`,
     timestamp: String(timestamp),
     type: kind ?? "text",
@@ -121,7 +149,18 @@ export async function processEvolutionEvent(
     return;
   }
   if (event.event === "Message") {
-    const incoming = incomingEvolution(event.data);
+    const parsed = messageSchema.safeParse(event.data);
+    let botJids: string[] = [];
+    const bot = groupBotJid();
+    if (parsed.success && parsed.data.Info.IsGroup && !parsed.data.Info.IsFromMe && bot) {
+      const mentions = mentionsIn(parsed.data.Message);
+      botJids = [bot];
+      if (
+        mentions.some((jid) => canonicalUserJid(jid)?.endsWith("@lid")) &&
+        !mentions.some((jid) => canonicalUserJid(jid) === bot)
+      ) botJids = await groupBotAliases(creds, bot);
+    }
+    const incoming = incomingEvolution(event.data, botJids);
     if (incoming?.media) {
       const encrypted = encryptSecret(
         JSON.stringify(incoming.media.payload.evolutionMessage),
