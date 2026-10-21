@@ -20,7 +20,7 @@ Meta continúa disponible. Solo un transporte puede estar configurado por organi
 
 ## Límites y verificación
 
-No se importan conversaciones históricas, grupos ni mensajes propios del teléfono. No hay plantillas de Meta ni indicador de escritura por Evolution Go; enviar ubicación/contactos estructurados falla explícitamente. Los contactos sin teléfono deben revisarse según la compatibilidad de JID del gateway. La capacidad de conexión depende de la versión Evolution Go desplegada; contratos revisados en `evolution-go-investigacion.md`.
+No se importan conversaciones históricas ni mensajes propios del teléfono. Los grupos se ignoran salvo activación explícita descrita abajo. No hay plantillas de Meta ni indicador de escritura por Evolution Go; enviar ubicación/contactos estructurados falla explícitamente. Los contactos sin teléfono deben revisarse según la compatibilidad de JID del gateway. La capacidad de conexión depende de la versión Evolution Go desplegada; contratos revisados en `evolution-go-investigacion.md`.
 
 Verificación automatizada: tests de contrato con fetch simulado, configuración apagada/encendida en CI, tipos, lint y build. Pendiente de verificación humana: guardar credencial real, escanear QR, recibir mensaje de otro teléfono, obtener respuesta del agente, enviar/recibir adjunto y reconectar. No se ha desplegado este cambio ni configurado una instancia remota.
 
@@ -29,3 +29,17 @@ Verificación automatizada: tests de contrato con fetch simulado, configuración
 Integrar este commit à branch `pt-br` de `dricdias/vocero-crm`, que já é a fonte do aplicativo existente. Em Environment Variables, adicionar `EVOLUTION_GO=on` como variável de execução e fazer redeploy com o Dockerfile da raiz. Manter domínio, porta 3000, volume `/data`, conexão Postgres e chaves atuais. Não substituir o aplicativo pela imagem oficial: ela não contém este conector.
 
 A migração é aplicada automaticamente pelo entrypoint. Após a aplicação ficar saudável, abrir Configurações / WhatsApp, selecionar Evolution Go, salvar a URL raiz e o token de uma instância dedicada, gerar QR e consultar estado após vincular. Se for preciso ocultar o conector, retirar a flag e fazer novo deploy; o banco e os dados existentes permanecem.
+
+## Grupos: responder somente por menção
+
+No Coolify, adicionar `EVOLUTION_GO_GROUP_BOT_NUMBER` com o número conectado ao Evolution Go (DDI, DDD e número, somente dígitos) e fazer Deploy. Requer `EVOLUTION_GO=on`. Não é uma senha. Sem número válido, o comportamento continua individual. Não é necessário reconectar o WhatsApp nem alterar o webhook.
+
+No Evolution Go, a instância precisa permitir eventos de grupos: `IgnoreGroups` e a configuração global `EVENT_IGNORE_GROUP` devem estar desligados. O CRM não muda essas opções automaticamente. No grupo, escolher o contato do agente na lista de menções do WhatsApp; digitar um `@nome` como texto simples não cria uma menção. Cada nova pergunta precisa mencionar o agente. Citar uma mensagem antiga que menciona o agente não o convoca.
+
+O CRM recebe somente as perguntas com menção ao próprio agente. Menções a outras pessoas e mensagens próprias são ignoradas. Menções em texto e legendas de anexos são reconhecidas. Quando o WhatsApp usa um identificador LID, o CRM consulta `POST /user/info` para confirmar o LID do número configurado (cache de cinco minutos, nova tentativa após falha em 30 segundos). Se não puder confirmar a identidade, não responde por suposição.
+
+Cada combinação de grupo e participante gera um atendimento separado, sem telefone associado e sem reutilizar o histórico privado do participante. A identidade é `evo-group:<grupo@g.us>:<participante@s.whatsapp.net ou @lid>`, e `conversation.channelThreadRef` guarda o grupo. A resposta vai ao grupo com menção somente ao participante atendido. O agente recebe instruções para lembrar que a resposta é pública e orientar assuntos privados para uma conversa individual. Ele não lê o restante da conversa do grupo.
+
+Os bloqueios de sandbox, organização, janela e handoff continuam aplicados. Um handoff pausa somente o atendimento daquele participante naquele grupo; para retomar, reativar a IA dessa conversa na bandeja. Conversas de grupo não são enviadas pela Meta se Evolution for desconectado. Remover a variável e fazer Deploy impede novas entradas de grupos sem apagar os históricos existentes.
+
+Teste de aceitação: enviar mensagem sem menção (silêncio), mencionar outra pessoa (silêncio), mencionar o agente com pergunta dos guias (resposta no grupo), repetir com outro participante (atendimento independente), testar uma pergunta no privado (continua respondendo). Ver `tests/e2e/us-evolution-group-mentions.md`.

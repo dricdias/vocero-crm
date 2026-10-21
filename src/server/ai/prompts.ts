@@ -35,6 +35,7 @@ export function buildAgentSystemPrompt(input: {
   profile: AgentProfile;
   kb: KbEntry[];
   supportKnowledge?: string;
+  group?: boolean;
   stages: { name: string }[];
   /**
    * 015 — ¿esta instancia tiene agenda? Apagada, el prompt no gasta ni un
@@ -65,6 +66,7 @@ export function buildAgentSystemPrompt(input: {
       ? `Regras de escalonamento para humano:\n${profile.escalationRules}`
       : null,
     profile.greeting ? `Saudação sugerida para conversas novas: ${profile.greeting}` : null,
+    input.group ? "ATENDIMENTO EM GRUPO: você foi mencionado explicitamente. Responda à dúvida do participante; sua resposta será pública no grupo. O histórico deste atendimento contém somente as mensagens desse participante que mencionaram você neste grupo. Não suponha que leu as outras mensagens. Não peça senhas, códigos de verificação ou dados privados; oriente a continuar no privado quando necessário. O sistema identifica o destinatário da resposta: não escreva menções numéricas por conta própria." : null,
     `CONHECIMENTO DO NEGÓCIO (sua única fonte de verdade; se algo não está aqui, NÃO invente — diga que vai confirmar com a equipe ou escale):\n${[renderKb(input.kb), input.supportKnowledge].filter(Boolean).join("\n\n")}`,
     `Etapas do funil disponíveis: ${stageNames}`,
     [

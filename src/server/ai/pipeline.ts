@@ -281,7 +281,7 @@ export async function runAgentTurn(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge }),
+      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge, group: conversation.channel === "whatsapp" && /@g\.us$/.test(conversation.channelThreadRef ?? "") }),
     },
     ...history
       .filter((m) => m.text)

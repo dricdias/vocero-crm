@@ -1,5 +1,6 @@
 import { getEvolutionByOrg, setEvolutionStatus, type EvolutionCredentials } from "@/server/evolution/credentials";
 import { sendEvolutionText, sendEvolutionMedia, EvolutionError } from "@/server/evolution/client";
+import { evolutionGroupTarget } from "@/server/evolution/groups";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
@@ -82,6 +83,7 @@ export class SendError extends Error {
 type SendResult = { messageId: string };
 
 type SendTarget = {
+  groupParticipant?: string;
   evolution?: EvolutionCredentials;
   conversation: typeof schema.conversation.$inferSelect;
   /** null cuando el destino no es WhatsApp (014). */
@@ -309,12 +311,16 @@ async function prepareSend(
   }
 
   const evolution = await getEvolutionByOrg(organizationId);
+  const group = evolutionGroupTarget(row.contact.waIdentity);
+  if (row.contact.waIdentity.startsWith("evo-group:") && (!evolution || !group)) {
+    throw new SendError("not_connected", "Esta conversa de grupo exige o Evolution Go conectado");
+  }
   if (evolution) {
     if (evolution.status !== "connected") throw new SendError("reconnect_required", "Reconecte o Evolution Go em Configurações → WhatsApp");
     const lid = /^evo-lid:(\d+)$/.exec(row.contact.waIdentity);
-    const recipient = row.contact.phone ? normalizeRecipient(row.contact.phone) : lid ? `${lid[1]}@lid` : null;
+    const recipient = group?.group ?? (row.contact.phone ? normalizeRecipient(row.contact.phone) : lid ? `${lid[1]}@lid` : null);
     if (!recipient) throw new SendError("meta_error", "O Evolution Go exige um telefone ou uma identidade LID válida");
-    return {conversation: row.conversation, credentials: null, evolution, recipient, destinatario: {to: recipient}};
+    return {conversation: row.conversation, credentials: null, evolution, recipient, destinatario: {to: recipient}, groupParticipant: group?.participant};
   }
   const credentials = await getCredentialsByOrg(organizationId);
   if (!credentials) {
@@ -442,7 +448,7 @@ export async function sendText(input: {
   }
 
   const waMessageId = target.evolution
-    ? await callEvolutionSend(target, () => sendEvolutionText(target.evolution!, target.recipient, text))
+    ? await callEvolutionSend(target, () => sendEvolutionText(target.evolution!, target.recipient, text, target.groupParticipant))
     : target.instagram
     ? await callInstagramSend(target, text)
     : target.messenger

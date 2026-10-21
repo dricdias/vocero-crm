@@ -81,6 +81,7 @@ describe("envío por Evolution en la puerta real del CRM", () => {
       expect.objectContaining({ organizationId: "org_1" }),
       "5511999999999",
       "Hola",
+      undefined,
     );
     expect(m.insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -124,6 +125,7 @@ describe("envío por Evolution en la puerta real del CRM", () => {
       expect.anything(),
       "123456@lid",
       "Hola",
+      undefined,
     );
   });
   it("credencial rechazada pausa Evolution sin fallback a Meta", async () => {
@@ -134,5 +136,18 @@ describe("envío por Evolution en la puerta real del CRM", () => {
     expect(m.status).toHaveBeenCalledWith("org_1", false);
     expect(m.graph).not.toHaveBeenCalled();
     expect(m.insert).not.toHaveBeenCalled();
+  });
+  it("responde en el grupo y al participante, nunca a su privado", async () => {
+    (m.row as { contact: unknown }).contact = { phone: null, waIdentity: "evo-group:120363000123@g.us:5511999999999@s.whatsapp.net" };
+    await sendText(input);
+    expect(m.send).toHaveBeenCalledWith(expect.anything(), "120363000123@g.us", "Hola", "5511999999999@s.whatsapp.net");
+    expect(m.graph).not.toHaveBeenCalled();
+  });
+  it("no deriva un grupo a Meta al desconectar Evolution", async () => {
+    (m.row as { contact: unknown }).contact = { phone: null, waIdentity: "evo-group:120363000123@g.us:5511999999999@s.whatsapp.net" };
+    m.evo.mockResolvedValue(null);
+    await expect(sendText(input)).rejects.toMatchObject({ code: "not_connected" });
+    expect(m.graph).not.toHaveBeenCalled();
+    expect(m.send).not.toHaveBeenCalled();
   });
 });

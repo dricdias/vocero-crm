@@ -84,10 +84,12 @@ export async function sendEvolutionText(
   access: EvolutionAccess,
   number: string,
   text: string,
+  participant?: string,
 ): Promise<string> {
   const sent = await evolutionRequest(access, "/send/text", sentSchema, {
     number,
-    text,
+    text: participant ? `@${participant.split("@")[0]} ${text}` : text,
+    ...(participant ? { formatJid: false, mentionedJid: [participant] } : {}),
   });
   return `evo:${sent.Info.ID}`;
 }
@@ -100,6 +102,7 @@ export async function sendEvolutionMedia(
 ): Promise<string> {
   const body = new FormData();
   body.set("number", number);
+  if (number.endsWith("@g.us")) body.set("formatJid", "false");
   body.set("type", type);
   if (caption) body.set("caption", caption);
   if (file.fileName) body.set("filename", file.fileName);
