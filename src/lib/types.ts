@@ -3,6 +3,7 @@
 import type { Channel } from "@/lib/channels";
 
 export type ConversationDto = {
+  evolutionGroup?: boolean;
   id: string;
   /** 014: canal de la conversacion, para el distintivo de la bandeja. */
   channel: Channel;

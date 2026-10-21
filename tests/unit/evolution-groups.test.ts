@@ -6,6 +6,8 @@ import { sendEvolutionText } from "@/server/evolution/client";
 vi.mock("@/server/inbox/ingest", () => ({ ingestInboundMessage: vi.fn() }));
 vi.mock("@/server/evolution/credentials", () => ({ setEvolutionStatus: vi.fn() }));
 vi.mock("@/server/evolution/replies", () => ({ confirmedGroupReply: vi.fn().mockResolvedValue(false) }));
+vi.mock("@/server/evolution/group-mode", () => ({ getEvolutionGroupMode: vi.fn().mockResolvedValue("mentions") }));
+import { getEvolutionGroupMode } from "@/server/evolution/group-mode";
 import { confirmedGroupReply } from "@/server/evolution/replies";
 import { ingestInboundMessage } from "@/server/inbox/ingest";
 import type { EvolutionCredentials } from "@/server/evolution/credentials";
@@ -17,7 +19,7 @@ const event = {
   Info: { ID: "GROUP1", Chat: group, Sender: sender, IsGroup: true, IsFromMe: false, Timestamp: 1792530000, PushName: "Ana" },
   Message: { extendedTextMessage: { text: "@15555550100 como recuperar a senha?", contextInfo: { mentionedJID: [bot] } } },
 };
-afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); vi.mocked(confirmedGroupReply).mockResolvedValue(false); });
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); vi.mocked(confirmedGroupReply).mockResolvedValue(false); vi.mocked(getEvolutionGroupMode).mockResolvedValue("mentions"); });
 
 describe("Evolution Go: grupos por menção", () => {
   it("exige conector ativo e número válido para optar por grupos", () => {
@@ -138,5 +140,23 @@ describe("Evolution Go: grupos por menção", () => {
     await processEvolutionEvent({ organizationId: "org_reply_disabled" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data: { ...event, quoted: { stanzaID: "OUT1" }, Message: { conversation: "sim" } } });
     expect(confirmedGroupReply).not.toHaveBeenCalled();
     expect(ingestInboundMessage).not.toHaveBeenCalled();
+  });
+  it("modo todas aceita mensagem sem menção e sem consulta de LID", async () => {
+    vi.stubEnv("EVOLUTION_GO", "on"); vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
+    vi.mocked(getEvolutionGroupMode).mockResolvedValue("all");
+    const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
+    await processEvolutionEvent({ organizationId: "org_all" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data: { ...event, Message: { conversation: "Como recupero a senha?" } } });
+    expect(getEvolutionGroupMode).toHaveBeenCalledWith("org_all", group);
+    expect(ingestInboundMessage).toHaveBeenCalledWith(expect.objectContaining({ text: "Como recupero a senha?", threadRef: group }));
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(confirmedGroupReply).not.toHaveBeenCalled();
+  });
+  it("voltar a menções ignora as próximas mensagens comuns", async () => {
+    vi.stubEnv("EVOLUTION_GO", "on"); vi.stubEnv("EVOLUTION_GO_GROUP_BOT_NUMBER", "15555550100");
+    vi.mocked(getEvolutionGroupMode).mockResolvedValueOnce("all").mockResolvedValueOnce("mentions");
+    const data = { ...event, Message: { conversation: "senha?" } };
+    await processEvolutionEvent({ organizationId: "org_toggle" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data });
+    await processEvolutionEvent({ organizationId: "org_toggle" } as EvolutionCredentials, { event: "Message", instanceToken: "secret", data });
+    expect(ingestInboundMessage).toHaveBeenCalledOnce();
   });
 });

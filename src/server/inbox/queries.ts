@@ -4,6 +4,8 @@ import { scoped } from "@/lib/db/tenant";
 import { isWindowOpen, replyWindow, windowRemainingMs } from "@/server/inbox/window";
 import { capabilitiesFor, windowMsFor } from "@/server/channels/capabilities";
 import type { ConversationDto } from "@/lib/types";
+import { evolutionEnabled } from "@/server/evolution/flag";
+import { evolutionGroupTarget } from "@/server/evolution/groups";
 
 /**
  * 018 — El anuncio de origen viaja con la conversación. La llave única
@@ -162,6 +164,7 @@ export function serializeConversation(
   return {
     id: c.id,
     channel: c.channel,
+    evolutionGroup: c.channel === "whatsapp" && evolutionEnabled() && !!evolutionGroupTarget(contact.waIdentity),
     contact: { id: contact.id, name: contact.name, phone: contact.phone },
     stageName,
     aiEnabled: c.aiEnabled,

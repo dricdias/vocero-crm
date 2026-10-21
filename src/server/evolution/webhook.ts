@@ -7,6 +7,8 @@ import { applyStatusUpdate } from "@/server/inbox/status";
 import { setEvolutionStatus, type EvolutionCredentials } from "./credentials";
 import { canonicalUserJid, groupBotAliases, groupBotJid } from "./groups";
 import { confirmedGroupReply } from "./replies";
+import { getEvolutionGroupMode } from "./group-mode";
+import { evolutionGroupJidSchema } from "@/lib/evolution-group-mode";
 
 export const evolutionEventSchema = z.object({
   event: z.string(),
@@ -73,7 +75,7 @@ function quotedIdIn(data: z.infer<typeof messageSchema>): string | null {
 }
 
 /** Pura: solo las menciones explícitas al bot abren un hilo de grupo. */
-export function incomingEvolution(data: unknown, botJids: readonly string[] = [], replyConfirmed = false) {
+export function incomingEvolution(data: unknown, botJids: readonly string[] = [], groupAuthorized = false) {
   const parsed = messageSchema.safeParse(data);
   if (!parsed.success) return null;
   const { Info: info, Message: message } = parsed.data;
@@ -88,7 +90,7 @@ export function incomingEvolution(data: unknown, botJids: readonly string[] = []
     const bots = new Set(botJids.map(canonicalUserJid).filter(Boolean));
     if (
       !/^\d+(?:-\d+)?@g\.us$/.test(info.Chat) || !sender ||
-      (!mentions.some((jid) => bots.has(canonicalUserJid(jid))) && !(replyConfirmed && bots.size > 0))
+      (!mentions.some((jid) => bots.has(canonicalUserJid(jid))) && !(groupAuthorized && bots.size > 0))
     ) return null;
   }
   const rawId = info.Chat.split("@")[0]!.split(":")[0]!;
@@ -165,16 +167,19 @@ export async function processEvolutionEvent(
   if (event.event === "Message") {
     const parsed = messageSchema.safeParse(event.data);
     let botJids: string[] = [];
+    let allMessages = false;
     const bot = groupBotJid();
     if (parsed.success && parsed.data.Info.IsGroup && !parsed.data.Info.IsFromMe && bot) {
+      if (!evolutionGroupJidSchema.safeParse(parsed.data.Info.Chat).success || !canonicalUserJid(parsed.data.Info.Sender ?? "")) return;
+      allMessages = await getEvolutionGroupMode(creds.organizationId, parsed.data.Info.Chat) === "all";
       const mentions = mentionsIn(parsed.data.Message);
       botJids = [bot];
       if (
-        mentions.some((jid) => canonicalUserJid(jid)?.endsWith("@lid")) &&
+        !allMessages && mentions.some((jid) => canonicalUserJid(jid)?.endsWith("@lid")) &&
         !mentions.some((jid) => canonicalUserJid(jid) === bot)
       ) botJids = await groupBotAliases(creds, bot);
     }
-    let incoming = incomingEvolution(event.data, botJids);
+    let incoming = incomingEvolution(event.data, botJids, allMessages);
     if (!incoming && parsed.success && parsed.data.Info.IsGroup && !parsed.data.Info.IsFromMe && bot) {
       const quotedId = quotedIdIn(parsed.data);
       const sender = parsed.data.Info.Sender;
