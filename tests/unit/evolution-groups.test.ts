@@ -60,7 +60,7 @@ describe("Evolution Go: grupos por menção", () => {
   it("envia ao grupo e menciona só o participante atendido", async () => {
     const fetcher = vi.fn().mockResolvedValue(Response.json({ message: "success", data: { Info: { ID: "OUT1" } } }));
     vi.stubGlobal("fetch", fetcher);
-    await sendEvolutionText({ baseUrl: "https://evo.test", token: "secret" }, group, "Veja o guia.", sender);
+    await sendEvolutionText({ baseUrl: "https://evo.test", token: "secret" }, group, "@5511999999999 Veja o guia.", sender);
     expect(JSON.parse(fetcher.mock.calls[0]![1].body)).toEqual({ number: group, text: "@5511999999999 Veja o guia.", formatJid: false, mentionedJid: [sender] });
   });
   it("resolve a menção LID pelo número configurado antes de ingerir", async () => {

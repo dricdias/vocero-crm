@@ -46,6 +46,7 @@ vi.mock("@/server/inbox/ingest", () => ({
 vi.mock("@/server/events/bus", () => ({ publish: vi.fn() }));
 import { sendText } from "@/server/inbox/send";
 import { EvolutionError } from "@/server/evolution/client";
+import { capabilitiesFor } from "@/server/channels/capabilities";
 const input = {
   conversationId: "cv_1",
   organizationId: "org_1",
@@ -140,7 +141,8 @@ describe("envío por Evolution en la puerta real del CRM", () => {
   it("responde en el grupo y al participante, nunca a su privado", async () => {
     (m.row as { contact: unknown }).contact = { phone: null, waIdentity: "evo-group:120363000123@g.us:5511999999999@s.whatsapp.net" };
     await sendText(input);
-    expect(m.send).toHaveBeenCalledWith(expect.anything(), "120363000123@g.us", "Hola", "5511999999999@s.whatsapp.net");
+    expect(m.send).toHaveBeenCalledWith(expect.anything(), "120363000123@g.us", "@5511999999999 Hola", "5511999999999@s.whatsapp.net");
+    expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({ text: "@5511999999999 Hola" }));
     expect(m.graph).not.toHaveBeenCalled();
   });
   it("no deriva un grupo a Meta al desconectar Evolution", async () => {
@@ -148,6 +150,12 @@ describe("envío por Evolution en la puerta real del CRM", () => {
     m.evo.mockResolvedValue(null);
     await expect(sendText(input)).rejects.toMatchObject({ code: "not_connected" });
     expect(m.graph).not.toHaveBeenCalled();
+    expect(m.send).not.toHaveBeenCalled();
+  });
+  it("incluye la mención al comprobar el límite antes de llamar al gateway", async () => {
+    (m.row as { contact: unknown }).contact = { phone: null, waIdentity: "evo-group:120363000123@g.us:5511999999999@s.whatsapp.net" };
+    const max = capabilitiesFor("whatsapp").maxTextChars!;
+    await expect(sendText({ ...input, text: "a".repeat(max) })).rejects.toMatchObject({ code: "text_too_long" });
     expect(m.send).not.toHaveBeenCalled();
   });
 });

@@ -435,10 +435,14 @@ export async function sendText(input: {
   // canal que no lo dibuja se le quitan las marcas ANTES de medir, enviar y
   // guardar: lo que queda en el hilo es lo que el cliente leyó. Lo que escribe
   // una persona no se toca.
-  const text =
+  const renderedText =
     input.aiGenerated && capabilitiesFor(canal).textFormat === "plain"
       ? plainSocialText(input.text)
       : input.text;
+  // La mención también cuenta para el límite y se conserva en la bandeja.
+  const text = target.groupParticipant
+    ? `@${target.groupParticipant.split("@")[0]} ${renderedText}`
+    : renderedText;
 
   // 022: el límite de longitud es del canal. WhatsApp y TikTok lo declaran en
   // caracteres y se comprueba aquí, antes de llamar a nadie; Instagram y

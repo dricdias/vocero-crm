@@ -88,7 +88,7 @@ export async function sendEvolutionText(
 ): Promise<string> {
   const sent = await evolutionRequest(access, "/send/text", sentSchema, {
     number,
-    text: participant ? `@${participant.split("@")[0]} ${text}` : text,
+    text,
     ...(participant ? { formatJid: false, mentionedJid: [participant] } : {}),
   });
   return `evo:${sent.Info.ID}`;
