@@ -6,6 +6,7 @@ import { ingestInboundMessage } from "@/server/inbox/ingest";
 import { applyStatusUpdate } from "@/server/inbox/status";
 import { setEvolutionStatus, type EvolutionCredentials } from "./credentials";
 import { canonicalUserJid, groupBotAliases, groupBotJid } from "./groups";
+import { confirmedGroupReply } from "./replies";
 
 export const evolutionEventSchema = z.object({
   event: z.string(),
@@ -18,6 +19,7 @@ export function sameToken(actual: string, expected: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 const messageSchema = z.object({
+  quoted: z.unknown().optional(),
   Info: z.object({
     ID: z.string().min(1),
     Chat: z.string(),
@@ -58,8 +60,20 @@ function mentionsIn(message: Record<string, unknown>): string[] {
   });
 }
 
+const quoteSchema = z.object({ stanzaID: z.string().min(1).max(256) });
+function quotedIdIn(data: z.infer<typeof messageSchema>): string | null {
+  // Evolution también entrega la cita normalizada en data.quoted.
+  const top = quoteSchema.safeParse(data.quoted);
+  if (top.success) return top.data.stanzaID;
+  for (const kind of ["extendedTextMessage", "imageMessage", "videoMessage", "documentMessage", "audioMessage", "stickerMessage"]) {
+    const parsed = z.object({ contextInfo: quoteSchema }).safeParse(data.Message[kind]);
+    if (parsed.success) return parsed.data.contextInfo.stanzaID;
+  }
+  return null;
+}
+
 /** Pura: solo las menciones explícitas al bot abren un hilo de grupo. */
-export function incomingEvolution(data: unknown, botJids: readonly string[] = []) {
+export function incomingEvolution(data: unknown, botJids: readonly string[] = [], replyConfirmed = false) {
   const parsed = messageSchema.safeParse(data);
   if (!parsed.success) return null;
   const { Info: info, Message: message } = parsed.data;
@@ -74,7 +88,7 @@ export function incomingEvolution(data: unknown, botJids: readonly string[] = []
     const bots = new Set(botJids.map(canonicalUserJid).filter(Boolean));
     if (
       !/^\d+(?:-\d+)?@g\.us$/.test(info.Chat) || !sender ||
-      !mentions.some((jid) => bots.has(canonicalUserJid(jid)))
+      (!mentions.some((jid) => bots.has(canonicalUserJid(jid))) && !(replyConfirmed && bots.size > 0))
     ) return null;
   }
   const rawId = info.Chat.split("@")[0]!.split(":")[0]!;
@@ -160,7 +174,14 @@ export async function processEvolutionEvent(
         !mentions.some((jid) => canonicalUserJid(jid) === bot)
       ) botJids = await groupBotAliases(creds, bot);
     }
-    const incoming = incomingEvolution(event.data, botJids);
+    let incoming = incomingEvolution(event.data, botJids);
+    if (!incoming && parsed.success && parsed.data.Info.IsGroup && !parsed.data.Info.IsFromMe && bot) {
+      const quotedId = quotedIdIn(parsed.data);
+      const sender = parsed.data.Info.Sender;
+      if (quotedId && sender && await confirmedGroupReply(creds.organizationId, parsed.data.Info.Chat, sender, quotedId)) {
+        incoming = incomingEvolution(event.data, [bot], true);
+      }
+    }
     if (incoming?.media) {
       const encrypted = encryptSecret(
         JSON.stringify(incoming.media.payload.evolutionMessage),
