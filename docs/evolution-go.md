@@ -43,3 +43,11 @@ Cada combinação de grupo e participante gera um atendimento separado, sem tele
 Os bloqueios de sandbox, organização, janela e handoff continuam aplicados. Um handoff pausa somente o atendimento daquele participante naquele grupo; para retomar, reativar a IA dessa conversa na bandeja. Conversas de grupo não são enviadas pela Meta se Evolution for desconectado. Remover a variável e fazer Deploy impede novas entradas de grupos sem apagar os históricos existentes.
 
 Teste de aceitação: enviar mensagem sem menção (silêncio), mencionar outra pessoa (silêncio), mencionar o agente com pergunta dos guias (resposta no grupo), repetir com outro participante (atendimento independente), testar uma pergunta no privado (continua respondendo). Ver `tests/e2e/us-evolution-group-mentions.md`.
+
+## Alternar entre os dois modos no CRM
+
+Depois do primeiro atendimento no grupo, abrir uma conversa desse grupo na Bandeja e abrir os detalhes pelo ícone do painel à direita. Em **Respostas neste grupo**, escolher **Menções e respostas ao agente** (padrão atual) ou **Todas as mensagens do grupo**, e clicar **Salvar modo do grupo**. Só administradores alteram a escolha; membros conseguem consultar.
+
+A escolha vale para todos os participantes daquele grupo, sem alterar outros grupos ou o privado. No modo todas, perguntas novas entram sem @; no modo menções, continua aceitando @ e Responder numa saída do agente no atendimento daquele participante. Os históricos seguem separados por participante. O agente mantém as regras de encerramento, handoff e pausa da IA: alterar o modo não reativa um atendimento pausado.
+
+A troca afeta as próximas entradas, sem importar mensagens antigas nem cancelar turnos já em processamento. A preferência é salva no banco por organização e grupo, sem precisar reconectar o WhatsApp ou fazer Deploy para cada teste. Este recurso requer publicar a versão com a migração aditiva `0022_evolution_group_mode.sql`, aplicada automaticamente no arranque. Sem preferência salva, continua em menções. As flags `EVOLUTION_GO` e `EVOLUTION_GO_GROUP_BOT_NUMBER` continuam necessárias.

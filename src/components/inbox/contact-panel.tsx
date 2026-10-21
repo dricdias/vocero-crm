@@ -32,6 +32,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { FichaPanel } from "@/components/ficha-panel";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
+import { GroupModeControl } from "./group-mode-control";
 
 const HANDOFF_LABELS: Record<string, string> = {
   cliente: "O cliente pediu um humano",
@@ -326,6 +327,8 @@ export function ContactPanel({
               </div>
             )}
           </div>
+
+          {conversation.evolutionGroup && <GroupModeControl key={conversation.id} conversationId={conversation.id} refreshKey={refreshKey} />}
 
           {anuncio && (
             <div className="mt-3">

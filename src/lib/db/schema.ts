@@ -1281,3 +1281,15 @@ export const evolutionCredentials = pgTable("evolution_credentials", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [uniqueIndex("evolution_credentials_org_uq").on(t.organizationId), uniqueIndex("evolution_credentials_hook_uq").on(t.webhookHash)]);
+
+/** Preferencia compartida por los atendimientos de un mismo grupo. */
+export const evolutionGroupSettings = pgTable("evolution_group_settings", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  groupJid: text("group_jid").notNull(),
+  replyMode: text("reply_mode", { enum: ["mentions", "all"] }).notNull().default("mentions"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("evolution_group_settings_org_group_uq").on(t.organizationId, t.groupJid),
+  check("evolution_group_settings_mode_ck", sql`${t.replyMode} in ('mentions', 'all')`),
+]);
