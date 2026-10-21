@@ -20,8 +20,12 @@ export function groupBotJid(): string | null {
   return /^\d{7,15}$/.test(phone) ? `${phone}@s.whatsapp.net` : null;
 }
 
-const userInfoSchema = z.object({
-  Users: z.record(z.object({ LID: z.string().nullable().optional() })),
+const userCheckSchema = z.object({
+  Users: z.array(z.object({
+    JID: z.string(),
+    IsInWhatsapp: z.boolean(),
+    LID: z.string().nullable().optional(),
+  })),
 });
 const aliases = new Map<string, { expires: number; pending: Promise<string[]> }>();
 
@@ -32,9 +36,11 @@ export async function groupBotAliases(access: EvolutionAccess, bot: string): Pro
   if (cached && cached.expires > Date.now()) return cached.pending;
   if (aliases.size >= 32) aliases.delete(aliases.keys().next().value!);
   const entry = { expires: Date.now() + 300_000, pending: Promise.resolve([bot]) };
-  entry.pending = evolutionRequest(access, "/user/info", userInfoSchema, { number: [bot.split("@")[0]!] })
+  // /user/info puede agotar el timeout consultando el propio número.
+  // /user/check confirma número + LID sin consultar perfil ni dispositivos.
+  entry.pending = evolutionRequest(access, "/user/check", userCheckSchema, { number: [bot.split("@")[0]!], formatJid: false })
     .then((result) => {
-      const own = Object.entries(result.Users).find(([jid]) => canonicalUserJid(jid) === bot)?.[1];
+      const own = result.Users.find((user) => user.IsInWhatsapp && canonicalUserJid(user.JID) === bot);
       const lid = own?.LID ? canonicalUserJid(own.LID) : null;
       if (!lid?.endsWith("@lid")) entry.expires = Date.now() + 30_000;
       return lid?.endsWith("@lid") ? [bot, lid] : [bot];
