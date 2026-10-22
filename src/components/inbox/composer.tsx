@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Clock3,
   FileText,
@@ -21,6 +21,8 @@ import {
 } from "./helpers";
 import { QuoteBlock } from "./quote-block";
 import { TemplateSender } from "./template-sender";
+import { EmojiPicker } from "./emoji-picker";
+import { insertAtSelection } from "@/lib/emojis";
 
 /** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
 type AttachPanel = "location" | "contact" | null;
@@ -65,6 +67,8 @@ export function Composer({
   const [contactPhone, setContactPhone] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // 041 — Dónde dejar el cursor cuando el texto con el emoji ya se pintó.
+  const emojiCaret = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,11 +99,36 @@ export function Composer({
     };
   }, [filePreview]);
 
+  useLayoutEffect(() => {
+    const el = taRef.current;
+    if (!el || emojiCaret.current === null) return;
+    el.focus();
+    el.setSelectionRange(emojiCaret.current, emojiCaret.current);
+    emojiCaret.current = null;
+    autogrow();
+  }, [text]);
+
   function autogrow() {
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  /** 041 — El emoji entra en el cursor (o en lugar de la selección); no envía. */
+  function insertEmoji(emoji: string) {
+    const el = taRef.current;
+    if (!el || sending) return;
+    const next = insertAtSelection(text, el.selectionStart, el.selectionEnd, emoji);
+    if (next.text === text) {
+      // Reemplazar un emoji por el mismo no cambia el texto ni dispara el
+      // efecto: el cursor se coloca aquí.
+      el.focus();
+      el.setSelectionRange(next.caret, next.caret);
+      return;
+    }
+    emojiCaret.current = next.caret;
+    setText(next.text);
   }
 
   function pickFile(f: File | null) {
@@ -297,7 +326,7 @@ export function Composer({
   const soloPersona = !conversation.windowOpen && Boolean(human?.open);
 
   return (
-    <div className="border-t bg-background px-[18px] pb-3.5 pt-3">
+    <div className="relative border-t bg-background px-[18px] pb-3.5 pt-3">
       {soloPersona && (
         <div
           data-window="human"
@@ -462,6 +491,7 @@ export function Composer({
           className="hidden"
           onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
         />
+        <EmojiPicker disabled={sending} onSelect={insertEmoji} onOpen={() => setPanel(null)} />
         {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola. */}
         {(conversation.composer.media || conversation.composer.structured) && (
           <div className="flex shrink-0 items-center gap-0.5">
