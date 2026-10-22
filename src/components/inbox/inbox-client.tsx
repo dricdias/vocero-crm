@@ -416,28 +416,12 @@ export function InboxClient({
                 </button>
               )}
             </header>
-            <MessageThread
-              // 042: el aviso «Imagen reenviada a…» es de esta conversación.
-              // Prefijo propio: el Composer hermano ya usa `selected.id`.
-              key={`hilo-${selected.id}`}
-              messages={thread}
-              contactName={selected.contact.name}
-              // 039: citar solo donde el canal lo permite y se puede escribir
-              // texto libre (con la ventana cerrada solo salen plantillas).
-              onReply={
-                selected.composer.quoteReply && selected.windowOpen
-                  ? setReplyTo
-                  : undefined
-              }
-              conversations={conversations ?? []}
-              onForwarded={() => {
-                if (selectedIdRef.current) void refetchMessages(selectedIdRef.current);
-                void refetchConversations();
-              }}
-            />
             <Composer
               // 028: uno por conversación. Sin la llave, el borrador, el adjunto
               // elegido y el panel abierto pasaban a la siguiente conversación.
+              // 043: el hilo va dentro (la zona donde se suelta una imagen es
+              // la conversación entera), así que la llave también lo reinicia
+              // a él: el aviso «Imagen reenviada a…» no pasa a otra.
               key={selected.id}
               conversation={selected}
               onSend={sendText}
@@ -448,7 +432,24 @@ export function InboxClient({
                   void refetchMessages(selectedIdRef.current);
                 void refetchConversations();
               }}
-            />
+            >
+              <MessageThread
+                messages={thread}
+                contactName={selected.contact.name}
+                // 039: citar solo donde el canal lo permite y se puede escribir
+                // texto libre (con la ventana cerrada solo salen plantillas).
+                onReply={
+                  selected.composer.quoteReply && selected.windowOpen
+                    ? setReplyTo
+                    : undefined
+                }
+                conversations={conversations ?? []}
+                onForwarded={() => {
+                  if (selectedIdRef.current) void refetchMessages(selectedIdRef.current);
+                  void refetchConversations();
+                }}
+              />
+            </Composer>
           </>
         ) : (
           <div className="thread-bg flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">

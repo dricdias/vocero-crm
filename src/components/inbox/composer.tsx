@@ -1,6 +1,13 @@
 ﻿"use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactNode,
+} from "react";
 import {
   Clock3,
   FileText,
@@ -47,6 +54,7 @@ export function Composer({
   onSent,
   replyTo = null,
   onReplyChange,
+  children,
 }: {
   conversation: ConversationDto;
   onSend: (text: string, replyTo: MessageDto | null) => Promise<string | null>;
@@ -54,6 +62,8 @@ export function Composer({
   /** 039: el mensaje al que se está respondiendo citando, si hay. */
   replyTo?: MessageDto | null;
   onReplyChange?: (m: MessageDto | null) => void;
+  /** 043 — El hilo: la zona donde se suelta una imagen es la conversación entera. */
+  children?: ReactNode;
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -72,6 +82,12 @@ export function Composer({
   const mediaSending = useRef(false);
   // 041 — Dónde dejar el cursor cuando el texto con el emoji ya se pintó.
   const emojiCaret = useRef<number | null>(null);
+  // 043 — Entrar y salir de los hijos dispara dragenter/dragleave en cascada:
+  // se cuenta la profundidad para que el indicador no parpadee.
+  const dragDepth = useRef(0);
+  const [dragging, setDragging] = useState(false);
+  // Hay caja de texto libre (ventana normal, o la humana de Instagram/Messenger).
+  const textoLibre = conversation.windowOpen || Boolean(conversation.humanWindow?.open);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +110,23 @@ export function Composer({
 
   /** 039: el id citado, para los envíos que esperan respuesta del servidor. */
   const replyField = replyTo ? { replyToMessageId: replyTo.id } : {};
+
+  // 043 — Soltar un archivo fuera del chat abriría el archivo en la pestaña y
+  // el CRM (con el borrador) se perdería. Mientras haya conversación abierta,
+  // un archivo soltado en otro punto de la página no hace nada.
+  useEffect(() => {
+    const esArchivo = (e: globalThis.DragEvent) =>
+      Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    const frenar = (e: globalThis.DragEvent) => {
+      if (esArchivo(e)) e.preventDefault();
+    };
+    window.addEventListener("dragover", frenar);
+    window.addEventListener("drop", frenar);
+    return () => {
+      window.removeEventListener("dragover", frenar);
+      window.removeEventListener("drop", frenar);
+    };
+  }, []);
 
   // La URL del preview de imagen se libera al reemplazar/limpiar el archivo.
   useEffect(() => {
@@ -142,20 +175,94 @@ export function Composer({
     setError(null);
   }
 
-  /** 042 — Una imagen del portapapeles: se valida aquí y queda como adjunto. */
-  function attachImage(files: File[]) {
+  /**
+   * 042 — Una imagen del portapapeles (o, 043, soltada en el chat): se valida
+   * aquí y queda como adjunto. Nunca envía.
+   */
+  function attachImage(files: File[], origen: "paste" | "drop") {
     if (sending || mediaSending.current) return;
     if (!conversation.composer.media) {
-      setError(`Pegar imágenes está disponible en WhatsApp; ${CHANNEL_LABEL[conversation.channel]} no admite adjuntos.`);
+      setError(`Pegar y arrastrar imágenes está disponible en WhatsApp; ${CHANNEL_LABEL[conversation.channel]} no admite adjuntos.`);
       return;
     }
-    const result = validarImagenAdjunta(files, "paste");
+    if (!textoLibre) {
+      setError("La ventana está cerrada: no se puede adjuntar una imagen. Solo sale una plantilla.");
+      return;
+    }
+    const result = validarImagenAdjunta(files, origen);
     if (!result.ok) {
       setError(result.error);
       return;
     }
     pickFile(result.file);
     taRef.current?.focus();
+  }
+
+  function isFileDrag(e: DragEvent<HTMLDivElement>) {
+    return Array.from(e.dataTransfer.types).includes("Files");
+  }
+
+  /** Con un diálogo modal abierto (reenviar imagen), soltar no adjunta atrás. */
+  function modalAbierto(e: DragEvent<HTMLDivElement>) {
+    return e.currentTarget.querySelector('[role="dialog"][aria-modal="true"]') !== null;
+  }
+
+  /**
+   * 043 — La conversación entera (el hilo, que llega como `children`, y el
+   * compositor) acepta una imagen soltada. Solo reacciona a arrastres de
+   * archivos: arrastrar texto o un enlace sigue como siempre.
+   */
+  function withDropZone(content: ReactNode, conError = false) {
+    const acceptsDrop = conversation.composer.media && textoLibre && !sending;
+    return (
+      <div
+        role="region"
+        aria-label="Chat: adjuntar imagen"
+        className="relative flex min-h-0 flex-1 flex-col"
+        onDragEnter={(e) => {
+          if (!isFileDrag(e)) return;
+          e.preventDefault();
+          dragDepth.current++;
+          if (acceptsDrop && !modalAbierto(e)) setDragging(true);
+        }}
+        onDragOver={(e) => {
+          if (!isFileDrag(e)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = acceptsDrop ? "copy" : "none";
+        }}
+        onDragLeave={(e) => {
+          if (!isFileDrag(e)) return;
+          dragDepth.current = Math.max(0, dragDepth.current - 1);
+          if (dragDepth.current === 0) setDragging(false);
+        }}
+        onDrop={(e) => {
+          if (!isFileDrag(e)) return;
+          e.preventDefault();
+          dragDepth.current = 0;
+          setDragging(false);
+          if (modalAbierto(e)) return;
+          attachImage(Array.from(e.dataTransfer.files), "drop");
+        }}
+      >
+        {children}
+        {content}
+        {conError && error && (
+          <p role="alert" className="bg-background px-[18px] pb-3 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+        {dragging && acceptsDrop && (
+          <div
+            role="status"
+            className="pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-brand bg-brand-tint p-4"
+          >
+            <p className="rounded-md bg-background px-4 py-3 text-center text-sm font-semibold text-brand-ink shadow-sm">
+              Suelta la imagen para adjuntarla
+            </p>
+          </div>
+        )}
+      </div>
+    );
   }
 
   async function apiSend(path: string, init: RequestInit): Promise<string | null> {
@@ -180,6 +287,8 @@ export function Composer({
       // mientras tanto.
       if (mediaSending.current) return;
       mediaSending.current = true;
+      dragDepth.current = 0;
+      setDragging(false);
       setSending(true);
       const form = new FormData();
       form.set("file", file);
@@ -287,7 +396,7 @@ export function Composer({
   // 022 — TikTok no tiene plantillas ni otra forma de reabrir: con la ventana
   // cerrada no hay nada que ofrecer, solo decir qué pasa y qué lo arregla.
   if (!conversation.windowOpen && conversation.channel === "tiktok") {
-    return (
+    return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
         <div className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
@@ -300,7 +409,8 @@ export function Composer({
             </p>
           </div>
         </div>
-      </div>
+      </div>,
+      true
     );
   }
 
@@ -310,7 +420,7 @@ export function Composer({
   const human = conversation.humanWindow;
   const canal = CHANNEL_LABEL[conversation.channel];
   if (!conversation.windowOpen && human && !human.open) {
-    return (
+    return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
         <div
           data-window="closed"
@@ -326,12 +436,13 @@ export function Composer({
             </p>
           </div>
         </div>
-      </div>
+      </div>,
+      true
     );
   }
 
   if (!conversation.windowOpen && !human) {
-    return (
+    return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
         <div className="mb-3 flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
@@ -345,7 +456,8 @@ export function Composer({
           </div>
         </div>
         <TemplateSender conversationId={conversation.id} onSent={onSent} />
-      </div>
+      </div>,
+      true
     );
   }
 
@@ -353,8 +465,9 @@ export function Composer({
 
   const soloPersona = !conversation.windowOpen && Boolean(human?.open);
 
-  return (
+  return withDropZone(
     <div className="relative border-t bg-background px-[18px] pb-3.5 pt-3">
+
       {soloPersona && (
         <div
           data-window="human"
@@ -584,7 +697,7 @@ export function Composer({
               setError("No se pudo leer la imagen del portapapeles. Cópiala de nuevo.");
               return;
             }
-            attachImage(files as File[]);
+            attachImage(files as File[], "paste");
           }}
           onChange={(e) => {
             setText(e.target.value);
