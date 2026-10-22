@@ -1,4 +1,5 @@
 /** Utilidades de presentación de la bandeja. */
+import type { MessageDto, QuotedMessageDto } from "@/lib/types";
 
 export function formatTime(iso: string | null): string {
   if (!iso) return "";
@@ -73,4 +74,23 @@ export function emptyInboxDescription(labels: readonly string[]): string {
 export function previewText(preview: string | null): string {
   if (!preview) return "";
   return MEDIA_LABELS[preview] ? `📎 ${MEDIA_LABELS[preview]}` : preview;
+}
+
+/** 039 — La cita de un mensaje del hilo, para el compositor y la burbuja provisional. */
+export function citaDe(m: MessageDto): QuotedMessageDto {
+  return {
+    id: m.id,
+    direction: m.direction,
+    type: m.type,
+    text: m.text ?? m.media?.caption ?? null,
+    mediaKind: m.media?.kind ?? null,
+  };
+}
+
+/** 039 — El renglón de texto de una cita: su texto, el tipo de adjunto, o que no está. */
+export function textoDeCita(cita: QuotedMessageDto): string {
+  if (cita.text) return cita.text;
+  if (cita.mediaKind) return mediaLabel(cita.mediaKind);
+  if (cita.type && cita.type !== "text") return mediaLabel(cita.type);
+  return cita.id ? "Mensaje" : "Mensaje no disponible";
 }

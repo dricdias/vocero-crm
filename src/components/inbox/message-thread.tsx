@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -9,6 +9,7 @@ import {
   FileText,
   MapPin,
   Paperclip,
+  Reply,
   Smartphone,
   Sparkles,
   UserRound,
@@ -16,6 +17,7 @@ import {
 import type { MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatBytes, mediaLabel } from "./helpers";
+import { QuoteBlock } from "./quote-block";
 
 function StatusTicks({ status }: { status: MessageDto["status"] }) {
   const cls = "h-[13px] w-[13px]";
@@ -182,8 +184,39 @@ function bubbleTime(iso: string): string {
   });
 }
 
-export function MessageThread({ messages }: { messages: MessageDto[] }) {
+export function MessageThread({
+  messages,
+  contactName,
+  onReply,
+}: {
+  messages: MessageDto[];
+  /** 039: quién firma las citas del cliente. */
+  contactName: string;
+  /** 039: presente solo si el canal permite responder citando. */
+  onReply?: (m: MessageDto) => void;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [resaltado, setResaltado] = useState<string | null>(null);
+  const resaltadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 039: el clic en una cita lleva al original y lo resalta un momento.
+  const irAlCitado = useCallback((id: string) => {
+    const el = scrollRef.current?.querySelector<HTMLElement>(
+      `[data-message-id="${CSS.escape(id)}"]`
+    );
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    setResaltado(id);
+    if (resaltadoTimer.current) clearTimeout(resaltadoTimer.current);
+    resaltadoTimer.current = setTimeout(() => setResaltado(null), 1600);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (resaltadoTimer.current) clearTimeout(resaltadoTimer.current);
+    },
+    []
+  );
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -216,12 +249,13 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
             )}
             <div
               className={cn(
-                "flex",
-                out ? "justify-end" : "justify-start",
+                "group flex items-center gap-1",
+                out ? "flex-row-reverse" : "flex-row",
                 grouped ? "mt-[3px]" : "mt-2.5"
               )}
             >
               <div
+                data-message-id={m.id}
                 className={cn(
                   // En el teléfono la burbuja necesita casi todo el renglón:
                   // con 64% cada mensaje se parte en tres líneas.
@@ -231,9 +265,18 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                   out
                     ? "border-bubble-out-border bg-bubble-out text-bubble-out-text"
                     : "border-bubble-in-border bg-bubble-in",
-                  !grouped && (out ? "rounded-tr-[5px]" : "rounded-tl-[5px]")
+                  !grouped && (out ? "rounded-tr-[5px]" : "rounded-tl-[5px]"),
+                  resaltado === m.id && "ring-2 ring-brand"
                 )}
               >
+                {m.replyTo && (
+                  <QuoteBlock
+                    cita={m.replyTo}
+                    contactName={contactName}
+                    onJump={irAlCitado}
+                    className="mb-1.5"
+                  />
+                )}
                 {m.media ? (
                   <span className="block">
                     <MediaBlock media={m.media} />
@@ -291,6 +334,18 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                   </p>
                 )}
               </div>
+              {onReply && m.quotable && (
+                // En el teléfono no hay "pasar el ratón": ahí se ve siempre.
+                <button
+                  type="button"
+                  onClick={() => onReply(m)}
+                  aria-label="Responder"
+                  title="Responder"
+                  className="shrink-0 rounded-full p-1.5 text-text-3 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                >
+                  <Reply className="h-4 w-4" strokeWidth={1.7} />
+                </button>
+              )}
             </div>
           </div>
         );

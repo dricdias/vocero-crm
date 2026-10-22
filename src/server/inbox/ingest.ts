@@ -24,6 +24,12 @@ import {
 import { registrarAnuncioDeOrigen } from "@/server/attribution/store";
 import { onLeadActivity } from "@/server/inbox/lead-activity";
 import { maybeRunAgentTurn } from "@/server/ai/trigger";
+import {
+  aCitaDto,
+  citaDelWebhook,
+  resolverCita,
+  type CitaEncontrada,
+} from "@/server/inbox/quotes";
 
 /** Tipos de contenido soportados; el resto se ignora sin error. */
 const SUPPORTED_TYPES = new Set([
@@ -303,6 +309,7 @@ export async function processMessagesValue(value: WebhookValue): Promise<void> {
       text: contenido.text,
       timestamp: msg.timestamp,
       media: mediaInputFrom(msg),
+      replyToWaMessageId: citaDelWebhook(msg),
       // 018: normalizado aquí, en el adaptador del canal; la ingesta no sabe
       // de qué forma lo mandó Meta.
       anuncio: anuncioDeWhatsapp(msg.referral),
@@ -376,6 +383,8 @@ async function ingestManualEcho(
       text: echo.text?.body ?? null,
       status: "sent",
       origin: "manual",
+      // 039: el dueño también cita desde el teléfono.
+      replyToWaMessageId: citaDelWebhook(echo),
       waTimestamp,
     })
     .onConflictDoNothing({ target: [schema.message.waMessageId] })
@@ -420,7 +429,11 @@ async function ingestManualEcho(
     type: "message.new",
     data: {
       conversationId: conversation.id,
-      message: serializeMessage(message, asset),
+      message: serializeMessage(
+        message,
+        asset,
+        await resolverCita(organizationId, message)
+      ),
     },
   });
   publish(organizationId, {
@@ -437,6 +450,8 @@ export async function ingestInboundMessage(input: {
   text: string | null;
   timestamp: string;
   media?: MediaInput | null;
+  /** 039: `wamid` del mensaje que el cliente citó, si citó alguno. */
+  replyToWaMessageId?: string | null;
   /** 014: hilo en la plataforma de origen (Zernio); null en WhatsApp. */
   threadRef?: string | null;
   /** 016/018: el anuncio que abrió la conversación, ya normalizado por el canal. */
@@ -493,6 +508,7 @@ export async function ingestInboundMessage(input: {
       type: input.type,
       text: input.text,
       status: "delivered",
+      replyToWaMessageId: input.replyToWaMessageId ?? null,
       waTimestamp,
     })
     .onConflictDoNothing({ target: [schema.message.waMessageId] })
@@ -520,7 +536,11 @@ export async function ingestInboundMessage(input: {
     type: "message.new",
     data: {
       conversationId: conversation.id,
-      message: serializeMessage(message, asset),
+      message: serializeMessage(
+        message,
+        asset,
+        await resolverCita(organizationId, message)
+      ),
     },
   });
   publish(organizationId, {
@@ -539,7 +559,9 @@ function toDate(timestamp: string): Date {
 
 export function serializeMessage(
   m: typeof schema.message.$inferSelect,
-  media: typeof schema.mediaAsset.$inferSelect | null = null
+  media: typeof schema.mediaAsset.$inferSelect | null = null,
+  /** 039: el mensaje citado ya resuelto (`resolverCitas`); null si no está. */
+  cita: CitaEncontrada | null = null
 ) {
   return {
     id: m.id,
@@ -564,6 +586,9 @@ export function serializeMessage(
           payload: media.kind === "location" || media.kind === "contacts" ? media.payload : null,
         }
       : null,
+    /** 039: se le puede responder citando (tiene id en la plataforma). */
+    quotable: Boolean(m.waMessageId),
+    replyTo: m.replyToWaMessageId ? aCitaDto(cita) : null,
     createdAt: (m.waTimestamp ?? m.createdAt).toISOString(),
   };
 }

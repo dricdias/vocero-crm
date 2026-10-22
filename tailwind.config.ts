@@ -72,6 +72,10 @@ const config: Config = {
           ink: "var(--accent-ink)",
           veil: "var(--accent-veil)",
         },
+        quote: {
+          DEFAULT: "var(--quote-bg)",
+          hover: "var(--quote-bg-hover)",
+        },
         "text-2": "var(--text-2)",
         "text-3": "var(--text-3)",
         "text-4": "var(--text-4)",

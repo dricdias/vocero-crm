@@ -37,6 +37,8 @@ const schema = z
       .object({ text: z.string(), payload: z.string().optional() })
       .optional(),
     interactive: z.record(z.unknown()).optional(),
+    // 039 — el wamid que el cliente cita (llega en `context.id`)
+    replyTo: z.string().optional(),
   })
   .refine((v) => v.from || v.fromUserId, {
     message: "Se requiere from o fromUserId",

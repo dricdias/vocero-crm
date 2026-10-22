@@ -438,6 +438,11 @@ export const message = pgTable(
     mediaAssetId: text("media_asset_id").references(() => mediaAsset.id, {
       onDelete: "set null",
     }),
+    /**
+     * 039 — `wamid` del mensaje al que responde (cita). Sin FK: el citado
+     * puede no estar en el CRM; se resuelve al leer (`inbox/quotes.ts`).
+     */
+    replyToWaMessageId: text("reply_to_wa_message_id"),
     waTimestamp: timestamp("wa_timestamp"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

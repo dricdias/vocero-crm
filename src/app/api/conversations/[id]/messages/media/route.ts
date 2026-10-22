@@ -17,11 +17,13 @@ const SEND_ERROR_STATUS: Record<SendError["code"], number> = {
   meta_error: 422,
   meta_unavailable: 503,
   upload_failed: 502,
+  reply_unavailable: 422,
 };
 
 /**
  * 008 — Envía un adjunto de archivo por la conversación (multipart):
- * `file` (binario, requerido) + `caption` (opcional). La validación de tipo y
+ * `file` (binario, requerido) + `caption` (opcional) + `replyToMessageId`
+ * (039, opcional: el id local del mensaje al que responde citando). La validación de tipo y
  * tamaño ocurre ANTES de tocar Graph (413/415 con el límite en el mensaje).
  */
 export const POST = withAuth(async (session, req: Request, ctx: Params) => {
@@ -43,6 +45,12 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
       ? captionRaw.trim().slice(0, 1024)
       : undefined;
 
+  const replyRaw = form.get("replyToMessageId");
+  const replyToMessageId =
+    typeof replyRaw === "string" && replyRaw.trim()
+      ? replyRaw.trim().slice(0, 64)
+      : undefined;
+
   const data = Buffer.from(await file.arrayBuffer());
 
   try {
@@ -55,6 +63,7 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
         fileName: file.name || undefined,
       },
       caption,
+      replyToMessageId,
     });
     return Response.json({ messageId: result.messageId }, { status: 201 });
   } catch (err) {

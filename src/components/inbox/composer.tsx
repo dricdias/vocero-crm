@@ -10,10 +10,16 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import type { ConversationDto, TemplateDto } from "@/lib/types";
+import type { ConversationDto, MessageDto, TemplateDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CHANNEL_LABEL } from "@/lib/channels";
-import { formatBytes, formatRemaining, formatRemainingLong } from "./helpers";
+import {
+  citaDe,
+  formatBytes,
+  formatRemaining,
+  formatRemainingLong,
+} from "./helpers";
+import { QuoteBlock } from "./quote-block";
 import { TemplateSender } from "./template-sender";
 
 /** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
@@ -36,10 +42,15 @@ export function Composer({
   conversation,
   onSend,
   onSent,
+  replyTo = null,
+  onReplyChange,
 }: {
   conversation: ConversationDto;
-  onSend: (text: string) => Promise<string | null>;
+  onSend: (text: string, replyTo: MessageDto | null) => Promise<string | null>;
   onSent: () => void;
+  /** 039: el mensaje al que se está respondiendo citando, si hay. */
+  replyTo?: MessageDto | null;
+  onReplyChange?: (m: MessageDto | null) => void;
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -68,6 +79,14 @@ export function Composer({
       cancelled = true;
     };
   }, []);
+
+  // 039: al elegir «Responder» se escribe ya, sin buscar el campo.
+  useEffect(() => {
+    if (replyTo) taRef.current?.focus();
+  }, [replyTo]);
+
+  /** 039: el id citado, para los envíos que esperan respuesta del servidor. */
+  const replyField = replyTo ? { replyToMessageId: replyTo.id } : {};
 
   // La URL del preview de imagen se libera al reemplazar/limpiar el archivo.
   useEffect(() => {
@@ -110,6 +129,7 @@ export function Composer({
       form.set("file", file);
       const caption = text.trim();
       if (caption) form.set("caption", caption);
+      if (replyTo) form.set("replyToMessageId", replyTo.id);
       const err = await apiSend(
         `/api/conversations/${conversation.id}/messages/media`,
         { method: "POST", body: form }
@@ -122,6 +142,7 @@ export function Composer({
       pickFile(null);
       setText("");
       if (taRef.current) taRef.current.style.height = "auto";
+      onReplyChange?.(null);
       onSent();
       return;
     }
@@ -134,9 +155,13 @@ export function Composer({
     // "enviando" del hilo es la que informa el estado real.
     setText("");
     if (taRef.current) taRef.current.style.height = "auto";
-    const err = await onSend(value);
+    const cita = replyTo;
+    onReplyChange?.(null);
+    const err = await onSend(value, cita);
     if (err) {
       setError(err);
+      // 039: la cita vuelve con el texto.
+      if (cita) onReplyChange?.(cita);
       // Lo que no salió vuelve al campo. Si ya empezaste a escribir otra cosa
       // se antepone en vez de pisarte: nada se pierde en silencio.
       setText((actual) => (actual ? `${value}\n${actual}` : value));
@@ -159,6 +184,7 @@ export function Composer({
       body: JSON.stringify({
         type: "location",
         location: { ...coords, ...(placeName.trim() ? { name: placeName.trim() } : {}) },
+        ...replyField,
       }),
     });
     setSending(false);
@@ -169,6 +195,7 @@ export function Composer({
     setPanel(null);
     setCoordsRaw("");
     setPlaceName("");
+    onReplyChange?.(null);
     onSent();
   }
 
@@ -185,6 +212,7 @@ export function Composer({
       body: JSON.stringify({
         type: "contacts",
         contacts: [{ name: contactName.trim(), phone: contactPhone.trim() }],
+        ...replyField,
       }),
     });
     setSending(false);
@@ -195,6 +223,7 @@ export function Composer({
     setPanel(null);
     setContactName("");
     setContactPhone("");
+    onReplyChange?.(null);
     onSent();
   }
 
@@ -299,6 +328,27 @@ export function Composer({
               {t.name.replace(/_/g, " ")}
             </button>
           ))}
+        </div>
+      )}
+
+      {replyTo && (
+        <div
+          data-replying-to={replyTo.id}
+          className="mb-2.5 flex items-center gap-2 rounded-md border bg-subtle p-2"
+        >
+          <QuoteBlock
+            cita={citaDe(replyTo)}
+            contactName={conversation.contact.name}
+            className="flex-1"
+          />
+          <button
+            onClick={() => onReplyChange?.(null)}
+            aria-label="Cancelar respuesta"
+            title="Cancelar respuesta"
+            className="shrink-0 rounded p-1 text-text-3 hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-4 w-4" strokeWidth={1.7} />
+          </button>
         </div>
       )}
 
@@ -466,6 +516,8 @@ export function Composer({
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               void submit();
+            } else if (e.key === "Escape" && replyTo) {
+              onReplyChange?.(null);
             }
           }}
           className="max-h-[120px] w-full resize-none self-center bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-text-3"

@@ -61,6 +61,9 @@
     --ring: var(--accent);
     /* Velo translúcido ENCIMA del acento (contadores dentro de un chip). */
     --accent-veil: rgba(255, 255, 255, 0.22);
+    /* 039: fondo del fragmento citado dentro de una burbuja (cualquier color). */
+    --quote-bg: rgba(0, 0, 0, 0.05);
+    --quote-bg-hover: rgba(0, 0, 0, 0.09);
     --bg-active: var(--accent-tint);
 
     /* Estado: color puro + tríada (tint = fondo, soft = borde, text = tinta) */
@@ -151,6 +154,8 @@
     --accent-ink: var(--accent-text);
     --ring: var(--accent-hover);
     --accent-veil: rgba(0, 0, 0, 0.22);
+    --quote-bg: rgba(255, 255, 255, 0.07);
+    --quote-bg-hover: rgba(255, 255, 255, 0.12);
 
     /* Estado sobre fondo oscuro: el tono puro oscurecido (no mezclado con el
        azul marino, que lo vuelve gris), un escalón arriba de --bg. */

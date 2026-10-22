@@ -183,7 +183,12 @@ export function serializeConversation(
     humanWindow: reply
       ? { open: reply.humanAgentTag, remainingMs: reply.humanAgentTag ? reply.operatorRemainingMs : 0 }
       : null,
-    composer: { media: caps.outboundMedia, structured: caps.structuredMessages },
+    composer: {
+      media: caps.outboundMedia,
+      structured: caps.structuredMessages,
+      // 039: la UI solo ofrece «Responder» donde el canal cita.
+      quoteReply: caps.quoteReplies,
+    },
     preview,
     anuncio,
   };
