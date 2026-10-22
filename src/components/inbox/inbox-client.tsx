@@ -417,6 +417,9 @@ export function InboxClient({
               )}
             </header>
             <MessageThread
+              // 042: el aviso «Imagen reenviada a…» es de esta conversación.
+              // Prefijo propio: el Composer hermano ya usa `selected.id`.
+              key={`hilo-${selected.id}`}
               messages={thread}
               contactName={selected.contact.name}
               // 039: citar solo donde el canal lo permite y se puede escribir
@@ -426,6 +429,11 @@ export function InboxClient({
                   ? setReplyTo
                   : undefined
               }
+              conversations={conversations ?? []}
+              onForwarded={() => {
+                if (selectedIdRef.current) void refetchMessages(selectedIdRef.current);
+                void refetchConversations();
+              }}
             />
             <Composer
               // 028: uno por conversación. Sin la llave, el borrador, el adjunto

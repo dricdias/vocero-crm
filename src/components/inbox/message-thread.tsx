@@ -7,6 +7,7 @@ import {
   CheckCheck,
   Clock3,
   FileText,
+  Forward,
   MapPin,
   Paperclip,
   Reply,
@@ -14,9 +15,10 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
-import type { MessageDto, MessageMediaDto } from "@/lib/types";
+import type { ConversationDto, MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatBytes, mediaLabel } from "./helpers";
+import { ForwardImageDialog } from "./forward-image-dialog";
 import { LinkedText } from "./linked-text";
 import { QuoteBlock } from "./quote-block";
 
@@ -189,14 +191,21 @@ export function MessageThread({
   messages,
   contactName,
   onReply,
+  conversations = [],
+  onForwarded,
 }: {
   messages: MessageDto[];
   /** 039: quién firma las citas del cliente. */
   contactName: string;
   /** 039: presente solo si el canal permite responder citando. */
   onReply?: (m: MessageDto) => void;
+  /** 042 — Destinos posibles del reenvío; sin `onForwarded` no se ofrece. */
+  conversations?: ConversationDto[];
+  onForwarded?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [forwarding, setForwarding] = useState<MessageDto | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [resaltado, setResaltado] = useState<string | null>(null);
   const resaltadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -222,13 +231,25 @@ export function MessageThread({
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+  }, [messages.length, notice]);
 
   return (
     <div
       ref={scrollRef}
       className="thread-bg flex flex-1 flex-col gap-[3px] overflow-y-auto px-3 py-5 sm:px-[6%]"
     >
+      {forwarding && (
+        <ForwardImageDialog
+          message={forwarding}
+          conversations={conversations}
+          onClose={() => setForwarding(null)}
+          onSent={(name) => {
+            setForwarding(null);
+            setNotice(`Imagen reenviada a ${name}`);
+            onForwarded?.();
+          }}
+        />
+      )}
       {messages.map((m, i) => {
         const prev = messages[i - 1];
         const newDay =
@@ -286,6 +307,19 @@ export function MessageThread({
                         <LinkedText text={m.media.caption} />
                       </span>
                     )}
+                    {/* Aunque la descarga haya fallado: el servidor la reintenta (042 · D4). */}
+                    {onForwarded && m.media.kind === "image" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNotice(null);
+                            setForwarding(m);
+                          }}
+                          className="mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] font-medium text-brand-ink transition-colors hover:bg-secondary"
+                        >
+                          <Forward className="h-3.5 w-3.5" strokeWidth={1.7} /> Reenviar imagen
+                        </button>
+                      )}
                   </span>
                 ) : m.type === "text" || m.type === "template" ? (
                   <span className="whitespace-pre-wrap break-words">
@@ -351,6 +385,14 @@ export function MessageThread({
           </div>
         );
       })}
+      {notice && (
+        <p
+          role="status"
+          className="mt-2 self-center rounded-full border border-border-strong bg-background px-3 py-1 text-xs text-text-2 shadow-sm"
+        >
+          {notice}
+        </p>
+      )}
     </div>
   );
 }
