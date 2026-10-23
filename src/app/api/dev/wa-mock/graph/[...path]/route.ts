@@ -190,7 +190,11 @@ export async function GET(req: Request, ctx: Params) {
     const origin = new URL(req.url).origin;
     return Response.json({
       id: path[0],
-      mime_type: path[0]!.includes("pdf") ? "application/pdf" : "image/jpeg",
+      mime_type: path[0]!.includes("pdf")
+        ? "application/pdf"
+        : path[0]!.includes("audio")
+          ? "audio/ogg; codecs=opus"
+          : "image/jpeg",
       file_size: 13,
       url: `${origin}/api/dev/wa-mock/media-file/${path[0]}`,
     });
@@ -258,8 +262,32 @@ export async function POST(req: Request, ctx: Params) {
         { status: 400 }
       );
     }
+    // 044 — Meta no acepta WebM: así una grabación sin convertir no pasa en
+    // verde aquí y falla en producción.
+    const type = String(form?.get("type") ?? file.type ?? "");
+    if (/^(audio|video)\/webm/i.test(type)) {
+      return Response.json(
+        {
+          error: {
+            message: `(#131053) Media upload error: Unsupported media type ${type}`,
+            type: "OAuthException",
+            code: 131053,
+          },
+        },
+        { status: 400 }
+      );
+    }
     // El id arranca con "media" para que el GET de metadata lo resuelva.
-    return Response.json({ id: `media-up-${nextN()}` });
+    const id = `media-up-${nextN()}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    getWaMockState().uploads.push({
+      id,
+      type,
+      fileName: file instanceof File ? file.name : "",
+      size: bytes.byteLength,
+      head: Buffer.from(bytes.subarray(0, 4)).toString("hex"),
+    });
+    return Response.json({ id });
   }
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;

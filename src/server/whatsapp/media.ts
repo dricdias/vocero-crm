@@ -79,7 +79,10 @@ export class MediaValidationError extends Error {
  * documento (#78): el navegador de quien los abra los trataría como una
  * página, y se servirían desde el origen del CRM.
  */
-export function validateOutgoing(mime: string, sizeBytes: number) {
+export function validateOutgoing(mimeConParametros: string, sizeBytes: number) {
+  // 044: `audio/ogg; codecs=opus` (la nota de voz, o lo que graba Firefox)
+  // trae parámetros; el tipo es lo de antes del `;`.
+  const mime = mimeConParametros.split(";")[0]!.trim();
   if (!/^[\w.-]+\/[\w.+-]+$/.test(mime)) {
     throw new MediaValidationError("unsupported_type", "Tipo de arquivo não reconhecido");
   }

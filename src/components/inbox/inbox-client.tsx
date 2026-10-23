@@ -161,6 +161,14 @@ export function InboxClient({
       // Un entrante nuevo puede crear/mover el lead: refresca el panel.
       setDetailRev((v) => v + 1);
     },
+    onMessageMedia: ({ conversationId, messageId, media }) => {
+      if (selectedIdRef.current !== conversationId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, media: media as MessageDto["media"] } : m
+        )
+      );
+    },
     onMessageStatus: ({ conversationId, messageId, status, error }) => {
       if (selectedIdRef.current !== conversationId) return;
       setMessages((prev) =>

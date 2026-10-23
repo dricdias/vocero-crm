@@ -18,6 +18,14 @@ export type SseEvent =
         error?: string | null;
       };
     }
+  /**
+   * 044 — El adjunto de un mensaje terminó de descargarse (o falló): sin
+   * esto la burbuja se quedaba en «descargando…» hasta recargar.
+   */
+  | {
+      type: "message.media";
+      data: { conversationId: string; messageId: string; media: unknown };
+    }
   | { type: "conversation.updated"; data: { conversation: unknown } }
   /** 026 — alguien del equipo eliminó la conversación: se quita de la bandeja. */
   | {

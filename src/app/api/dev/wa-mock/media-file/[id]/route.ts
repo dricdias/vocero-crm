@@ -1,4 +1,5 @@
 import { mockGuard } from "@/lib/dev-guard";
+import { empaquetarOgg } from "@/lib/audio/webm-ogg";
 import { pngDePrueba } from "@/server/dev/png-de-prueba";
 
 /**
@@ -61,6 +62,15 @@ export async function GET(
     }
     return new Response(new Uint8Array(pngDePrueba(id)), {
       headers: { "content-type": "image/png" },
+    });
+  }
+
+  // 044 — Una nota de voz de verdad (Ogg/Opus, 3 s de silencio) para que el
+  // reproductor la pueda decodificar.
+  if (id.includes("audio")) {
+    const silencio = Array.from({ length: 150 }, () => new Uint8Array([0xf8, 0xff, 0xfe]));
+    return new Response(new Uint8Array(empaquetarOgg(undefined, silencio)), {
+      headers: { "content-type": "audio/ogg; codecs=opus" },
     });
   }
 

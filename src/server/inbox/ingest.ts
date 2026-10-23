@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
+import { scoped } from "@/lib/db/tenant";
 import { normalizeMx } from "@/lib/meta/client";
 import { publish } from "@/server/events/bus";
 import { getCredentialsByPhoneNumberId } from "@/server/whatsapp/credentials";
@@ -180,7 +181,10 @@ async function attachMediaAsset(
       .where(eq(schema.message.id, messageId));
     if (asset.fetchStatus === "pending") {
       // Descarga in-process, sin bloquear la ingesta; on-demand reintenta.
-      void ensureAssetAvailable(organizationId, asset.id).catch(() => {});
+      // 044: al terminar se avisa a la bandeja, que pintó «descargando…».
+      void ensureAssetAvailable(organizationId, asset.id)
+        .then(() => avisarAdjuntoListo(organizationId, messageId, asset.id))
+        .catch(() => {});
     }
     return asset;
   } catch (err) {
@@ -555,6 +559,33 @@ function toDate(timestamp: string): Date {
   const n = Number(timestamp);
   if (Number.isFinite(n) && n > 0) return new Date(n * 1000);
   return new Date();
+}
+
+/**
+ * 044 — Publica el estado final del adjunto (disponible o fallido) para que la
+ * burbuja deje de decir «descargando…» sin recargar.
+ */
+async function avisarAdjuntoListo(
+  organizationId: string,
+  messageId: string,
+  assetId: string
+): Promise<void> {
+  const db = getDb();
+  const [fila] = await db
+    .select({ message: schema.message, asset: schema.mediaAsset })
+    .from(schema.message)
+    .innerJoin(schema.mediaAsset, eq(schema.mediaAsset.id, assetId))
+    .where(scoped(schema.message.organizationId, organizationId, eq(schema.message.id, messageId)))
+    .limit(1);
+  if (!fila || fila.asset.fetchStatus === "pending") return;
+  publish(organizationId, {
+    type: "message.media",
+    data: {
+      conversationId: fila.message.conversationId,
+      messageId,
+      media: serializeMessage(fila.message, fila.asset).media,
+    },
+  });
 }
 
 export function serializeMessage(

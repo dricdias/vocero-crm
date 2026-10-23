@@ -62,8 +62,20 @@ export type MockWabaSubscription = {
   overrideCallbackUri: string | null;
 };
 
+/** 044 — Un archivo subido a `{phoneNumberId}/media`, para las aserciones. */
+export type MockUpload = {
+  id: string;
+  /** El campo `type` del formulario, que Meta valida. */
+  type: string;
+  fileName: string;
+  size: number;
+  /** Primeros bytes en hexadecimal (la firma del formato: `4f676753` = OggS). */
+  head: string;
+};
+
 type WaMockState = {
   outbox: OutboxEntry[];
+  uploads: MockUpload[];
   templates: MockTemplate[];
   capiEvents: CapiMockEvent[];
   /** Por WABA ID. Sin entrada = la app no está suscrita a esa WABA. */
@@ -82,6 +94,7 @@ const globalForMock = globalThis as unknown as { __waMockState?: WaMockState };
 function freshState(): WaMockState {
   return {
     outbox: [],
+    uploads: [],
     templates: [],
     capiEvents: [],
     wabaSubscriptions: {},
@@ -96,6 +109,7 @@ export function getWaMockState(): WaMockState {
   }
   // Un proceso de `next dev` que ya tenía el estado viejo en memoria.
   globalForMock.__waMockState.phoneWebhooks ??= {};
+  globalForMock.__waMockState.uploads ??= [];
   return globalForMock.__waMockState;
 }
 

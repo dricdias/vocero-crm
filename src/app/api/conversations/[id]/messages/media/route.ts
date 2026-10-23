@@ -23,7 +23,8 @@ const SEND_ERROR_STATUS: Record<SendError["code"], number> = {
 /**
  * 008 — Envía un adjunto de archivo por la conversación (multipart):
  * `file` (binario, requerido) + `caption` (opcional) + `replyToMessageId`
- * (039, opcional: el id local del mensaje al que responde citando). La validación de tipo y
+ * (039, opcional: el id local del mensaje al que responde citando) + `voice=1`
+ * (044, opcional: grabado en el compositor, sale como nota de voz). La validación de tipo y
  * tamaño ocurre ANTES de tocar Graph (413/415 con el límite en el mensaje).
  */
 export const POST = withAuth(async (session, req: Request, ctx: Params) => {
@@ -51,6 +52,9 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
       ? replyRaw.trim().slice(0, 64)
       : undefined;
 
+  // 044: grabado en el compositor (nota de voz).
+  const voz = form.get("voice") === "1";
+
   const data = Buffer.from(await file.arrayBuffer());
 
   try {
@@ -64,6 +68,7 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
       },
       caption,
       replyToMessageId,
+      voz,
     });
     return Response.json({ messageId: result.messageId }, { status: 201 });
   } catch (err) {

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { ConversationDto, MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { AudioPlayer } from "./audio-player";
 import { formatBytes, mediaLabel } from "./helpers";
 import { ForwardImageDialog } from "./forward-image-dialog";
 import { LinkedText } from "./linked-text";
@@ -144,7 +145,7 @@ function MediaBlock({ media }: { media: MessageMediaDto }) {
     );
   }
   if (media.kind === "audio") {
-    return <audio controls preload="metadata" src={src} className="max-w-full" />;
+    return <AudioPlayer src={src} />;
   }
   // document
   return (

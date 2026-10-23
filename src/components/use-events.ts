@@ -11,6 +11,12 @@ export type EventHandlers = {
     /** Motivo, presente solo cuando status = "failed". */
     error?: string | null;
   }) => void;
+  /** 044 — El adjunto de un mensaje terminó de descargarse (o falló). */
+  onMessageMedia?: (data: {
+    conversationId: string;
+    messageId: string;
+    media: unknown;
+  }) => void;
   onConversationUpdated?: (data: { conversation: unknown }) => void;
   /** 026 */
   onConversationDeleted?: (data: {
@@ -57,6 +63,7 @@ export function useEvents(handlers: EventHandlers): void {
     listen("message.status", (d) =>
       handlersRef.current.onMessageStatus?.(d as never)
     );
+    listen("message.media", (d) => handlersRef.current.onMessageMedia?.(d as never));
     listen("conversation.updated", (d) =>
       handlersRef.current.onConversationUpdated?.(d as never)
     );

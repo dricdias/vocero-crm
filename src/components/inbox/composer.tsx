@@ -12,6 +12,7 @@ import {
   Clock3,
   FileText,
   MapPin,
+  Mic,
   Paperclip,
   Send,
   UserRound,
@@ -31,6 +32,7 @@ import { TemplateSender } from "./template-sender";
 import { validarImagenAdjunta } from "@/lib/imagen-adjunta";
 import { EmojiPicker } from "./emoji-picker";
 import { insertAtSelection } from "@/lib/emojis";
+import { VoiceRecorder, type NotaGrabada } from "./voice-recorder";
 
 /** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
 type AttachPanel = "location" | "contact" | null;
@@ -86,6 +88,8 @@ export function Composer({
   // se cuenta la profundidad para que el indicador no parpadee.
   const dragDepth = useRef(0);
   const [dragging, setDragging] = useState(false);
+  // 044 — La grabadora ocupa el lugar de la caja mientras está abierta.
+  const [grabando, setGrabando] = useState(false);
   // Hay caja de texto libre (ventana normal, o la humana de Instagram/Messenger).
   const textoLibre = conversation.windowOpen || Boolean(conversation.humanWindow?.open);
 
@@ -336,6 +340,29 @@ export function Composer({
     }
   }
 
+  /** 044 — La nota grabada sale por el mismo envío de adjuntos, marcada como voz. */
+  async function enviarNota(nota: NotaGrabada): Promise<string | null> {
+    if (mediaSending.current) return "Ya se está enviando un adjunto.";
+    mediaSending.current = true;
+    setSending(true);
+    setError(null);
+    const form = new FormData();
+    form.set("file", nota.archivo);
+    form.set("voice", "1");
+    if (replyTo) form.set("replyToMessageId", replyTo.id);
+    const err = await apiSend(`/api/conversations/${conversation.id}/messages/media`, {
+      method: "POST",
+      body: form,
+    });
+    setSending(false);
+    mediaSending.current = false;
+    if (err) return err;
+    setGrabando(false);
+    onReplyChange?.(null);
+    onSent();
+    return null;
+  }
+
   async function submitLocation() {
     const coords = parseCoords(coordsRaw);
     if (!coords) {
@@ -462,6 +489,8 @@ export function Composer({
   }
 
   const canSubmit = file !== null || text.trim().length > 0;
+  // 044 — Con la caja vacía el botón graba, como en WhatsApp.
+  const puedeGrabar = conversation.composer.media && !file && !text.trim();
 
   const soloPersona = !conversation.windowOpen && Boolean(human?.open);
 
@@ -625,7 +654,17 @@ export function Composer({
         </div>
       )}
 
-      {/* La caja de escritura en píldora, como la del mockup de la landing */}
+      {grabando ? (
+        <VoiceRecorder
+          onSend={enviarNota}
+          onCancel={() => setGrabando(false)}
+          onError={(msg) => {
+            setGrabando(false);
+            setError(msg);
+          }}
+        />
+      ) : (
+      /* La caja de escritura en píldora, como la del mockup de la landing */
       <div className="flex items-end gap-2 rounded-[23px] border border-border-strong bg-background py-1.5 pl-2 pr-1.5 shadow-sm transition-[border-color,box-shadow] focus-within:border-brand focus-within:ring-[3px] focus-within:ring-brand-soft">
         <input
           ref={fileRef}
@@ -713,18 +752,38 @@ export function Composer({
           }}
           className="max-h-[120px] w-full resize-none self-center bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-text-3"
         />
-        <button
-          onClick={() => void submit()}
-          disabled={sending || !canSubmit}
-          aria-label="Enviar"
-          className={cn(
-            "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-brand text-brand-fg transition-[opacity,background-color] hover:bg-brand-hover",
-            (sending || !canSubmit) && "opacity-40"
-          )}
-        >
-          <Send className="h-4 w-4" strokeWidth={1.7} />
-        </button>
+        {puedeGrabar ? (
+          <button
+            onClick={() => {
+              setPanel(null);
+              setError(null);
+              setGrabando(true);
+            }}
+            disabled={sending}
+            aria-label="Grabar nota de voz"
+            title="Grabar nota de voz"
+            className={cn(
+              "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-brand text-brand-fg transition-[opacity,background-color] hover:bg-brand-hover",
+              sending && "opacity-40"
+            )}
+          >
+            <Mic className="h-4 w-4" strokeWidth={1.7} />
+          </button>
+        ) : (
+          <button
+            onClick={() => void submit()}
+            disabled={sending || !canSubmit}
+            aria-label="Enviar"
+            className={cn(
+              "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-brand text-brand-fg transition-[opacity,background-color] hover:bg-brand-hover",
+              (sending || !canSubmit) && "opacity-40"
+            )}
+          >
+            <Send className="h-4 w-4" strokeWidth={1.7} />
+          </button>
+        )}
       </div>
+      )}
       <div className="mt-1.5 flex items-center justify-between">
         {error ? (
           <p role="alert" className="text-xs text-destructive">
