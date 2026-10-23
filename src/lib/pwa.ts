@@ -64,7 +64,10 @@ export function buildManifest(
     description,
     lang: "es",
     dir: "ltr",
-    start_url: "/",
+    // Quien abre la app instalada viene a contestar: directo a la Bandeja, no a
+    // la guía de inicio (que sigue a un clic en el menú). `id` se queda en «/»
+    // para que Chrome la reconozca como la misma app ya instalada.
+    start_url: "/inbox",
     scope: "/",
     display: "standalone",
     background_color: NAV_INK,

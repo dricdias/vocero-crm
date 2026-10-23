@@ -34,8 +34,9 @@ icono) y un archivo estático.
 arma en cada petición con la marca guardada (nombre y logo o inicial): nada de
 «Vocero» cableado. Lleva:
 
-- `display: "standalone"` y `start_url: "/"` (la raíz ya decide si va a la guía
-  o a la bandeja);
+- `display: "standalone"` y `start_url: "/inbox"`: la app instalada abre en la
+  Bandeja. Primero fue `/`, que según el estado manda a la guía de inicio;
+  Kevin lo probó en Android el 2026-10-23 y pidió la Bandeja;
 - `scope: "/"` e `id: "/"`;
 - `lang: "es"`;
 - color de fondo y de tema: el azul marino de la barra lateral, igual en los
@@ -104,7 +105,7 @@ funcionando el sonido y el contador de la 045.
 - **AC1 — Manifest.** `GET /manifest.webmanifest` sin sesión → 200
   `application/manifest+json`, con:
   - `name` igual al nombre de la marca y `short_name` de ≤ 12 caracteres;
-  - `display: standalone`, `start_url: "/"`;
+  - `display: standalone`, `start_url: "/inbox"`;
   - iconos 192 y 512 (`any`) y 512 (`maskable`).
 
   Al cambiar el nombre en Ajustes → Marca, el manifest siguiente lo trae.

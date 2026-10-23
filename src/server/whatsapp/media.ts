@@ -214,7 +214,12 @@ export async function downloadGraphMedia(
  */
 export async function ensureAssetAvailable(
   organizationId: string,
-  assetId: string
+  assetId: string,
+  /**
+   * Bajarlo aunque figure como disponible: el archivo se perdió (volumen sin
+   * montar, restauración a medias) y la fila todavía no lo sabe.
+   */
+  opts: { forzar?: boolean } = {}
 ): Promise<typeof schema.mediaAsset.$inferSelect | null> {
   const db = getDb();
   const rows = await db
@@ -224,7 +229,7 @@ export async function ensureAssetAvailable(
     .limit(1);
   const asset = rows[0];
   if (!asset || asset.organizationId !== organizationId) return null;
-  if (asset.fetchStatus === "available") return asset;
+  if (asset.fetchStatus === "available" && !opts.forzar) return asset;
   if (!asset.waMediaId) return null; // location/contacts no tienen binario
 
   try {
@@ -266,6 +271,35 @@ export async function ensureAssetAvailable(
       .set({ fetchStatus: "failed", fetchError: message, updatedAt: new Date() })
       .where(eq(schema.mediaAsset.id, assetId));
     console.warn(`[media] descarga del asset ${assetId} falló: ${message}`);
+    return null;
+  }
+}
+
+/**
+ * Lee el archivo de un adjunto ya disponible.
+ *
+ * Si la base dice «disponible» pero el archivo no está —el contenedor se
+ * redesplegó sin un volumen en `/data` y se llevó los adjuntos—, se vuelve a
+ * bajar de Meta una vez, que los conserva unos 30 días. Sin esto, el adjunto
+ * quedaba en 410 para siempre aunque Meta todavía lo tuviera. `null` si ni
+ * así se puede: el archivo ya no existe en ningún lado.
+ */
+export async function leerAdjunto(
+  organizationId: string,
+  asset: typeof schema.mediaAsset.$inferSelect
+): Promise<{ asset: typeof schema.mediaAsset.$inferSelect; data: Buffer } | null> {
+  try {
+    return { asset, data: await readMediaFile(organizationId, asset.id) };
+  } catch {
+    // El archivo no está: se intenta recuperar de Meta.
+  }
+  const recuperado = await ensureAssetAvailable(organizationId, asset.id, { forzar: true });
+  if (!recuperado || recuperado.fetchStatus !== "available") return null;
+  try {
+    const data = await readMediaFile(organizationId, asset.id);
+    console.log(`[media] ${asset.id} no estaba en el volumen; se recuperó de Meta`);
+    return { asset: recuperado, data };
+  } catch {
     return null;
   }
 }

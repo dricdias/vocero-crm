@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
 import { IMAGEN_ADJUNTA } from "@/lib/imagen-adjunta";
-import { ensureAssetAvailable, readMediaFile } from "@/server/whatsapp/media";
+import { ensureAssetAvailable, leerAdjunto } from "@/server/whatsapp/media";
 import { SendError, sendMediaMessage } from "./send";
 
 /** 042 — Un reenvío que no puede salir; el código va tal cual a la API. */
@@ -82,12 +82,12 @@ export async function forwardImage(input: {
       throw new ForwardImageError(410, "gone", "La imagen ya no está disponible para reenviar");
     }
   }
-  let data: Buffer;
-  try {
-    data = await readMediaFile(input.organizationId, asset.id);
-  } catch {
+  // Si el archivo se perdió del volumen, `leerAdjunto` lo vuelve a bajar de Meta.
+  const leido = await leerAdjunto(input.organizationId, asset);
+  if (!leido) {
     throw new ForwardImageError(410, "gone", "El archivo de la imagen ya no está disponible");
   }
+  const data = leido.data;
 
   return sendMediaMessage({
     organizationId: input.organizationId,

@@ -35,7 +35,7 @@ describe("el manifest", () => {
     expect(JSON.stringify(m)).not.toMatch(/vocero/i);
     expect(m).toMatchObject({
       display: "standalone",
-      start_url: "/",
+      start_url: "/inbox",
       scope: "/",
       id: "/",
       lang: "es",

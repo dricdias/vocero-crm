@@ -28,6 +28,20 @@ viva, `WA_MOCK_ENABLED=true` y `META_GRAPH_BASE_URL` apuntando a wa-mock.
 9. En 390 px de ancho, abrir el diálogo. **Esperado:** cabe, sin
    desplazamiento horizontal.
 
+## El archivo se perdió del volumen
+
+> Automatizado en `scripts/e2e-adjunto-perdido.mjs` (13 checks). Caso real del
+> 2026-10-23 en crm-dev: la app corría sin volumen en `/data`, un
+> redespliegue se llevó los archivos y todos los audios e imágenes daban 410,
+> aunque Meta todavía los tenía.
+
+1. Entra una imagen y se descarga. Se borra su archivo del volumen.
+   **Esperado:** `GET /api/media/{id}` responde 200 con el mismo contenido: el
+   CRM la vuelve a bajar de Meta y la deja otra vez en el volumen.
+2. Igual, pero Meta ya no la tiene (id caducado). **Esperado:** 410 «ya no
+   está en el volumen ni en WhatsApp» en menos de 10 s, sin 500, y el adjunto
+   queda como no disponible («contenido no disponible» en la bandeja).
+
 ## Fuera del guion
 
 - Destinos de Instagram, Messenger o TikTok (422), origen o destino del

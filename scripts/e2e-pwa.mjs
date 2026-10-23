@@ -67,7 +67,7 @@ try {
   const m = await sinSesion.json();
   ok("name es el de la marca", m.name === nombre, m.name);
   ok("short_name cabe en 12", typeof m.short_name === "string" && m.short_name.length <= 12, m.short_name);
-  ok("standalone desde /", m.display === "standalone" && m.start_url === "/", JSON.stringify([m.display, m.start_url]));
+  ok("standalone, abre en la Bandeja", m.display === "standalone" && m.start_url === "/inbox", JSON.stringify([m.display, m.start_url]));
   ok("ningún «Vocero» cableado", !/vocero/i.test(JSON.stringify(m)));
   ok(
     "iconos 192 y 512 (any) y 512 (maskable)",

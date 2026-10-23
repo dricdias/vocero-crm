@@ -27,6 +27,15 @@ vi.mock("@/server/whatsapp/media", async (original) => ({
   ...(await original<typeof import("@/server/whatsapp/media")>()),
   readMediaFile: mocks.read,
   ensureAssetAvailable: mocks.ensure,
+  // `leerAdjunto` (recupera de Meta un archivo perdido) se prueba aparte, en
+  // scripts/e2e-adjunto-perdido.mjs: aquí solo lee con el mock.
+  leerAdjunto: async (organizationId: string, asset: { id: string }) => {
+    try {
+      return { asset, data: await mocks.read(organizationId, asset.id) };
+    } catch {
+      return null;
+    }
+  },
 }));
 vi.mock("@/server/inbox/send", async (original) => ({
   ...(await original<typeof import("@/server/inbox/send")>()),
