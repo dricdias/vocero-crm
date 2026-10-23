@@ -1352,3 +1352,30 @@ export const webhookEvent = pgTable(
     index("webhook_event_org_status_idx").on(t.organizationId, t.status),
   ]
 );
+
+/* ============================================================
+ * 049 — Respuestas rápidas («/atajo» en el compositor)
+ * ============================================================ */
+
+/**
+ * Textos que el equipo inserta con `/atajo` en vez de teclearlos otra vez
+ * (horario, pago, envío…). Compartidas por la organización: las administra
+ * quien configura y las usa cualquiera. No son plantillas de Meta: solo sirven
+ * con la ventana abierta.
+ */
+export const quickReply = pgTable(
+  "quick_reply",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Normalizado: minúsculas, sin acentos, `[a-z0-9_-]{1,32}`. */
+    atajo: text("atajo").notNull(),
+    /** Hasta 4 096 caracteres (el tope de WhatsApp). Admite `{nombre}`. */
+    texto: text("texto").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("quick_reply_org_atajo_uq").on(t.organizationId, t.atajo)]
+);

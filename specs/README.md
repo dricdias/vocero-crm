@@ -30,6 +30,7 @@ producto** — y saberlo antes de leerla ahorra una confusión.
 | `046-referencias-2.2` | Exento (estudio) | research (lo que se aprendió de siete CRM y bandejas open source, licencias verificadas, ranking y plan de la 2.2; la elección de Kevin) |
 | `047-webhook-a-prueba-de-fallos` | Ciclo completo | spec, plan, tasks (el evento del webhook se guarda antes del 200 y se reintenta si falla; migración aditiva `0023`; enmienda el contrato del webhook: 503 si no se pudo guardar) |
 | `048-pwa` | Ligero | spec (Vocero instalable en el celular con la marca de la organización: manifest, iconos PNG con `next/og`, service worker que no guarda nada y botón «Instalar app»; sin Web Push) |
+| `049-respuestas-rapidas` | Ciclo completo | spec, plan, tasks (respuestas rápidas con «/» en el compositor, administradas en Ajustes; migración aditiva `0024`) |
 
 Los tres carriles —ciclo completo, ligero y exento— están definidos en el
 [Principio VI de la constitución](../.specify/memory/constitution.md). El

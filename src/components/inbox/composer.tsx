@@ -31,6 +31,14 @@ import { validarImagenAdjunta } from "@/lib/imagen-adjunta";
 import { EmojiPicker } from "./emoji-picker";
 import { insertAtSelection } from "@/lib/emojis";
 import { VoiceRecorder, type NotaGrabada } from "./voice-recorder";
+import { QuickReplyMenu } from "./quick-reply-menu";
+import {
+  aplicarRespuesta,
+  filtrarRespuestas,
+  rellenarVariables,
+  tokenRapido,
+  type RespuestaRapida,
+} from "@/lib/respuestas-rapidas";
 
 export function Composer({
   conversation,
@@ -67,6 +75,15 @@ export function Composer({
   const [dragging, setDragging] = useState(false);
   // 044 — La grabadora ocupa el lugar de la caja mientras está abierta.
   const [grabando, setGrabando] = useState(false);
+  // 049 — Respuestas rápidas: la lista de la organización (null = sin cargar),
+  // el `/atajo` que se está escribiendo y la opción resaltada. `cerradoEn`
+  // guarda dónde empezaba el token que se cerró con Escape: no vuelve a abrir
+  // hasta que se escriba otra `/`.
+  const [respuestas, setRespuestas] = useState<RespuestaRapida[] | null>(null);
+  const [puedeEditarRespuestas, setPuedeEditarRespuestas] = useState(false);
+  const [token, setToken] = useState<{ inicio: number; consulta: string } | null>(null);
+  const [activa, setActiva] = useState(0);
+  const [cerradoEn, setCerradoEn] = useState<number | null>(null);
   // Hay caja de texto libre (ventana normal, o la humana de Instagram/Messenger).
   const textoLibre = conversation.windowOpen || Boolean(conversation.humanWindow?.open);
 
@@ -113,6 +130,23 @@ export function Composer({
     };
   }, [filePreview]);
 
+  // 049 — La lista se pide una vez: el compositor se monta de nuevo con cada
+  // conversación (028 D5).
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/quick-replies")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { respuestas?: RespuestaRapida[]; puedeEditar?: boolean } | null) => {
+        if (!vivo || !d) return;
+        setRespuestas(d.respuestas ?? []);
+        setPuedeEditarRespuestas(Boolean(d.puedeEditar));
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
   useLayoutEffect(() => {
     const el = taRef.current;
     if (!el || emojiCaret.current === null) return;
@@ -127,6 +161,30 @@ export function Composer({
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  /** 049 — Relee el `/atajo` que hay antes del cursor (al teclear, hacer clic o moverse). */
+  function releerToken() {
+    const el = taRef.current;
+    if (!el) return;
+    const t = el.selectionStart === el.selectionEnd ? tokenRapido(el.value, el.selectionStart) : null;
+    setToken((antes) => {
+      if (t?.inicio !== antes?.inicio || t?.consulta !== antes?.consulta) setActiva(0);
+      return t;
+    });
+    if (!t) setCerradoEn(null);
+  }
+
+  /** 049 — Cambia el `/atajo` por la respuesta (con `{nombre}` relleno); no envía. */
+  function elegirRespuesta(r: RespuestaRapida) {
+    const el = taRef.current;
+    if (!el || !token) return;
+    const insercion = rellenarVariables(r.texto, conversation.contact.name);
+    const next = aplicarRespuesta(text, token.inicio, el.selectionStart, insercion);
+    emojiCaret.current = next.cursor;
+    setText(next.texto);
+    setToken(null);
+    setCerradoEn(null);
   }
 
   /** 041 — El emoji entra en el cursor (o en lugar de la selección); no envía. */
@@ -404,6 +462,10 @@ export function Composer({
     );
   }
 
+  // 049 — El menú de respuestas rápidas, si hay una `/` escribiéndose.
+  const opcionesRapidas = token ? filtrarRespuestas(respuestas ?? [], token.consulta).slice(0, 50) : [];
+  const menuRapido = token !== null && respuestas !== null && cerradoEn !== token.inicio;
+
   const canSubmit = file !== null || text.trim().length > 0;
   // 044 — Con la caja vacía el botón graba, como en WhatsApp.
   const puedeGrabar = conversation.composer.media && !file && !text.trim();
@@ -519,6 +581,16 @@ export function Composer({
             e.target.value = "";
           }}
         />
+        {menuRapido && (
+          <QuickReplyMenu
+            opciones={opcionesRapidas}
+            activa={activa}
+            vacio={(respuestas ?? []).length === 0}
+            puedeEditar={puedeEditarRespuestas}
+            onElegir={elegirRespuesta}
+            onActiva={setActiva}
+          />
+        )}
         <EmojiPicker disabled={sending} onSelect={insertEmoji} />
         {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola.
             045: ubicación y contacto ya no se ofrecen (el servidor los sigue
@@ -555,8 +627,32 @@ export function Composer({
           onChange={(e) => {
             setText(e.target.value);
             autogrow();
+            releerToken();
           }}
+          onSelect={releerToken}
+          onBlur={() => setToken(null)}
           onKeyDown={(e) => {
+            // 049 — Con el menú abierto, el teclado es suyo.
+            if (menuRapido) {
+              if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                const n = opcionesRapidas.length;
+                if (n) setActiva((i) => (i + (e.key === "ArrowDown" ? 1 : n - 1)) % n);
+                return;
+              }
+              if ((e.key === "Enter" && !e.shiftKey) || e.key === "Tab") {
+                e.preventDefault();
+                const elegida = opcionesRapidas[activa];
+                if (elegida) elegirRespuesta(elegida);
+                else setCerradoEn(token!.inicio);
+                return;
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setCerradoEn(token!.inicio);
+                return;
+              }
+            }
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               void submit();

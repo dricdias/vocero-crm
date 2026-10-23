@@ -37,6 +37,8 @@ const prefixes = {
   olvido: "olv",
   // 047 — eventos de webhook guardados antes de procesarse
   webhookEvent: "whe",
+  // 049 — respuestas rápidas
+  quickReply: "qr",
 } as const;
 
 export type IdKind = keyof typeof prefixes;
