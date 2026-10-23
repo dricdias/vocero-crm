@@ -148,6 +148,15 @@ try {
   await page.getByPlaceholder("Escribe una respuesta").waitFor({ timeout: 20000 });
   const filaDe = (p, id) => p.locator(`div.group:has([data-message-id="${id}"])`);
   await page.locator(`[data-message-id="${delOrigen.texto.id}"]`).waitFor();
+  // La hora es un float: la burbuja tiene que contenerla (se salía en la
+  // rc.1 bajo el audio, el documento y la ubicación).
+  const horasFuera = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-message-id]")].filter((b) => {
+      const hora = b.querySelector(":scope > span.float-right");
+      return hora && hora.getBoundingClientRect().bottom > b.getBoundingClientRect().bottom + 0.5;
+    }).length
+  );
+  ok("la hora queda dentro de cada burbuja (audio, documento, ubicación)", horasFuera === 0, `${horasFuera} fuera`);
   await filaDe(page, delOrigen.texto.id).hover();
   ok(
     "al pasar el ratón por el texto: «Responder» y «Reenviar»",

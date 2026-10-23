@@ -502,7 +502,9 @@ export function MessageThread({
                 className={cn(
                   // Burbujas del mockup de la landing: el cliente entra en
                   // verde WhatsApp, el CRM contesta con el lavado del acento.
-                  "rounded-[14px] border px-3 pb-1.5 pt-2 text-[13.5px] leading-[1.45] shadow-sm",
+                  // `flow-root` contiene la hora (un float): desde la 059 la
+                  // burbuja va envuelta y ya no es un elemento flex que lo haga.
+                  "flow-root rounded-[14px] border px-3 pb-1.5 pt-2 text-[13.5px] leading-[1.45] shadow-sm",
                   out
                     ? "border-bubble-out-border bg-bubble-out text-bubble-out-text"
                     : "border-bubble-in-border bg-bubble-in",
