@@ -205,6 +205,10 @@ export function MessageThread({
   onForwarded?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  // 045 — El hilo se queda abajo mientras crece (una foto o un audio que
+  // terminan de cargar), salvo que el operador haya subido a leer.
+  const contenidoRef = useRef<HTMLDivElement>(null);
+  const pegadoAbajo = useRef(true);
   const [forwarding, setForwarding] = useState<MessageDto | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [resaltado, setResaltado] = useState<string | null>(null);
@@ -231,14 +235,35 @@ export function MessageThread({
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    pegadoAbajo.current = true;
   }, [messages.length, notice]);
+
+  // Sin esto, una conversación corta con una foto quedaba en el primer
+  // mensaje: al bajar al final todavía cabía todo (scroll 0) y, cuando la foto
+  // terminaba de cargar, el hilo crecía hacia abajo sin moverse.
+  useEffect(() => {
+    const el = scrollRef.current;
+    const contenido = contenidoRef.current;
+    if (!el || !contenido || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (pegadoAbajo.current) el.scrollTop = el.scrollHeight;
+    });
+    ro.observe(contenido);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div
       ref={scrollRef}
-      className="thread-bg flex flex-1 flex-col gap-[3px] overflow-y-auto px-3 py-5 sm:px-[6%]"
+      onScroll={(e) => {
+        const el = e.currentTarget;
+        pegadoAbajo.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+      }}
+      className="thread-bg flex flex-1 flex-col overflow-y-auto px-3 py-5 sm:px-[6%]"
     >
+      <div ref={contenidoRef} className="flex shrink-0 flex-col gap-[3px]">
       {forwarding && (
         <ForwardImageDialog
           message={forwarding}
@@ -394,6 +419,7 @@ export function MessageThread({
           {notice}
         </p>
       )}
+      </div>
     </div>
   );
 }

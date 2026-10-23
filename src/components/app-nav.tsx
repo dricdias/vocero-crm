@@ -3,13 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, LogOut, X } from "lucide-react";
+import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
 import type { Branding } from "@/lib/branding";
 import type { ThemePreference } from "@/lib/theme";
 import { cn, initials } from "@/lib/utils";
 import { appNavGroups, isNavActive, SETTINGS_ITEM, type NavItem } from "@/lib/nav";
 import { signOut } from "@/lib/auth/client";
 import { useEvents } from "@/components/use-events";
+import {
+  debeSonar,
+  guardarSonido,
+  reproducirAviso,
+  sonidoActivado,
+  useDesbloquearAudio,
+  useTituloNoLeidos,
+} from "@/components/avisos-de-mensajes";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-mark";
 import {
@@ -73,6 +81,9 @@ export function AppNav({
   const pathname = usePathname();
   const router = useRouter();
   const [unread, setUnread] = useState(0);
+  // 045 — Chats con algo sin leer: es lo que WhatsApp cuenta en la pestaña.
+  const [chats, setChats] = useState(0);
+  const [sonido, setSonido] = useState(true);
 
   async function refetchUnread() {
     const res = await fetch("/api/conversations").catch(() => null);
@@ -81,14 +92,23 @@ export function AppNav({
       conversations: { unreadCount: number }[];
     };
     setUnread(data.conversations.reduce((a, c) => a + c.unreadCount, 0));
+    setChats(data.conversations.filter((c) => c.unreadCount > 0).length);
   }
 
   useEffect(() => {
     void refetchUnread();
+    setSonido(sonidoActivado());
   }, []);
 
+  useDesbloquearAudio();
+  useTituloNoLeidos(chats);
+
   useEvents({
-    onMessageNew: () => void refetchUnread(),
+    onMessageNew: ({ conversationId, message }) => {
+      const m = message as { direction?: string };
+      if (debeSonar({ direction: m.direction, conversationId })) reproducirAviso();
+      void refetchUnread();
+    },
     onConversationUpdated: () => void refetchUnread(),
   });
 
@@ -186,19 +206,39 @@ export function AppNav({
             {role === "owner" ? "Proprietário" : "Equipe"} · Online
           </span>
         </span>
-        <ThemeToggle initial={theme} />
-        <button
-          aria-label="Sair"
-          title="Sair"
-          className="rounded p-1 text-text-3 hover:text-foreground"
-          onClick={async () => {
-            await signOut();
-            router.push("/login");
-            router.refresh();
-          }}
-        >
-          <LogOut className="h-4 w-4" strokeWidth={1.7} />
-        </button>
+        <span className="flex shrink-0 items-center">
+          <button
+            type="button"
+            onClick={() => {
+              const v = !sonido;
+              setSonido(v);
+              guardarSonido(v);
+            }}
+            aria-label={sonido ? "Som de mensagens: ativado" : "Som de mensagens: silenciado"}
+            aria-pressed={sonido}
+            title={sonido ? "Silenciar o som de mensagens novas" : "Ativar o som de mensagens novas"}
+            className="rounded p-1 text-text-3 transition-colors hover:text-foreground"
+          >
+            {sonido ? (
+              <Bell className="h-4 w-4" strokeWidth={1.7} />
+            ) : (
+              <BellOff className="h-4 w-4" strokeWidth={1.7} />
+            )}
+          </button>
+          <ThemeToggle initial={theme} />
+          <button
+            aria-label="Sair"
+            title="Sair"
+            className="rounded p-1 text-text-3 hover:text-foreground"
+            onClick={async () => {
+              await signOut();
+              router.push("/login");
+              router.refresh();
+            }}
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.7} />
+          </button>
+        </span>
       </div>
 
       {/* Qué versión está corriendo. Discreta pero siempre visible: la duda

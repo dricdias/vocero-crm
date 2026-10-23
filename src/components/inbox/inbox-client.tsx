@@ -16,6 +16,7 @@ import { useEvents } from "@/components/use-events";
 import { ConversationList } from "./conversation-list";
 import { MessageThread } from "./message-thread";
 import { Composer } from "./composer";
+import { setConversacionAbierta } from "@/components/avisos-de-mensajes";
 import { citaDe } from "./helpers";
 import { ContactPanel } from "./contact-panel";
 
@@ -81,6 +82,11 @@ export function InboxClient({
   }, []);
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
+  // 045 — El aviso sonoro no suena por la conversación que ya estás mirando.
+  useEffect(() => {
+    setConversacionAbierta(selectedId);
+    return () => setConversacionAbierta(null);
+  }, [selectedId]);
   const lastFetchRef = useRef<string | null>(null);
   const tmpSeq = useRef(0);
   // Los envíos salen en fila: el compositor ya no espera, pero WhatsApp debe

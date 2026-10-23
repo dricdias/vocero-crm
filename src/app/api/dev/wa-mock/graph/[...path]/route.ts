@@ -194,7 +194,9 @@ export async function GET(req: Request, ctx: Params) {
         ? "application/pdf"
         : path[0]!.includes("audio")
           ? "audio/ogg; codecs=opus"
-          : "image/jpeg",
+          : path[0]!.includes("imagen")
+            ? "image/png"
+            : "image/jpeg",
       file_size: 13,
       url: `${origin}/api/dev/wa-mock/media-file/${path[0]}`,
     });

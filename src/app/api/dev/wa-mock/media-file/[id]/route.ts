@@ -74,6 +74,14 @@ export async function GET(
     });
   }
 
+  // 045 — Una foto de verdad (grande, como las de un teléfono), para probar
+  // que el hilo se queda abajo cuando termina de cargar.
+  if (id.includes("imagen")) {
+    return new Response(new Uint8Array(pngDePrueba(id, 600)), {
+      headers: { "content-type": "image/png" },
+    });
+  }
+
   const isPdf = id.includes("pdf");
   return new Response(Buffer.from("wa-mock-media"), {
     headers: {

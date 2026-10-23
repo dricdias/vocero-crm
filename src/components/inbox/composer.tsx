@@ -11,11 +11,9 @@ import {
 import {
   Clock3,
   FileText,
-  MapPin,
   Mic,
   Paperclip,
   Send,
-  UserRound,
   X,
 } from "lucide-react";
 import type { ConversationDto, MessageDto, TemplateDto } from "@/lib/types";
@@ -33,22 +31,6 @@ import { validarImagenAdjunta } from "@/lib/imagen-adjunta";
 import { EmojiPicker } from "./emoji-picker";
 import { insertAtSelection } from "@/lib/emojis";
 import { VoiceRecorder, type NotaGrabada } from "./voice-recorder";
-
-/** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
-type AttachPanel = "location" | "contact" | null;
-
-/** Extrae lat,long de "21.019, -101.257" o de un enlace de Google Maps. */
-function parseCoords(raw: string): { latitude: number; longitude: number } | null {
-  const m =
-    raw.match(/(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)/) ??
-    raw.match(/@(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)/);
-  if (!m) return null;
-  const latitude = Number(m[1]);
-  const longitude = Number(m[2]);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-  if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
-  return { latitude, longitude };
-}
 
 export function Composer({
   conversation,
@@ -73,11 +55,6 @@ export function Composer({
   const [templates, setTemplates] = useState<TemplateDto[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [panel, setPanel] = useState<AttachPanel>(null);
-  const [coordsRaw, setCoordsRaw] = useState("");
-  const [placeName, setPlaceName] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   // 042 — `sending` tarda un render en verse; esto corta el doble envío ya.
@@ -111,9 +88,6 @@ export function Composer({
   useEffect(() => {
     if (replyTo) taRef.current?.focus();
   }, [replyTo]);
-
-  /** 039: el id citado, para los envíos que esperan respuesta del servidor. */
-  const replyField = replyTo ? { replyToMessageId: replyTo.id } : {};
 
   // 043 — Soltar un archivo fuera del chat abriría el archivo en la pestaña y
   // el CRM (con el borrador) se perdería. Mientras haya conversación abierta,
@@ -175,7 +149,6 @@ export function Composer({
     if (filePreview) URL.revokeObjectURL(filePreview);
     setFile(f);
     setFilePreview(f && f.type.startsWith("image/") ? URL.createObjectURL(f) : null);
-    setPanel(null);
     setError(null);
   }
 
@@ -363,63 +336,6 @@ export function Composer({
     return null;
   }
 
-  async function submitLocation() {
-    const coords = parseCoords(coordsRaw);
-    if (!coords) {
-      setError("Coordenadas inválidas — cole «lat, long» ou um link do Google Maps");
-      return;
-    }
-    setSending(true);
-    setError(null);
-    const err = await apiSend(`/api/conversations/${conversation.id}/messages`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        type: "location",
-        location: { ...coords, ...(placeName.trim() ? { name: placeName.trim() } : {}) },
-        ...replyField,
-      }),
-    });
-    setSending(false);
-    if (err) {
-      setError(err);
-      return;
-    }
-    setPanel(null);
-    setCoordsRaw("");
-    setPlaceName("");
-    onReplyChange?.(null);
-    onSent();
-  }
-
-  async function submitContact() {
-    if (!contactName.trim() || contactPhone.trim().length < 5) {
-      setError("O contato precisa de nome e telefone");
-      return;
-    }
-    setSending(true);
-    setError(null);
-    const err = await apiSend(`/api/conversations/${conversation.id}/messages`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        type: "contacts",
-        contacts: [{ name: contactName.trim(), phone: contactPhone.trim() }],
-        ...replyField,
-      }),
-    });
-    setSending(false);
-    if (err) {
-      setError(err);
-      return;
-    }
-    setPanel(null);
-    setContactName("");
-    setContactPhone("");
-    onReplyChange?.(null);
-    onSent();
-  }
-
   // 022 — TikTok no tiene plantillas ni otra forma de reabrir: con la ventana
   // cerrada no hay nada que ofrecer, solo decir qué pasa y qué lo arregla.
   if (!conversation.windowOpen && conversation.channel === "tiktok") {
@@ -510,7 +426,7 @@ export function Composer({
           </p>
         </div>
       )}
-      {templates.length > 0 && !file && panel === null && (
+      {templates.length > 0 && !file && (
         <div className="mb-2.5 flex flex-wrap gap-1.5">
           {templates.slice(0, 4).map((t) => (
             <button
@@ -580,80 +496,6 @@ export function Composer({
         </div>
       )}
 
-      {panel === "location" && (
-        <div className="mb-2.5 flex flex-wrap items-end gap-2 rounded-md border bg-subtle p-2.5">
-          <label className="min-w-0 flex-1 text-xs text-text-2">
-            Coordenadas ou link do Google Maps
-            <input
-              value={coordsRaw}
-              onChange={(e) => setCoordsRaw(e.target.value)}
-              placeholder="21.019, -101.257"
-              className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
-            />
-          </label>
-          <label className="min-w-0 flex-1 text-xs text-text-2">
-            Nome do lugar (opcional)
-            <input
-              value={placeName}
-              onChange={(e) => setPlaceName(e.target.value)}
-              placeholder="Escritório Central"
-              className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
-            />
-          </label>
-          <button
-            onClick={() => void submitLocation()}
-            disabled={sending}
-            className="rounded-full bg-brand px-3.5 py-1.5 text-sm font-semibold text-brand-fg shadow-sm hover:bg-brand-hover disabled:opacity-40"
-          >
-            Enviar localização
-          </button>
-          <button
-            onClick={() => setPanel(null)}
-            aria-label="Cancelar"
-            className="rounded p-1 text-text-3 hover:bg-secondary"
-          >
-            <X className="h-4 w-4" strokeWidth={1.7} />
-          </button>
-        </div>
-      )}
-
-      {panel === "contact" && (
-        <div className="mb-2.5 flex flex-wrap items-end gap-2 rounded-md border bg-subtle p-2.5">
-          <label className="min-w-0 flex-1 text-xs text-text-2">
-            Nome
-            <input
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              placeholder="João Silva"
-              className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
-            />
-          </label>
-          <label className="min-w-0 flex-1 text-xs text-text-2">
-            Telefone
-            <input
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="+55 11 91234-5678"
-              className="mt-1 w-full rounded-md border border-border-strong bg-background px-2.5 py-1.5 text-sm outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-[3px] focus:ring-brand-soft"
-            />
-          </label>
-          <button
-            onClick={() => void submitContact()}
-            disabled={sending}
-            className="rounded-full bg-brand px-3.5 py-1.5 text-sm font-semibold text-brand-fg shadow-sm hover:bg-brand-hover disabled:opacity-40"
-          >
-            Enviar contato
-          </button>
-          <button
-            onClick={() => setPanel(null)}
-            aria-label="Cancelar"
-            className="rounded p-1 text-text-3 hover:bg-secondary"
-          >
-            <X className="h-4 w-4" strokeWidth={1.7} />
-          </button>
-        </div>
-      )}
-
       {grabando ? (
         <VoiceRecorder
           onSend={enviarNota}
@@ -677,48 +519,20 @@ export function Composer({
             e.target.value = "";
           }}
         />
-        <EmojiPicker disabled={sending} onSelect={insertEmoji} onOpen={() => setPanel(null)} />
-        {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola. */}
-        {(conversation.composer.media || conversation.composer.structured) && (
-          <div className="flex shrink-0 items-center gap-0.5">
-            {conversation.composer.media && (
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={sending}
-                aria-label="Anexar arquivo"
-                title="Anexar imagem, vídeo, áudio ou documento"
-                className="rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Paperclip className="h-[18px] w-[18px]" strokeWidth={1.7} />
-              </button>
-            )}
-            {conversation.composer.structured && (
-              <>
-                <button
-                  onClick={() => setPanel(panel === "location" ? null : "location")}
-                  aria-label="Enviar localização"
-                  title="Enviar localização"
-                  className={cn(
-                    "rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground",
-                    panel === "location" && "bg-secondary text-brand"
-                  )}
-                >
-                  <MapPin className="h-[18px] w-[18px]" strokeWidth={1.7} />
-                </button>
-                <button
-                  onClick={() => setPanel(panel === "contact" ? null : "contact")}
-                  aria-label="Compartilhar contato"
-                  title="Compartilhar contato"
-                  className={cn(
-                    "rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground",
-                    panel === "contact" && "bg-secondary text-brand"
-                  )}
-                >
-                  <UserRound className="h-[18px] w-[18px]" strokeWidth={1.7} />
-                </button>
-              </>
-            )}
-          </div>
+        <EmojiPicker disabled={sending} onSelect={insertEmoji} />
+        {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola.
+            045: ubicación y contacto ya no se ofrecen (el servidor los sigue
+            sabiendo enviar, para un cerebro conectado). */}
+        {conversation.composer.media && (
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={sending}
+            aria-label="Anexar arquivo"
+            title="Anexar imagem, vídeo, áudio ou documento"
+            className="shrink-0 rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <Paperclip className="h-[18px] w-[18px]" strokeWidth={1.7} />
+          </button>
         )}
         <textarea
           ref={taRef}
@@ -755,7 +569,6 @@ export function Composer({
         {puedeGrabar ? (
           <button
             onClick={() => {
-              setPanel(null);
               setError(null);
               setGrabando(true);
             }}

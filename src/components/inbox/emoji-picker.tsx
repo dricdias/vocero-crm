@@ -17,7 +17,7 @@ export function EmojiPicker({
 }: {
   disabled: boolean;
   onSelect: (emoji: string) => void;
-  onOpen: () => void;
+  onOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -74,7 +74,7 @@ export function EmojiPicker({
           if (!open) {
             setSearch("");
             setCategory("all");
-            onOpen();
+            onOpen?.();
           }
           setOpen(!open);
         }}

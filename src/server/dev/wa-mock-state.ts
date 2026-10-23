@@ -99,7 +99,10 @@ function freshState(): WaMockState {
     capiEvents: [],
     wabaSubscriptions: {},
     phoneWebhooks: {},
-    counter: 0,
+    // Arranca en la hora, no en 0: los ids del mock (`wamid.mock.N`) no
+    // chocan con los de un arranque anterior sobre la misma base, que el CRM
+    // descartaría como duplicados (idempotencia por wa_message_id).
+    counter: Date.now(),
   };
 }
 
