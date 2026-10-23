@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
 import { BotonInstalar } from "@/components/pwa";
+import { limpiarBorradores } from "@/lib/borradores";
 import type { Branding } from "@/lib/branding";
 import type { ThemePreference } from "@/lib/theme";
 import { cn, initials } from "@/lib/utils";
@@ -236,6 +237,8 @@ export function AppNav({
             title="Sair"
             className="rounded p-1 text-text-3 hover:text-foreground"
             onClick={async () => {
+              // 051 — Los borradores no se quedan en una computadora compartida.
+              limpiarBorradores();
               await signOut();
               router.push("/login");
               router.refresh();

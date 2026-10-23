@@ -33,6 +33,7 @@ import { EmojiPicker } from "./emoji-picker";
 import { insertAtSelection } from "@/lib/emojis";
 import { VoiceRecorder, type NotaGrabada } from "./voice-recorder";
 import { QuickReplyMenu } from "./quick-reply-menu";
+import { guardarBorrador, leerBorrador } from "@/lib/borradores";
 import {
   aplicarRespuesta,
   filtrarRespuestas,
@@ -65,7 +66,8 @@ export function Composer({
    */
   onNota?: (texto: string) => Promise<string | null>;
 }) {
-  const [text, setText] = useState("");
+  // 051 — Lo que quedó escrito en esta conversación vuelve al regresar a ella.
+  const [text, setText] = useState(() => leerBorrador("responder", conversation.id));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [templates, setTemplates] = useState<TemplateDto[]>([]);
@@ -94,7 +96,7 @@ export function Composer({
   const [cerradoEn, setCerradoEn] = useState<number | null>(null);
   // 050 — Responder al cliente o anotar para el equipo.
   const [modo, setModo] = useState<"responder" | "nota">("responder");
-  const [nota, setNota] = useState("");
+  const [nota, setNota] = useState(() => leerBorrador("nota", conversation.id));
   const [guardandoNota, setGuardandoNota] = useState(false);
   // Hay caja de texto libre (ventana normal, o la humana de Instagram/Messenger).
   const textoLibre = conversation.windowOpen || Boolean(conversation.humanWindow?.open);
@@ -141,6 +143,20 @@ export function Composer({
       if (filePreview) URL.revokeObjectURL(filePreview);
     };
   }, [filePreview]);
+
+  // 051 — Cada cambio se guarda como borrador (vaciar la caja lo borra; enviar
+  // la vacía). El adjunto no: 028 D5.
+  useEffect(() => {
+    guardarBorrador("responder", conversation.id, text);
+  }, [text, conversation.id]);
+  useEffect(() => {
+    guardarBorrador("nota", conversation.id, nota);
+  }, [nota, conversation.id]);
+  // Un borrador largo vuelve con la caja a su altura.
+  useEffect(() => {
+    // Solo al montar: después lo hace onChange.
+    autogrow();
+  }, []);
 
   // 049 — La lista se pide una vez: el compositor se monta de nuevo con cada
   // conversación (028 D5).
