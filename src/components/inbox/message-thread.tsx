@@ -6,6 +6,7 @@ import {
   Check,
   CheckCheck,
   Clock3,
+  Copy,
   FileText,
   Forward,
   Lock,
@@ -18,11 +19,20 @@ import {
   UserRound,
 } from "lucide-react";
 import { intercalarNotas, type NotaDto } from "@/lib/notas";
+import {
+  claseReenvio,
+  desplazamientoBurbuja,
+  DESLIZAR_PARA_CITAR_PX,
+  nombreReenvio,
+  PULSACION_LARGA_MS,
+  sueltaYCita,
+  TOLERANCIA_PULSACION_PX,
+} from "@/lib/reenvio";
 import type { ConversationDto, MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AudioPlayer } from "./audio-player";
 import { formatBytes, mediaLabel } from "./helpers";
-import { ForwardImageDialog } from "./forward-image-dialog";
+import { ForwardDialog } from "./forward-dialog";
 import { LinkedText } from "./linked-text";
 import { QuoteBlock } from "./quote-block";
 
@@ -217,6 +227,114 @@ function NotaInterna({ nota, onBorrar }: { nota: NotaDto; onBorrar?: (n: NotaDto
   );
 }
 
+/**
+ * 059 · D6 — Los gestos táctiles de una burbuja: deslizarla hacia un lado la
+ * cita y mantenerla presionada abre el menú de acciones. Con el ratón no hace
+ * nada (ahí están los iconos); `touch-pan-y` deja al navegador el
+ * desplazamiento vertical del hilo.
+ */
+function GestosBurbuja({
+  onCitar,
+  onMenu,
+  children,
+}: {
+  onCitar?: () => void;
+  onMenu?: () => void;
+  children: React.ReactNode;
+}) {
+  const [dx, setDx] = useState(0);
+  const dxRef = useRef(0);
+  const inicio = useRef<{ x: number; y: number } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abrioMenu = useRef(false);
+  const ultimoToque = useRef(0);
+
+  const mover = (v: number) => {
+    dxRef.current = v;
+    setDx(v);
+  };
+  const cancelarPulsacion = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => cancelarPulsacion, []);
+
+  return (
+    <div
+      // El ancho máximo de la burbuja vive aquí: un porcentaje dentro de una
+      // caja que se ajusta a su contenido no limitaría nada.
+      // En el teléfono la burbuja necesita casi todo el renglón: con 64% cada
+      // mensaje se parte en tres líneas.
+      className="relative min-w-0 max-w-[85%] touch-pan-y sm:max-w-[64%] [-webkit-touch-callout:none] [@media(hover:none)]:select-none"
+      style={{
+        transform: dx ? `translateX(${dx}px)` : undefined,
+        transition: dx ? "none" : "transform 150ms ease-out",
+      }}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        if (e.touches.length !== 1 || !t) return;
+        ultimoToque.current = Date.now();
+        inicio.current = { x: t.clientX, y: t.clientY };
+        abrioMenu.current = false;
+        if (onMenu) {
+          timer.current = setTimeout(() => {
+            abrioMenu.current = true;
+            mover(0);
+            navigator.vibrate?.(10);
+            onMenu();
+          }, PULSACION_LARGA_MS);
+        }
+      }}
+      onTouchMove={(e) => {
+        const t = e.touches[0];
+        if (!inicio.current || !t) return;
+        const ddx = t.clientX - inicio.current.x;
+        const ddy = t.clientY - inicio.current.y;
+        if (Math.hypot(ddx, ddy) > TOLERANCIA_PULSACION_PX) cancelarPulsacion();
+        if (abrioMenu.current || !onCitar) return;
+        mover(desplazamientoBurbuja(ddx, ddy));
+      }}
+      onTouchEnd={(e) => {
+        cancelarPulsacion();
+        // Al soltar, el navegador manda un clic al punto del dedo: tras abrir
+        // el menú caería sobre él (o sobre un enlace al citar). Se anula.
+        if (abrioMenu.current) e.preventDefault();
+        if (inicio.current && !abrioMenu.current && onCitar && sueltaYCita(dxRef.current)) {
+          e.preventDefault();
+          navigator.vibrate?.(10);
+          onCitar();
+        }
+        inicio.current = null;
+        mover(0);
+      }}
+      onTouchCancel={() => {
+        cancelarPulsacion();
+        inicio.current = null;
+        mover(0);
+      }}
+      // Mantener presionado abre nuestro menú, no el del navegador.
+      onContextMenu={(e) => {
+        if (onMenu && Date.now() - ultimoToque.current < 1500) e.preventDefault();
+      }}
+    >
+      {children}
+      {dx !== 0 && (
+        <span
+          aria-hidden
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 rounded-full bg-secondary p-1.5 text-text-2",
+            dx > 0 ? "-left-9" : "-right-9"
+          )}
+          style={{ opacity: Math.min(1, Math.abs(dx) / DESLIZAR_PARA_CITAR_PX) }}
+        >
+          <Reply className="h-4 w-4" strokeWidth={1.7} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+
 function bubbleTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("pt-BR", {
     hour: "2-digit",
@@ -252,6 +370,8 @@ export function MessageThread({
   const contenidoRef = useRef<HTMLDivElement>(null);
   const pegadoAbajo = useRef(true);
   const [forwarding, setForwarding] = useState<MessageDto | null>(null);
+  // 059 · D6 — El mensaje cuyo menú (mantener presionado) está abierto.
+  const [menuDe, setMenuDe] = useState<MessageDto | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [resaltado, setResaltado] = useState<string | null>(null);
   const resaltadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -307,15 +427,31 @@ export function MessageThread({
     >
       <div ref={contenidoRef} className="flex shrink-0 flex-col gap-[3px]">
       {forwarding && (
-        <ForwardImageDialog
+        <ForwardDialog
           message={forwarding}
           conversations={conversations}
           onClose={() => setForwarding(null)}
           onSent={(name) => {
+            setNotice(`${nombreReenvio(forwarding).hecho} a ${name}`);
             setForwarding(null);
-            setNotice(`Imagen reenviada a ${name}`);
             onForwarded?.();
           }}
+        />
+      )}
+      {menuDe && (
+        <MenuMensaje
+          message={menuDe}
+          onClose={() => setMenuDe(null)}
+          onReply={onReply && menuDe.quotable ? () => onReply(menuDe) : undefined}
+          onForward={
+            onForwarded && claseReenvio(menuDe)
+              ? () => {
+                  setNotice(null);
+                  setForwarding(menuDe);
+                }
+              : undefined
+          }
+          onCopied={(ok) => setNotice(ok ? "Texto copiado" : "No se pudo copiar el texto")}
         />
       )}
       {(() => {
@@ -332,6 +468,11 @@ export function MessageThread({
         const grouped =
           !newDay && prev !== undefined && prev.direction === m.direction;
         const out = m.direction === "out";
+        // 059 — Qué acciones tiene esta burbuja.
+        const puedeCitar = Boolean(onReply && m.quotable);
+        const puedeReenviar = Boolean(onForwarded && claseReenvio(m));
+        const textoCopiable = m.media ? m.media.caption : m.text;
+        const tieneMenu = puedeCitar || puedeReenviar || Boolean(textoCopiable);
 
         return (
           <div key={m.id}>
@@ -352,14 +493,16 @@ export function MessageThread({
                 grouped ? "mt-[3px]" : "mt-2.5"
               )}
             >
+              <GestosBurbuja
+                onCitar={puedeCitar ? () => onReply!(m) : undefined}
+                onMenu={tieneMenu ? () => setMenuDe(m) : undefined}
+              >
               <div
                 data-message-id={m.id}
                 className={cn(
-                  // En el teléfono la burbuja necesita casi todo el renglón:
-                  // con 64% cada mensaje se parte en tres líneas.
                   // Burbujas del mockup de la landing: el cliente entra en
                   // verde WhatsApp, el CRM contesta con el lavado del acento.
-                  "max-w-[85%] rounded-[14px] border px-3 pb-1.5 pt-2 text-[13.5px] leading-[1.45] shadow-sm sm:max-w-[64%]",
+                  "rounded-[14px] border px-3 pb-1.5 pt-2 text-[13.5px] leading-[1.45] shadow-sm",
                   out
                     ? "border-bubble-out-border bg-bubble-out text-bubble-out-text"
                     : "border-bubble-in-border bg-bubble-in",
@@ -383,19 +526,6 @@ export function MessageThread({
                         <LinkedText text={m.media.caption} />
                       </span>
                     )}
-                    {/* Aunque la descarga haya fallado: el servidor la reintenta (042 · D4). */}
-                    {onForwarded && m.media.kind === "image" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNotice(null);
-                            setForwarding(m);
-                          }}
-                          className="mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] font-medium text-brand-ink transition-colors hover:bg-secondary"
-                        >
-                          <Forward className="h-3.5 w-3.5" strokeWidth={1.7} /> Reenviar imagen
-                        </button>
-                      )}
                   </span>
                 ) : m.type === "text" || m.type === "template" ? (
                   <span className="whitespace-pre-wrap break-words">
@@ -445,17 +575,44 @@ export function MessageThread({
                   </p>
                 )}
               </div>
-              {onReply && m.quotable && (
-                // En el teléfono no hay "pasar el ratón": ahí se ve siempre.
-                <button
-                  type="button"
-                  onClick={() => onReply(m)}
-                  aria-label="Responder"
-                  title="Responder"
-                  className="shrink-0 rounded-full p-1.5 text-text-3 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              </GestosBurbuja>
+              {/* 059 · D5 — Con ratón, dos iconos al pasar por la burbuja. En
+                  una pantalla táctil no se pintan: ahí se desliza o se
+                  mantiene presionado (D6). */}
+              {(puedeCitar || puedeReenviar) && (
+                <span
+                  className={cn(
+                    "hidden shrink-0 items-center [@media(hover:hover)]:flex",
+                    out ? "flex-row-reverse" : "flex-row"
+                  )}
                 >
-                  <Reply className="h-4 w-4" strokeWidth={1.7} />
-                </button>
+                  {puedeCitar && (
+                    <button
+                      type="button"
+                      onClick={() => onReply!(m)}
+                      aria-label="Responder"
+                      title="Responder"
+                      className={ICONO_ACCION}
+                    >
+                      <Reply className="h-4 w-4" strokeWidth={1.7} />
+                    </button>
+                  )}
+                  {puedeReenviar && (
+                    // Aunque la descarga haya fallado: el servidor la reintenta (042 · D4).
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotice(null);
+                        setForwarding(m);
+                      }}
+                      aria-label="Reenviar"
+                      title="Reenviar"
+                      className={ICONO_ACCION}
+                    >
+                      <Forward className="h-4 w-4" strokeWidth={1.7} />
+                    </button>
+                  )}
+                </span>
               )}
             </div>
           </div>
@@ -475,6 +632,75 @@ export function MessageThread({
           {notice}
         </p>
       )}
+      </div>
+    </div>
+  );
+}
+
+const ICONO_ACCION =
+  "rounded-full p-1.5 text-text-3 opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100";
+
+/**
+ * 059 · D6 — El menú de una burbuja al mantenerla presionada, abajo de la
+ * pantalla: responder, reenviar y copiar el texto, según aplique.
+ */
+function MenuMensaje({
+  message,
+  onClose,
+  onReply,
+  onForward,
+  onCopied,
+}: {
+  message: MessageDto;
+  onClose: () => void;
+  onReply?: () => void;
+  onForward?: () => void;
+  onCopied: (ok: boolean) => void;
+}) {
+  const texto = message.media ? message.media.caption : message.text;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const item = (label: string, Icono: typeof Reply, accion: () => void) => (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={() => {
+        onClose();
+        accion();
+      }}
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[15px] hover:bg-subtle"
+    >
+      <Icono className="h-5 w-5 text-text-2" strokeWidth={1.7} />
+      {label}
+    </button>
+  );
+
+  async function copiar(t: string) {
+    try {
+      await navigator.clipboard.writeText(t);
+      onCopied(true);
+    } catch {
+      onCopied(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-overlay" onClick={onClose}>
+      <div
+        role="menu"
+        aria-label="Acciones del mensaje"
+        className="fixed inset-x-0 bottom-0 rounded-t-2xl border-t bg-card p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] text-card-foreground shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {onReply && item("Responder", Reply, onReply)}
+        {onForward && item("Reenviar", Forward, onForward)}
+        {texto && item("Copiar texto", Copy, () => void copiar(texto))}
       </div>
     </div>
   );

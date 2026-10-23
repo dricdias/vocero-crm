@@ -33,6 +33,7 @@ producto** — y saberlo antes de leerla ahorra una confusión.
 | `049-respuestas-rapidas` | Ciclo completo | spec, plan, tasks (respuestas rápidas con «/» en el compositor, administradas en Ajustes; migración aditiva `0024`) |
 | `050-notas-internas` | Ciclo completo | spec, plan, tasks (notas internas en el hilo, en su propia tabla; migración aditiva `0025`; enmienda el contrato SSE con `note.new` y `note.deleted`) |
 | `051-borrador-por-conversacion` | Ligero | spec (lo escrito en una conversación vuelve al regresar; en el navegador, se borra al enviar, a los 7 días y al cerrar sesión) |
+| `059-reenviar-y-deslizar` | Ligero | spec (reenviar cualquier mensaje con `POST …/messages/forward`; en el celular, deslizar para responder y mantener presionado para el menú) |
 | `052-filtros-ventana` | Ligero | spec (filtro «Por vencer» con el chip «Vence en…»; enmienda del 2026-10-23: «Todas | No leídas» y un solo botón «Filtrar», sin «Sin responder») |
 
 Los tres carriles —ciclo completo, ligero y exento— están definidos en el
