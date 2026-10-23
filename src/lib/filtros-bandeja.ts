@@ -1,21 +1,13 @@
 /**
- * 052 — Los filtros «Sin responder» y «Por vencer» de la bandeja, y el chip
- * «Vence en…». Puros, para probarlos sin navegador.
+ * 052 — El filtro «Por vencer» de la bandeja y el aviso «Vence en…» de la
+ * fila. Puros, para probarlos sin navegador. («Sin responder» se quitó en la
+ * enmienda del 2026-10-23.)
  */
 
 /** Margen para contestar antes de que cierre la ventana del canal. */
 export const POR_VENCER_MS = 2 * 3_600_000;
 
-type ConVentana = {
-  windowOpen: boolean;
-  windowRemainingMs: number;
-  esperandoRespuesta: boolean;
-};
-
-/** El último mensaje es del cliente: espera respuesta. */
-export function sinResponder(c: ConVentana): boolean {
-  return c.esperandoRespuesta;
-}
+type ConVentana = { windowOpen: boolean; windowRemainingMs: number };
 
 /** La ventana sigue abierta pero le quedan 2 h o menos. */
 export function porVencer(c: ConVentana): boolean {

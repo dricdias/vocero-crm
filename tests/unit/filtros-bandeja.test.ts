@@ -1,23 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { etiquetaVence, POR_VENCER_MS, porVencer, sinResponder } from "@/lib/filtros-bandeja";
+import { etiquetaVence, POR_VENCER_MS, porVencer } from "@/lib/filtros-bandeja";
 
-/** 052 — Los filtros «Sin responder» y «Por vencer» y el chip de la fila. */
+/** 052 — El filtro «Por vencer» y el aviso «Vence en…» de la fila. */
 
 const H = 3_600_000;
-const c = (windowOpen: boolean, windowRemainingMs: number, esperandoRespuesta = false) => ({
-  windowOpen,
-  windowRemainingMs,
-  esperandoRespuesta,
-});
-
-describe("sin responder", () => {
-  it("es que el último mensaje es del cliente", () => {
-    expect(sinResponder(c(true, 20 * H, true))).toBe(true);
-    expect(sinResponder(c(true, 20 * H, false))).toBe(false);
-    // Con la ventana cerrada sigue esperando: se le contesta con plantilla.
-    expect(sinResponder(c(false, 0, true))).toBe(true);
-  });
-});
+const c = (windowOpen: boolean, windowRemainingMs: number) => ({ windowOpen, windowRemainingMs });
 
 describe("por vencer", () => {
   it("ventana abierta con 2 h o menos", () => {

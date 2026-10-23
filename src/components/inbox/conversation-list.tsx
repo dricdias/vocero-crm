@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clock3, Inbox, Megaphone, Search, Sparkles, UserRound, X } from "lucide-react";
+import { Clock3, Inbox, Megaphone, SlidersHorizontal, Search, Sparkles, UserRound, X } from "lucide-react";
 import type { ConversationDto } from "@/lib/types";
 import { etiquetaDeOrigen, titularDeOrigen } from "@/lib/anuncios";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { emptyInboxDescription, formatTime, previewText } from "./helpers";
 import { EVENTO_BORRADOR, leerBorrador } from "@/lib/borradores";
-import { etiquetaVence, porVencer, sinResponder } from "@/lib/filtros-bandeja";
+import { etiquetaVence, porVencer } from "@/lib/filtros-bandeja";
 
 /* Puntos de etapa: los tokens del tema, no hex copiados del tema claro —
    así siguen al acento white-label y se recalculan en oscuro. */
@@ -97,9 +97,28 @@ export function ConversationList({
   onSeeded: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<
-    "all" | "unread" | "sin_responder" | "por_vencer" | "anuncios"
-  >("all");
+  // 052 (enmienda) — Dos pestañas y un botón «Filtrar» con lo demás.
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [soloPorVencer, setSoloPorVencer] = useState(false);
+  const [soloAnuncios, setSoloAnuncios] = useState(false);
+  const [menuFiltros, setMenuFiltros] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  // El menú se cierra al hacer clic fuera o con Escape.
+  useEffect(() => {
+    if (!menuFiltros) return;
+    const fuera = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuFiltros(false);
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuFiltros(false);
+    };
+    document.addEventListener("mousedown", fuera);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("mousedown", fuera);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menuFiltros]);
   const [stage, setStage] = useState<string>("all");
   const [inbox, setInbox] = useState<Channel | "all">("all");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -142,36 +161,26 @@ export function ConversationList({
     inbox === "all" ? searched : searched.filter((c) => c.channel === inbox);
   const inboxCount = (ch: Channel) =>
     searched.filter((c) => c.channel === ch).length;
-  const unreadCount = inInbox.filter((c) => c.unreadCount > 0).length;
   // 018: las que abrió un anuncio (o una publicación con botón de WhatsApp).
   const deAnuncios = inInbox.filter((c) => c.anuncio !== null);
-  // 052 — El cliente espera respuesta, y la ventana está por cerrarse.
-  const esperan = inInbox.filter(sinResponder);
+  // 052 — A la ventana le quedan 2 h o menos.
   const venciendo = inInbox.filter(porVencer);
-  const visible =
-    filter === "unread"
-      ? inInbox.filter((c) => c.unreadCount > 0)
-      : filter === "sin_responder"
-        ? esperan
-        : filter === "por_vencer"
-          ? venciendo
-          : filter === "anuncios"
-            ? deAnuncios
-            : inInbox;
-  // Sin ninguna conversación de anuncio el filtro no aparece: a quien no
-  // anuncia no se le pinta un botón que siempre dice 0. Si está elegido, se
-  // queda, para poder salir de él aunque el contador baje a cero.
-  const filtros: { id: typeof filter; label: string; count: number }[] = [
-    { id: "all", label: "Todas", count: inInbox.length },
-    { id: "unread", label: "Não lidas", count: unreadCount },
-    { id: "sin_responder", label: "Sem resposta", count: esperan.length },
+  // Lo del menú «Filtrar» se aplica antes de las pestañas: «Todas» y «No
+  // leídas» cuentan dentro de lo filtrado.
+  const filtrado = inInbox.filter(
+    (c) => (!soloPorVencer || porVencer(c)) && (!soloAnuncios || c.anuncio !== null)
+  );
+  const unreadCount = filtrado.filter((c) => c.unreadCount > 0).length;
+  const visible = filter === "unread" ? filtrado.filter((c) => c.unreadCount > 0) : filtrado;
+  const pestanas: { id: typeof filter; label: string; count: number }[] = [
+    { id: "all", label: "Todas", count: filtrado.length },
+    { id: "unread", label: "No leídas", count: unreadCount },
   ];
-  // 052 — Como «Anuncios»: sin ninguna por vencer no se pinta un botón en 0.
-  if (venciendo.length > 0 || filter === "por_vencer") {
-    filtros.push({ id: "por_vencer", label: "A vencer", count: venciendo.length });
-  }
-  if (deAnuncios.length > 0 || filter === "anuncios") {
-    filtros.push({ id: "anuncios", label: "Anúncios", count: deAnuncios.length });
+  const nFiltros = (stage !== "all" ? 1 : 0) + (soloPorVencer ? 1 : 0) + (soloAnuncios ? 1 : 0);
+  function limpiarFiltros() {
+    setStage("all");
+    setSoloPorVencer(false);
+    setSoloAnuncios(false);
   }
   // Con un solo canal encendido no hay bandejas que distinguir: ni marca en
   // los renglones ni filtro. La pantalla queda exactamente como antes de 014.
@@ -251,54 +260,128 @@ export function ConversationList({
         </div>
       </header>
 
-      {/* Envuelve: con el filtro de anuncios, los tres botones y el selector de
-          etapa no caben en una columna de 300-360 px, y el selector se
-          aplastaba hasta dejar solo la flecha. */}
-      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 border-b px-4 py-2.5">
-        {filtros.map((f) => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-[5px] text-[12.5px] font-semibold transition-colors",
-              FOCO_SEPARADO,
-              filter === f.id
-                ? "border-brand bg-brand text-brand-fg"
-                : "border-border-strong bg-chip text-text-2 hover:border-text-3"
-            )}
-          >
-            {f.label}
-            <span
+      {/* 052 (enmienda) — «Todas | No leídas» y un solo botón «Filtrar»: la
+          etapa, «Por vencer» y «De anuncios» viven en su menú, y lo elegido
+          se ve abajo como etiquetas que se quitan con ✕. */}
+      <div className="border-b px-4">
+        <div className="flex items-center gap-4">
+          <div role="tablist" aria-label="Qué conversaciones ver" className="flex items-center gap-4">
+            {pestanas.map((f) => (
+              <button
+                key={f.id}
+                role="tab"
+                aria-selected={filter === f.id}
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 py-2.5 text-[13px] font-semibold transition-colors",
+                  FOCO_SEPARADO,
+                  filter === f.id
+                    ? "border-brand text-foreground"
+                    : "border-transparent text-text-3 hover:text-foreground"
+                )}
+              >
+                {f.label}
+                <span className="font-mono text-[11px] font-medium text-text-3">{f.count}</span>
+              </button>
+            ))}
+          </div>
+
+          <div ref={menuRef} className="relative ml-auto">
+            <button
+              type="button"
+              onClick={() => setMenuFiltros((v) => !v)}
+              aria-expanded={menuFiltros}
+              aria-haspopup="dialog"
               className={cn(
-                "rounded-full px-1.5 text-[11px]",
-                filter === f.id ? "bg-brand-veil" : "bg-secondary text-text-3"
+                "flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1.5 text-[12.5px] font-semibold transition-colors",
+                FOCO_SEPARADO,
+                nFiltros > 0 ? "text-brand-ink" : "text-text-2 hover:bg-subtle hover:text-foreground"
               )}
             >
-              {f.count}
-            </span>
-          </button>
-        ))}
-
-        {stages.length > 0 && (
-          <select
-            value={stage}
-            onChange={(e) => setStage(e.target.value)}
-            aria-label="Filtrar por etapa do funil"
-            className={cn(
-              "ml-auto min-w-0 max-w-[42%] truncate rounded-full border px-2 py-[5px] text-[12.5px] font-semibold transition-colors",
-              FOCO_SEPARADO,
-              stage === "all"
-                ? "border-border-strong bg-chip text-text-2 hover:border-text-3"
-                : "border-brand bg-brand text-brand-fg"
+              <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.9} />
+              {nFiltros > 0 ? `Filtrar · ${nFiltros}` : "Filtrar"}
+            </button>
+            {menuFiltros && (
+              <div
+                role="dialog"
+                aria-label="Filtros de la bandeja"
+                className="absolute right-0 top-full z-30 mt-1 w-[min(280px,calc(100vw-2rem))] space-y-3 rounded-xl border border-border-strong bg-popover p-3 text-popover-foreground shadow-xl"
+              >
+                {stages.length > 0 && (
+                  <label className="block space-y-1">
+                    <span className="kicker text-text-3">Etapa</span>
+                    <select
+                      value={stage}
+                      onChange={(e) => setStage(e.target.value)}
+                      aria-label="Filtrar por etapa del embudo"
+                      className={cn(
+                        "w-full rounded-md border border-border-strong bg-background px-2 py-1.5 text-[13px]",
+                        FOCO_SEPARADO
+                      )}
+                    >
+                      <option value="all">Toda etapa</option>
+                      {stages.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {/* Como antes: sin ninguna, la casilla no aparece (salvo que esté marcada). */}
+                {(venciendo.length > 0 || soloPorVencer) && (
+                  <label className="flex cursor-pointer items-center gap-2 text-[13px]">
+                    <input
+                      type="checkbox"
+                      checked={soloPorVencer}
+                      onChange={(e) => setSoloPorVencer(e.target.checked)}
+                      className="h-4 w-4 accent-[var(--accent)]"
+                    />
+                    <span className="flex-1">Por vencer</span>
+                    <span className="font-mono text-[11px] text-text-3">{venciendo.length}</span>
+                  </label>
+                )}
+                {(deAnuncios.length > 0 || soloAnuncios) && (
+                  <label className="flex cursor-pointer items-center gap-2 text-[13px]">
+                    <input
+                      type="checkbox"
+                      checked={soloAnuncios}
+                      onChange={(e) => setSoloAnuncios(e.target.checked)}
+                      className="h-4 w-4 accent-[var(--accent)]"
+                    />
+                    <span className="flex-1">De anuncios</span>
+                    <span className="font-mono text-[11px] text-text-3">{deAnuncios.length}</span>
+                  </label>
+                )}
+                {stages.length === 0 && venciendo.length === 0 && deAnuncios.length === 0 && nFiltros === 0 && (
+                  <p className="text-[13px] text-text-3">Todavía no hay nada por qué filtrar.</p>
+                )}
+                {nFiltros > 0 && (
+                  <button
+                    type="button"
+                    onClick={limpiarFiltros}
+                    className="block w-full text-right text-[12.5px] font-semibold text-brand-ink hover:underline"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
             )}
-          >
-            <option value="all">Todas as etapas</option>
-            {stages.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          </div>
+        </div>
+
+        {nFiltros > 0 && (
+          <div className="flex flex-wrap gap-1.5 pb-2.5">
+            {stage !== "all" && (
+              <FiltroPuesto texto={`Etapa: ${stage}`} onQuitar={() => setStage("all")} />
+            )}
+            {soloPorVencer && (
+              <FiltroPuesto texto="Por vencer" onQuitar={() => setSoloPorVencer(false)} />
+            )}
+            {soloAnuncios && (
+              <FiltroPuesto texto="De anuncios" onQuitar={() => setSoloAnuncios(false)} />
+            )}
+          </div>
         )}
       </div>
 
@@ -313,7 +396,7 @@ export function ConversationList({
             {inbox !== "all" &&
             !query &&
             filter === "all" &&
-            stage === "all" &&
+            nFiltros === 0 &&
             !conversations.some((c) => c.channel === inbox)
               ? `Ninguém escreveu por ${CHANNEL_LABEL[inbox]} ainda.`
               : "Nenhum resultado para este filtro."}
@@ -440,5 +523,22 @@ export function ConversationList({
         )}
       </div>
     </div>
+  );
+}
+
+/** 052 (enmienda) — Un filtro puesto desde «Filtrar», con su ✕ para quitarlo. */
+function FiltroPuesto({ texto, onQuitar }: { texto: string; onQuitar: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-brand-tint py-0.5 pl-2.5 pr-1 text-[12px] font-semibold text-brand-text">
+      {texto}
+      <button
+        type="button"
+        onClick={onQuitar}
+        aria-label={`Quitar filtro ${texto}`}
+        className="rounded-full p-0.5 hover:bg-brand-soft"
+      >
+        <X className="h-3 w-3" strokeWidth={2.2} />
+      </button>
+    </span>
   );
 }
