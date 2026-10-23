@@ -30,6 +30,8 @@ export type ConversationDto = {
    */
   composer: { media: boolean; structured: boolean; quoteReply: boolean };
   preview: string | null;
+  /** 052 — El último mensaje es del cliente: nadie le ha contestado. */
+  esperandoRespuesta: boolean;
   /** 018: el anuncio que abrió la conversación, para la marca de la lista. */
   anuncio: {
     headline: string | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Inbox, Megaphone, Search, Sparkles, UserRound, X } from "lucide-react";
+import { Clock3, Inbox, Megaphone, Search, Sparkles, UserRound, X } from "lucide-react";
 import type { ConversationDto } from "@/lib/types";
 import { etiquetaDeOrigen, titularDeOrigen } from "@/lib/anuncios";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { emptyInboxDescription, formatTime, previewText } from "./helpers";
 import { EVENTO_BORRADOR, leerBorrador } from "@/lib/borradores";
+import { etiquetaVence, porVencer, sinResponder } from "@/lib/filtros-bandeja";
 
 /* Puntos de etapa: los tokens del tema, no hex copiados del tema claro —
    así siguen al acento white-label y se recalculan en oscuro. */
@@ -96,7 +97,9 @@ export function ConversationList({
   onSeeded: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread" | "anuncios">("all");
+  const [filter, setFilter] = useState<
+    "all" | "unread" | "sin_responder" | "por_vencer" | "anuncios"
+  >("all");
   const [stage, setStage] = useState<string>("all");
   const [inbox, setInbox] = useState<Channel | "all">("all");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -142,19 +145,31 @@ export function ConversationList({
   const unreadCount = inInbox.filter((c) => c.unreadCount > 0).length;
   // 018: las que abrió un anuncio (o una publicación con botón de WhatsApp).
   const deAnuncios = inInbox.filter((c) => c.anuncio !== null);
+  // 052 — El cliente espera respuesta, y la ventana está por cerrarse.
+  const esperan = inInbox.filter(sinResponder);
+  const venciendo = inInbox.filter(porVencer);
   const visible =
     filter === "unread"
       ? inInbox.filter((c) => c.unreadCount > 0)
-      : filter === "anuncios"
-        ? deAnuncios
-        : inInbox;
+      : filter === "sin_responder"
+        ? esperan
+        : filter === "por_vencer"
+          ? venciendo
+          : filter === "anuncios"
+            ? deAnuncios
+            : inInbox;
   // Sin ninguna conversación de anuncio el filtro no aparece: a quien no
   // anuncia no se le pinta un botón que siempre dice 0. Si está elegido, se
   // queda, para poder salir de él aunque el contador baje a cero.
   const filtros: { id: typeof filter; label: string; count: number }[] = [
     { id: "all", label: "Todas", count: inInbox.length },
     { id: "unread", label: "Não lidas", count: unreadCount },
+    { id: "sin_responder", label: "Sem resposta", count: esperan.length },
   ];
+  // 052 — Como «Anuncios»: sin ninguna por vencer no se pinta un botón en 0.
+  if (venciendo.length > 0 || filter === "por_vencer") {
+    filtros.push({ id: "por_vencer", label: "A vencer", count: venciendo.length });
+  }
   if (deAnuncios.length > 0 || filter === "anuncios") {
     filtros.push({ id: "anuncios", label: "Anúncios", count: deAnuncios.length });
   }
@@ -385,6 +400,16 @@ export function ConversationList({
                               }}
                             />
                             {c.stageName}
+                          </span>
+                        )}
+                        {porVencer(c) && (
+                          // 052 — Pasada la ventana, solo con plantilla: se avisa antes.
+                          <span
+                            data-vence
+                            className="inline-flex items-center gap-1 rounded-full border border-warning-soft bg-warning-tint px-2 py-0.5 text-[11px] font-semibold text-warning-text"
+                          >
+                            <Clock3 className="h-3 w-3" strokeWidth={1.8} />
+                            {etiquetaVence(c.windowRemainingMs)}
                           </span>
                         )}
                         {c.handoffAt && (
