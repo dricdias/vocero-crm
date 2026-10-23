@@ -1,4 +1,3 @@
-import { after } from "next/server";
 import { getEnv } from "@/lib/env";
 import { isValidWebhookToken } from "@/server/inbox/webhook";
 import {
@@ -6,7 +5,8 @@ import {
   isChannelEnabled,
 } from "@/server/channels/enabled";
 import { zernioSignatureFrom } from "@/server/zernio";
-import { isAuthenticZernioDelivery, processZernioPayload } from "@/server/zernio/dispatch";
+import { isAuthenticZernioDelivery } from "@/server/zernio/dispatch";
+import { recibirEvento } from "@/server/webhooks/recibir";
 
 /**
  * 022 — Webhook público del canal de TikTok.
@@ -58,15 +58,7 @@ export async function POST(req: Request, { params }: Params) {
     return new Response(null, { status: 401 });
   }
 
-  // Zernio corta a los 5 segundos y reintenta: se acusa recibo YA y se procesa
-  // fuera de la ruta.
-  after(async () => {
-    try {
-      await processZernioPayload(payload);
-    } catch (err) {
-      console.error("[tiktok] error procesando payload:", err);
-    }
-  });
-
-  return Response.json({ received: true });
+  // Zernio corta a los 5 segundos y reintenta: se guarda, se acusa recibo YA y
+  // se procesa fuera de la ruta (047: si falla, lo reintenta el barrido).
+  return recibirEvento("zernio", payload, rawBody, "tiktok");
 }

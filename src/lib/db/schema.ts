@@ -1298,3 +1298,57 @@ export const evolutionGroupSettings = pgTable("evolution_group_settings", {
   uniqueIndex("evolution_group_settings_org_group_uq").on(t.organizationId, t.groupJid),
   check("evolution_group_settings_mode_ck", sql`${t.replyMode} in ('mentions', 'all')`),
 ]);
+/* ============================================================
+ * 047 — Eventos de webhook guardados antes de procesarse
+ * ============================================================ */
+
+/**
+ * El cuerpo de cada entrega de Meta o Zernio, tal como llegó, guardado ANTES
+ * de acusar recibo. Si procesarlo falla, el barrido lo reintenta con espera
+ * creciente (`src/server/webhooks/`); si no se pudo ni guardar, la ruta
+ * responde 503 y reintenta quien lo mandó.
+ *
+ * Trae datos del cliente: se borra a los 7 días de procesado y a los 30 de
+ * agotado, y nunca sale a la API ni a los logs.
+ */
+export const webhookEvent = pgTable(
+  "webhook_event",
+  {
+    id: text("id").primaryKey(),
+    /** Resuelto al recibir, con las mismas credenciales que usa la ingesta. */
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Quién lo procesa: el adaptador del canal y la fuente. */
+    fuente: text("fuente", {
+      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio"],
+    }).notNull(),
+    payload: jsonb("payload").notNull(),
+    /** SHA-256 del cuerpo crudo: la misma entrega dos veces es una fila. */
+    huella: text("huella").notNull(),
+    status: text("status", {
+      enum: ["pendiente", "en_proceso", "procesado", "agotado"],
+    })
+      .notNull()
+      .default("pendiente"),
+    /** Sube al reclamar: distingue a dos dueños de una misma reserva. */
+    attempts: integer("attempts").notNull().default(0),
+    notBefore: timestamp("not_before").notNull().defaultNow(),
+    leasedUntil: timestamp("leased_until"),
+    /** El mensaje de la excepción, recortado. Nunca el cuerpo. */
+    lastError: text("last_error"),
+    processedAt: timestamp("processed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("webhook_event_huella_uq").on(t.huella),
+    // El barrido solo lee lo vivo: con el índice parcial, una tabla llena de
+    // procesados no lo hace más lento.
+    index("webhook_event_barrido_idx")
+      .on(t.status, t.notBefore)
+      .where(sql`${t.status} in ('pendiente', 'en_proceso')`),
+    // Los conteos de Ajustes → WhatsApp.
+    index("webhook_event_org_status_idx").on(t.organizationId, t.status),
+  ]
+);

@@ -4,6 +4,7 @@ import { mediaDirStatus } from "@/server/media-dir";
 import { leerConfigDespacho } from "@/server/brains/config";
 import { iniciarWorker, tanda } from "@/server/dispatch/worker";
 import { cifrarSecretosEnClaro } from "@/server/zernio/secreto-guardado";
+import { barrido, iniciarBarrido } from "@/server/webhooks/worker";
 
 /**
  * 008 — Aviso al arranque si MEDIA_DIR no es escribible. Sin esto, el primer
@@ -103,4 +104,14 @@ export function resumeDispatch(): void {
       "[boot] BRAIN_DISPATCH_URL está definida pero falta BOT_API_KEY (mínimo 16 caracteres): el despacho al cerebro queda INACTIVO."
     );
   }
+}
+
+/**
+ * 047 — Arranca el barrido de los eventos de webhook. Siempre: la ingesta es
+ * del núcleo. La primera pasada retoma lo que el reinicio dejó a medias (un
+ * evento en proceso cuya reserva venció, o uno pendiente de reintento).
+ */
+export function resumeWebhooks(): void {
+  iniciarBarrido();
+  void barrido();
 }

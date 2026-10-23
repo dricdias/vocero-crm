@@ -6,6 +6,7 @@ import { parseAgendaFlag } from "@/server/agenda/flag";
 import { parseAtribucionFlag } from "@/server/attribution/flag";
 import { parseChannels } from "@/server/channels/enabled";
 import { mediaDirStatus } from "@/server/media-dir";
+import { conteoGlobal } from "@/server/webhooks/eventos";
 
 /**
  * `GET /api/health` — lo que una plataforma, un script o un `curl` pueden
@@ -34,6 +35,11 @@ import { mediaDirStatus } from "@/server/media-dir";
  * reiniciaría en bucle un contenedor que atiende clientes. Lo que cambia es
  * que un volumen mal montado se ve desde fuera, y no en un 500 al subir el
  * logo.
+ *
+ * `webhooks` (047) cuenta los eventos de webhook que no han entrado: los que
+ * siguen en reintento y los agotados. Tampoco baja `ok`: un agotado pide que
+ * alguien lo mire, no que se reinicie el contenedor. Sale en `null` si la
+ * consulta falla.
  */
 
 export type HealthFeatures = {
@@ -52,6 +58,7 @@ export type HealthOk = {
   commitVerified?: boolean;
   features: HealthFeatures;
   mediaWritable: boolean;
+  webhooks: { pendientes: number; agotados: number } | null;
 };
 
 export type HealthDown = {
@@ -103,6 +110,7 @@ export async function checkHealth(): Promise<HealthResult> {
   }
   const { commit, verified } = resolveCommit();
   const media = await mediaDirStatus();
+  const webhooks = await conteoGlobal().catch(() => null);
   return {
     status: 200,
     body: {
@@ -111,6 +119,7 @@ export async function checkHealth(): Promise<HealthResult> {
       ...(commit ? { commit, commitVerified: verified } : {}),
       features: healthFeatures(),
       mediaWritable: media?.writable ?? false,
+      webhooks,
     },
   };
 }

@@ -1,13 +1,12 @@
-import { after } from "next/server";
 import { getEnv } from "@/lib/env";
 import { isValidSignature, isValidWebhookToken } from "@/server/inbox/webhook";
-import { processMetaPagePayload } from "@/server/messenger/ingest";
 import {
   channelDisabledResponse,
   isChannelEnabled,
 } from "@/server/channels/enabled";
 import { looksLikeMetaPayload, zernioSignatureFrom } from "@/server/zernio";
-import { isAuthenticZernioDelivery, processZernioPayload } from "@/server/zernio/dispatch";
+import { isAuthenticZernioDelivery } from "@/server/zernio/dispatch";
+import { recibirEvento } from "@/server/webhooks/recibir";
 
 /**
  * 017 — Webhook público del canal de Messenger.
@@ -84,18 +83,10 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
 
-  // Zernio corta a los 5 segundos y reintenta; Meta también. Se acusa recibo
-  // YA y se procesa fuera de la ruta.
-  after(async () => {
-    try {
-      // Un evento de Zernio se reparte por plataforma: la misma URL sirve para
-      // Instagram y para Messenger, porque Zernio entrega todo por un webhook.
-      if (isMeta) await processMetaPagePayload(payload);
-      else await processZernioPayload(payload);
-    } catch (err) {
-      console.error("[messenger] error procesando payload:", err);
-    }
-  });
-
-  return Response.json({ received: true });
+  // Zernio corta a los 5 segundos y reintenta; Meta también. Se guarda, se
+  // acusa recibo YA y se procesa fuera de la ruta (047: si falla, lo reintenta
+  // el barrido). Un evento de Zernio se reparte por plataforma: la misma URL
+  // sirve para Instagram y para Messenger, porque Zernio entrega todo por un
+  // webhook.
+  return recibirEvento(isMeta ? "meta_messenger" : "zernio", payload, rawBody, "messenger");
 }
