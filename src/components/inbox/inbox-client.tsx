@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ChevronLeft, PanelRight } from "lucide-react";
 import { cn, formatPhone } from "@/lib/utils";
 import { ContactAvatar } from "@/components/avatar";
+import type { NotaDto } from "@/lib/notas";
 import type {
   ConversationDto,
   MessageDto,
@@ -57,6 +58,8 @@ export function InboxClient({
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageDto[]>([]);
+  // 050 — Las notas internas de la conversación abierta.
+  const [notas, setNotas] = useState<NotaDto[]>([]);
   const [pending, setPending] = useState<PendingOut[]>([]);
   // 039: el mensaje al que se está respondiendo citando.
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
@@ -111,6 +114,13 @@ export function InboxClient({
     if (selectedIdRef.current === conversationId) setMessages(data.messages);
   }, []);
 
+  const refetchNotas = useCallback(async (conversationId: string) => {
+    const res = await fetch(`/api/conversations/${conversationId}/notes`).catch(() => null);
+    if (!res?.ok) return;
+    const data = (await res.json()) as { notas: NotaDto[] };
+    if (selectedIdRef.current === conversationId) setNotas(data.notas);
+  }, []);
+
   useEffect(() => {
     void refetchConversations();
   }, [refetchConversations]);
@@ -119,15 +129,17 @@ export function InboxClient({
     (id: string) => {
       setSelectedId(id);
       setMessages([]);
+      setNotas([]);
       setReplyTo(null);
       void refetchMessages(id);
+      void refetchNotas(id);
       void fetch(`/api/conversations/${id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ markRead: true }),
       });
     },
-    [refetchMessages]
+    [refetchMessages, refetchNotas]
   );
 
   /** 026 — Saca una conversación eliminada de todo lo que esta pestaña recuerda. */
@@ -137,6 +149,7 @@ export function InboxClient({
     if (selectedIdRef.current === id) {
       setSelectedId(null);
       setMessages([]);
+      setNotas([]);
       setReplyTo(null);
     }
   }, []);
@@ -151,6 +164,15 @@ export function InboxClient({
   }, [contactParam, conversations, select]);
 
   useEvents({
+    // 050 — Se relee la lista: `puedeBorrar` depende de quién mira.
+    onNoteNew: ({ conversationId }) => {
+      if (selectedIdRef.current === conversationId) void refetchNotas(conversationId);
+    },
+    onNoteDeleted: ({ conversationId, noteId }) => {
+      if (selectedIdRef.current === conversationId) {
+        setNotas((prev) => prev.filter((n) => n.id !== noteId));
+      }
+    },
     onMessageNew: ({ conversationId, message }) => {
       if (selectedIdRef.current === conversationId) {
         const m = message as MessageDto;
@@ -446,9 +468,34 @@ export function InboxClient({
                   void refetchMessages(selectedIdRef.current);
                 void refetchConversations();
               }}
+              onNota={async (texto) => {
+                const id = selected.id;
+                const res = await fetch(`/api/conversations/${id}/notes`, {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ texto }),
+                }).catch(() => null);
+                if (!res?.ok) {
+                  const d = (await res?.json().catch(() => null)) as { error?: { message?: string } } | null;
+                  return d?.error?.message ?? "No se pudo guardar la nota. Revisa la conexión.";
+                }
+                const { nota } = (await res.json()) as { nota: NotaDto };
+                if (selectedIdRef.current === id) {
+                  setNotas((prev) => (prev.some((n) => n.id === nota.id) ? prev : [...prev, nota]));
+                }
+                return null;
+              }}
             >
               <MessageThread
                 messages={thread}
+                notas={notas}
+                onBorrarNota={async (n) => {
+                  if (!window.confirm("¿Borrar esta nota interna?")) return;
+                  const res = await fetch(`/api/conversations/${n.conversationId}/notes/${n.id}`, {
+                    method: "DELETE",
+                  }).catch(() => null);
+                  if (res?.ok) setNotas((prev) => prev.filter((x) => x.id !== n.id));
+                }}
                 contactName={selected.contact.name}
                 // 039: citar solo donde el canal lo permite y se puede escribir
                 // texto libre (con la ventana cerrada solo salen plantillas).

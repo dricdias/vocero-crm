@@ -8,13 +8,16 @@ import {
   Clock3,
   FileText,
   Forward,
+  Lock,
   MapPin,
   Paperclip,
   Reply,
   Smartphone,
   Sparkles,
+  Trash2,
   UserRound,
 } from "lucide-react";
+import { intercalarNotas, type NotaDto } from "@/lib/notas";
 import type { ConversationDto, MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AudioPlayer } from "./audio-player";
@@ -180,6 +183,40 @@ function dayLabel(iso: string): string {
   return d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 }
 
+/**
+ * 050 — Una nota interna en el hilo: a lo ancho, en ámbar y con candado, para
+ * que nadie la confunda con un mensaje que vio el cliente. Sin responder ni
+ * reenviar.
+ */
+function NotaInterna({ nota, onBorrar }: { nota: NotaDto; onBorrar?: (n: NotaDto) => void }) {
+  return (
+    <div
+      data-nota-id={nota.id}
+      className="my-2 rounded-[12px] border border-warning-soft bg-warning-tint px-3 py-2 text-[13.5px] leading-[1.45] text-foreground shadow-sm"
+    >
+      <div className="mb-0.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-warning-text">
+        <Lock className="h-3 w-3" strokeWidth={2} aria-hidden />
+        <span>Nota interna</span>
+        <span className="font-normal opacity-80">
+          · {nota.autor?.nombre ?? "Alguien del equipo"} · {bubbleTime(nota.createdAt)}
+        </span>
+        {nota.puedeBorrar && onBorrar && (
+          <button
+            type="button"
+            onClick={() => onBorrar(nota)}
+            aria-label="Borrar nota interna"
+            title="Borrar nota"
+            className="ml-auto rounded p-0.5 opacity-70 hover:bg-warning-soft hover:opacity-100"
+          >
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+          </button>
+        )}
+      </div>
+      <p className="whitespace-pre-wrap break-words">{nota.texto}</p>
+    </div>
+  );
+}
+
 function bubbleTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("pt-BR", {
     hour: "2-digit",
@@ -194,6 +231,8 @@ export function MessageThread({
   onReply,
   conversations = [],
   onForwarded,
+  notas = [],
+  onBorrarNota,
 }: {
   messages: MessageDto[];
   /** 039: quién firma las citas del cliente. */
@@ -203,6 +242,9 @@ export function MessageThread({
   /** 042 — Destinos posibles del reenvío; sin `onForwarded` no se ofrece. */
   conversations?: ConversationDto[];
   onForwarded?: () => void;
+  /** 050 — Notas internas de la conversación, intercaladas por hora. */
+  notas?: NotaDto[];
+  onBorrarNota?: (n: NotaDto) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   // 045 — El hilo se queda abajo mientras crece (una foto o un audio que
@@ -238,7 +280,7 @@ export function MessageThread({
     if (!el) return;
     el.scrollTop = el.scrollHeight;
     pegadoAbajo.current = true;
-  }, [messages.length, notice]);
+  }, [messages.length, notas.length, notice]);
 
   // Sin esto, una conversación corta con una foto quedaba en el primer
   // mensaje: al bajar al final todavía cabía todo (scroll 0) y, cuando la foto
@@ -276,6 +318,11 @@ export function MessageThread({
           }}
         />
       )}
+      {(() => {
+        // 050 — Qué notas van antes de cada mensaje (y cuáles al final).
+        const reparto = intercalarNotas(messages, notas);
+        return (
+          <>
       {messages.map((m, i) => {
         const prev = messages[i - 1];
         const newDay =
@@ -288,6 +335,9 @@ export function MessageThread({
 
         return (
           <div key={m.id}>
+            {reparto.antes[i]!.map((n) => (
+              <NotaInterna key={n.id} nota={n} onBorrar={onBorrarNota} />
+            ))}
             {newDay && (
               <div className="my-3 flex justify-center">
                 <span className="kicker rounded-full border border-border-strong bg-background px-3 py-1 text-text-2 shadow-sm">
@@ -411,6 +461,12 @@ export function MessageThread({
           </div>
         );
       })}
+      {reparto.alFinal.map((n) => (
+        <NotaInterna key={n.id} nota={n} onBorrar={onBorrarNota} />
+      ))}
+          </>
+        );
+      })()}
       {notice && (
         <p
           role="status"

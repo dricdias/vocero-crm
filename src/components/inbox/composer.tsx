@@ -11,6 +11,7 @@ import {
 import {
   Clock3,
   FileText,
+  Lock,
   Mic,
   Paperclip,
   Send,
@@ -47,6 +48,7 @@ export function Composer({
   replyTo = null,
   onReplyChange,
   children,
+  onNota,
 }: {
   conversation: ConversationDto;
   onSend: (text: string, replyTo: MessageDto | null) => Promise<string | null>;
@@ -56,6 +58,12 @@ export function Composer({
   onReplyChange?: (m: MessageDto | null) => void;
   /** 043 — El hilo: la zona donde se suelta una imagen es la conversación entera. */
   children?: ReactNode;
+  /**
+   * 050 — Guardar una nota interna (solo la ve el equipo). Con ella aparecen
+   * las pestañas «Responder | Nota interna», también con la ventana cerrada.
+   * Devuelve el error a mostrar, o `null`.
+   */
+  onNota?: (texto: string) => Promise<string | null>;
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -84,6 +92,10 @@ export function Composer({
   const [token, setToken] = useState<{ inicio: number; consulta: string } | null>(null);
   const [activa, setActiva] = useState(0);
   const [cerradoEn, setCerradoEn] = useState<number | null>(null);
+  // 050 — Responder al cliente o anotar para el equipo.
+  const [modo, setModo] = useState<"responder" | "nota">("responder");
+  const [nota, setNota] = useState("");
+  const [guardandoNota, setGuardandoNota] = useState(false);
   // Hay caja de texto libre (ventana normal, o la humana de Instagram/Messenger).
   const textoLibre = conversation.windowOpen || Boolean(conversation.humanWindow?.open);
 
@@ -396,9 +408,109 @@ export function Composer({
 
   // 022 — TikTok no tiene plantillas ni otra forma de reabrir: con la ventana
   // cerrada no hay nada que ofrecer, solo decir qué pasa y qué lo arregla.
+  // 050 — Las pestañas van arriba en TODAS las ramas: anotar no depende de
+  // la ventana de Meta, y con la ventana cerrada es cuando más se necesita.
+  const pestanas = onNota ? (
+    <div role="tablist" aria-label="Qué escribir" className="mb-2 flex gap-1">
+      {(
+        [
+          ["responder", "Responder"],
+          ["nota", "Nota interna"],
+        ] as const
+      ).map(([valor, etiqueta]) => (
+        <button
+          key={valor}
+          type="button"
+          role="tab"
+          aria-selected={modo === valor}
+          onClick={() => {
+            setModo(valor);
+            setError(null);
+          }}
+          className={cn(
+            "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+            modo === valor
+              ? valor === "nota"
+                ? "bg-warning-tint text-warning-text ring-1 ring-warning-soft"
+                : "bg-brand-tint text-brand-text"
+              : "text-text-3 hover:bg-secondary hover:text-foreground"
+          )}
+        >
+          {valor === "nota" && <Lock className="mr-1 inline h-3 w-3 align-[-1px]" strokeWidth={2} />}
+          {etiqueta}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  async function guardarNota() {
+    const texto = nota.trim();
+    if (!onNota || !texto || guardandoNota) return;
+    setGuardandoNota(true);
+    setError(null);
+    const err = await onNota(texto);
+    setGuardandoNota(false);
+    if (err) setError(err);
+    else setNota("");
+  }
+
+  if (onNota && modo === "nota") {
+    return withDropZone(
+      <div className="border-t bg-background px-[18px] pb-3.5 pt-3">
+        {pestanas}
+        <div
+          data-modo="nota"
+          className="flex items-end gap-2 rounded-[18px] border border-warning-soft bg-warning-tint py-1.5 pl-3 pr-1.5"
+        >
+          <Lock className="mb-2 h-4 w-4 shrink-0 text-warning-text" strokeWidth={1.8} aria-hidden />
+          <textarea
+            value={nota}
+            rows={2}
+            autoFocus
+            placeholder="Nota interna: solo la ve tu equipo…"
+            aria-label="Nota interna"
+            onChange={(e) => setNota(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void guardarNota();
+              } else if (e.key === "Escape") {
+                setModo("responder");
+              }
+            }}
+            className="max-h-[120px] w-full resize-none self-center bg-transparent py-1 text-sm leading-relaxed text-foreground outline-none placeholder:text-warning-text placeholder:opacity-70"
+          />
+          <button
+            onClick={() => void guardarNota()}
+            disabled={guardandoNota || !nota.trim()}
+            className={cn(
+              "shrink-0 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition-opacity",
+              (guardandoNota || !nota.trim()) && "opacity-40"
+            )}
+          >
+            {guardandoNota ? "Guardando…" : "Guardar nota"}
+          </button>
+        </div>
+        <div className="mt-1.5 flex items-center justify-between">
+          {error ? (
+            <p role="alert" className="text-xs text-destructive">
+              {error}
+            </p>
+          ) : (
+            <span />
+          )}
+          <p className="font-mono text-[10.5px] tracking-[0.04em] text-text-3">
+            No se envía al cliente
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!conversation.windowOpen && conversation.channel === "tiktok") {
     return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
+        {pestanas}
         <div className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
           <div>
@@ -423,6 +535,7 @@ export function Composer({
   if (!conversation.windowOpen && human && !human.open) {
     return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
+        {pestanas}
         <div
           data-window="closed"
           className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text"
@@ -445,6 +558,7 @@ export function Composer({
   if (!conversation.windowOpen && !human) {
     return withDropZone(
       <div className="border-t bg-background px-[18px] py-3.5">
+        {pestanas}
         <div className="mb-3 flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-sm text-warning-text">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
           <div>
@@ -474,6 +588,7 @@ export function Composer({
 
   return withDropZone(
     <div className="relative border-t bg-background px-[18px] pb-3.5 pt-3">
+      {pestanas}
 
       {soloPersona && (
         <div

@@ -389,10 +389,10 @@ export function ContactPanel({
 
         {/* Notas */}
         <section className={cn("p-4", onDeleteConversation && "border-b")}>
-          <p className="kicker mb-2">Notas</p>
+          <p className="kicker mb-2">Notas do contato</p>
           <Textarea
             rows={5}
-            placeholder="Notas internas sobre este contato…"
+            placeholder="O que é fixo do cliente: endereço, como prefere pagar… (o desta conversa vai em Nota interna)"
             value={notes}
             disabled={!notesLoaded}
             onChange={(e) => setNotes(e.target.value)}
@@ -404,7 +404,7 @@ export function ContactPanel({
             disabled={savingNotes || !notesLoaded}
             onClick={() => void saveNotes()}
           >
-            {savingNotes ? "Salvando…" : "Salvar notas"}
+            {savingNotes ? "Salvando…" : "Salvar notas do contato"}
           </Button>
         </section>
 

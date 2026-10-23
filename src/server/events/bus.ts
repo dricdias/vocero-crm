@@ -32,6 +32,9 @@ export type SseEvent =
       type: "conversation.deleted";
       data: { conversationId: string; contactId: string; contactDeleted: boolean };
     }
+  /** 050 — una nota interna nueva o borrada: el hilo abierto la pinta o la quita. */
+  | { type: "note.new"; data: { conversationId: string; note: unknown } }
+  | { type: "note.deleted"; data: { conversationId: string; noteId: string } }
   /** 015 — algo cambió en la agenda: la pantalla de Citas se refresca sola. */
   | { type: "booking.updated"; data: { bookingId: string } }
   | {

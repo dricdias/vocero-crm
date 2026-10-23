@@ -39,6 +39,8 @@ const prefixes = {
   webhookEvent: "whe",
   // 049 — respuestas rápidas
   quickReply: "qr",
+  // 050 — notas internas del hilo
+  conversationNote: "nota",
 } as const;
 
 export type IdKind = keyof typeof prefixes;

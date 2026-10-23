@@ -30,6 +30,9 @@ export type EventHandlers = {
     progress: { done: number; total: number };
     score?: number | null;
   }) => void;
+  /** 050 — Una nota interna nueva o borrada en una conversación. */
+  onNoteNew?: (data: { conversationId: string; note: unknown }) => void;
+  onNoteDeleted?: (data: { conversationId: string; noteId: string }) => void;
   /** 015 — Algo cambió en la agenda (también cuando agenda la IA). */
   onBookingUpdated?: (data: { bookingId: string }) => void;
   /** Se llama tras RECONECTAR (no en la conexión inicial): catch-up con refetch. */
@@ -64,6 +67,8 @@ export function useEvents(handlers: EventHandlers): void {
       handlersRef.current.onMessageStatus?.(d as never)
     );
     listen("message.media", (d) => handlersRef.current.onMessageMedia?.(d as never));
+    listen("note.new", (d) => handlersRef.current.onNoteNew?.(d as never));
+    listen("note.deleted", (d) => handlersRef.current.onNoteDeleted?.(d as never));
     listen("conversation.updated", (d) =>
       handlersRef.current.onConversationUpdated?.(d as never)
     );

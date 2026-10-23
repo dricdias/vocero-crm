@@ -1379,3 +1379,37 @@ export const quickReply = pgTable(
   },
   (t) => [uniqueIndex("quick_reply_org_atajo_uq").on(t.organizationId, t.atajo)]
 );
+
+/* ============================================================
+ * 050 — Notas internas en el hilo
+ * ============================================================ */
+
+/**
+ * Lo que el equipo se anota dentro de una conversación y el cliente nunca ve.
+ *
+ * Tabla propia A PROPÓSITO, no un tipo de `message`: el envío a Meta, el
+ * despacho al cerebro, «sin responder», la ventana y las métricas leen
+ * `message`, y así ninguno puede tocar una nota por descuido. Una prueba
+ * vigila que esas rutas no la mencionen.
+ */
+export const conversationNote = pgTable(
+  "conversation_note",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    /** Si se borra la cuenta, la nota queda («Alguien del equipo»). */
+    authorUserId: text("author_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    texto: text("texto").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
+  ]
+);
