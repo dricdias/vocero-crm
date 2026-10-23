@@ -235,6 +235,19 @@ flota encima se distinguen, y el texto pasa el contraste AA. Con un color
 propio, los tonos derivados y la tinta de los botones se calculan solos para
 que se lean.
 
+### 📱 En el celular, como una app
+
+Vocero se instala desde el navegador, sin tiendas y con el nombre y el icono
+de tu negocio:
+
+- **Android y computadora (Chrome o Edge)**: en el menú aparece **Instalar
+  app** cuando el navegador lo permite.
+- **iPhone (Safari)**: Compartir → **Agregar a inicio**.
+
+Abre directo en la Bandeja, sin la barra del navegador. Si se va la red, dice
+«Sin conexión» en vez de mostrar conversaciones viejas: no guarda datos de tus
+clientes en el teléfono.
+
 ### 📄 Plantillas · 👥 Multi-usuario · 🔐 Self-hosted
 
 Plantillas con varias variables `{{1}}…{{n}}` y aprobación de Meta

@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Archivo, IBM_Plex_Mono, Instrument_Serif } from "next/font/google";
 import { accentCssVariables, DEFAULT_BRANDING } from "@/lib/branding";
 import { faviconHref } from "@/lib/favicon";
+import { appIconHref, NAV_INK, shortAppName } from "@/lib/pwa";
+import { RegistrarServiceWorker } from "@/components/pwa";
 import { normalizeThemePreference, THEME_COOKIE } from "@/lib/theme";
 import { getBranding } from "@/server/branding";
 import { enabledChannels } from "@/server/channels/enabled";
@@ -40,9 +42,19 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `${producto} com agente de IA e Laboratório de autoavaliação`,
     // El `?v=` cambia con la marca: los navegadores guardan el favicon con una
     // insistencia notable y, sin eso, el logo nuevo tarda días en aparecer.
-    icons: { icon: faviconHref(branding) },
+    icons: {
+      icon: faviconHref(branding),
+      // 048 — El icono de «Agregar a inicio» del iPhone: PNG de 180, a sangre.
+      apple: appIconHref(branding, 180),
+    },
+    // 048 — Instalada desde Safari, abre sin la barra del navegador. Barra de
+    // estado negra y no translúcida: la página no tiene margen para el notch.
+    appleWebApp: { capable: true, title: shortAppName(branding.name), statusBarStyle: "black" },
   };
 }
+
+/** 048 — La barra de estado de la app instalada, del color de la barra lateral. */
+export const viewport: Viewport = { themeColor: NAV_INK };
 
 export default async function RootLayout({
   children,
@@ -65,7 +77,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: accentCssVariables(branding.accent) }}
         />
       </head>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <RegistrarServiceWorker />
+      </body>
     </html>
   );
 }

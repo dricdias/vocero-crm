@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
+import { BotonInstalar } from "@/components/pwa";
 import type { Branding } from "@/lib/branding";
 import type { ThemePreference } from "@/lib/theme";
 import { cn, initials } from "@/lib/utils";
@@ -192,6 +193,10 @@ export function AppNav({
       </nav>
 
       <div className="flex-1" />
+
+      {/* 048 — Solo cuando el navegador ofrece instalar la app: una fila
+          propia y no un icono más en el pie, que ya va lleno. */}
+      <BotonInstalar className={navItemClass(false)} />
 
       {/* Ajustes va abajo, solo: no es trabajo del día. */}
       {renderItem(SETTINGS_ITEM)}
