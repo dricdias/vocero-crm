@@ -17,7 +17,10 @@ import { useEvents } from "@/components/use-events";
 import { ConversationList } from "./conversation-list";
 import { MessageThread } from "./message-thread";
 import { Composer } from "./composer";
-import { setConversacionAbierta } from "@/components/avisos-de-mensajes";
+import {
+  EVENTO_ABRIR_CONVERSACION,
+  setConversacionAbierta,
+} from "@/components/avisos-de-mensajes";
 import { citaDe } from "./helpers";
 import { ContactPanel } from "./contact-panel";
 
@@ -157,6 +160,21 @@ export function InboxClient({
   // Enlace directo desde Contactos/Pipeline: /inbox?contact=<id>
   const searchParams = useSearchParams();
   const contactParam = searchParams.get("contact");
+  // 056 — Al tocar un aviso del sistema: /inbox?conversation=<id>. Se aplica
+  // una vez por aviso; si no, cada refresco de la lista volvería a saltar ahí.
+  const conversationParam = searchParams.get("conversation");
+  const [pedida, setPedida] = useState<string | null>(null);
+  useEffect(() => setPedida(conversationParam), [conversationParam]);
+  useEffect(() => {
+    const alPedir = (e: Event) => setPedida((e as CustomEvent<string>).detail);
+    window.addEventListener(EVENTO_ABRIR_CONVERSACION, alPedir);
+    return () => window.removeEventListener(EVENTO_ABRIR_CONVERSACION, alPedir);
+  }, []);
+  useEffect(() => {
+    if (!pedida || !conversations?.some((c) => c.id === pedida)) return;
+    setPedida(null);
+    if (selectedIdRef.current !== pedida) select(pedida);
+  }, [pedida, conversations, select]);
   useEffect(() => {
     if (!contactParam || selectedIdRef.current) return;
     const match = conversations?.find((c) => c.contact.id === contactParam);
