@@ -1,5 +1,6 @@
 "use client";
 
+import { HANDOFF_LABELS } from "@/lib/eventos-hilo";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -34,13 +35,6 @@ import { FichaPanel } from "@/components/ficha-panel";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
 import { GroupModeControl } from "./group-mode-control";
 
-const HANDOFF_LABELS: Record<string, string> = {
-  cliente: "O cliente pediu um humano",
-  modelo: "O agente decidiu escalar",
-  error: "Erro do provedor de IA",
-  ventana: "Janela de 24h fechada",
-  manual_reply: "Você respondeu pelo celular — IA em pausa",
-};
 
 export function ContactPanel({
   conversation,
