@@ -298,7 +298,10 @@ export const TEMAS: Record<TemaId, Tema> = {
       "--riel-activo-texto": "#ffffff",
       "--enviar": "#000000",
       "--enviar-texto": "#ffffff",
-      "--sombra-tarjeta": "0 0 0 1.5px #000000",
+      // El contorno va por dentro y encima del contenido (.tarjeta::after):
+      // una sombra por fuera se recortaba en el borde de la pantalla.
+      "--sombra-tarjeta": "none",
+      "--contorno-tarjeta": "1.5px solid #000000",
       "--radio-tarjeta": "12px",
     },
   },

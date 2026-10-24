@@ -86,6 +86,24 @@ try {
   ok("y sin pulsar nada sobrevive a recargar", (await attr("data-tema")) === "papel");
   ok("la página dice que se guarda solo para ti", (await p.getByText(/se guardan solos, solo para ti/).count()) === 1);
 
+  // El contorno de Alto contraste va en una capa encima del contenido de cada
+  // tarjeta: antes se cortaba arriba y bajo la cabecera sticky del panel.
+  await p.getByRole("radio", { name: "Alto contraste" }).click();
+  await hasta(async () => (await attr("data-tema")) === "alto-contraste");
+  const contornos = await p.evaluate(() =>
+    [...document.querySelectorAll("[class*='tarjeta']")]
+      .filter((e) => e.getBoundingClientRect().width > 0)
+      .map((e) => {
+        const a = getComputedStyle(e, "::after");
+        return `${a.borderTopStyle}/${a.zIndex}`;
+      })
+  );
+  ok(
+    "Alto contraste: cada tarjeta lleva su contorno encima del contenido",
+    contornos.length >= 2 && contornos.every((c) => c === "solid/25"),
+    JSON.stringify(contornos)
+  );
+
   console.log("\n== AC2 · el tema propio ==");
   await p.getByRole("radio", { name: "Propio" }).click();
   await p.getByLabel("Color de texto").fill("#eeeeee");

@@ -118,6 +118,9 @@
     --marco-1: #f1eee5;
     --marco-2: #cde1d5;
     --radio-tarjeta: 24px;
+    /* 062 — Contorno de la tarjeta (Alto contraste), pintado por dentro y
+       encima del contenido (ver .tarjeta::after). */
+    --contorno-tarjeta: none;
     --sombra-tarjeta: 0 1px 2px rgba(20, 40, 30, 0.04),
       0 10px 30px -14px rgba(20, 40, 30, 0.16);
     /* El riel de iconos y el botón de enviar: ni el acento ni el gris, la
@@ -437,6 +440,19 @@
     background: var(--bg);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--sombra-tarjeta);
+    position: relative;
+  }
+  /* El contorno va en una capa ENCIMA del contenido: un outline quedaba
+     debajo de lo posicionado adentro (la cabecera sticky del panel) y una
+     sombra por fuera se recortaba en el borde de la pantalla. */
+  .tarjeta::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: var(--contorno-tarjeta);
+    pointer-events: none;
+    z-index: 25;
   }
 
   /* 061 — Dentro de una burbuja se redeclaran los neutros, como hace .nav-dark
