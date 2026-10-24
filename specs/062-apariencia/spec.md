@@ -106,6 +106,25 @@ negocio en el servidor, y escribe en `<html>`:
 
 Cambiar algo aplica al momento en la página, y guardar lo deja fijo.
 
+## Enmienda del 2026-10-24 — se guarda solo
+
+Kevin, al probar la rc.3 en el celular: «que se guarden en automático los
+cambios de tema sin darle clic al botón guardar» y «que los cambios afecten
+solo al usuario, pero sí haya un botón para guardar en todo el equipo, solo
+para administradores».
+
+- **E1.** Cada cambio (tema, colores del propio, letra, tamaño, densidad) se
+  pinta y se guarda al momento en la cookie de esa persona. Desaparece
+  «Guardar para mí». Un tema propio ilegible no se guarda: se queda el último
+  válido.
+- **E2.** «Guardar como predeterminado del negocio» pasa a llamarse **«Aplicar
+  a todo el equipo»**. Solo lo ven el dueño y los administradores
+  (`canConfigure`), y la API sigue respondiendo 403 a los demás.
+- **E3.** «Usar el del negocio» pasa a llamarse «Usar la del equipo».
+
+AC1, AC2 y AC4 se leen con estos cambios: «sobrevive a recargar» sin pulsar
+nada.
+
 ## Criterios de aceptación
 
 - **AC1.** Ajustes → Apariencia muestra los 8 temas. Elegir uno cambia la app

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,13 +25,13 @@ import { cn } from "@/lib/utils";
 const PROPIO_INICIAL = { fondo: "#ffffff", texto: "#1b1430", marco: "#d9c8ff" };
 
 /**
- * 062 · D7 — Ajustes → Apariencia. Elegir algo lo pinta al momento; guardar
- * lo deja fijo: para esta persona (cookie) o, quien configura, para todo el
- * negocio (`metadata.apariencia`).
+ * 062 · D7 (enmienda) — Ajustes → Apariencia. Cada cambio se pinta y se
+ * guarda al momento para esta persona (cookie), sin botón. Quien configura
+ * puede además aplicarlo a todo el equipo (`metadata.apariencia`).
  */
 export function AparienciaClient({
   inicial,
-  propia,
+  propia: propiaInicial,
   delNegocio,
   puedeConfigurar,
 }: {
@@ -46,6 +46,14 @@ export function AparienciaClient({
   const [aviso, setAviso] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [propia, setPropia] = useState(propiaInicial);
+  // Solo se guarda lo que la persona cambia, no lo que la página trae al abrir.
+  const tocado = useRef(false);
+  const cambiar = (f: (x: Apariencia) => Apariencia) => {
+    tocado.current = true;
+    setAviso(null);
+    setA(f);
+  };
   const propio = useMemo(() => temaPropio(colores), [colores]);
 
   // Lo elegido se ve ya, en toda la app, aunque no se haya guardado.
@@ -53,6 +61,10 @@ export function AparienciaClient({
     const efectiva: Apariencia = a.tema === "propio" ? { ...a, propio: colores } : a;
     if (efectiva.tema === "propio" && !propio.ok) return;
     pintarApariencia(efectiva);
+    if (tocado.current) {
+      guardarAparienciaPropia(efectiva);
+      setPropia(true);
+    }
     const estilo = document.getElementById("vocero-temas-vivo") ?? document.head.appendChild(Object.assign(document.createElement("style"), { id: "vocero-temas-vivo" }));
     estilo.textContent = cssDePropio(efectiva);
   }, [a, colores, propio.ok]);
@@ -62,18 +74,9 @@ export function AparienciaClient({
     return propio.ok ? { ...a, propio: colores } : null;
   };
 
-  function guardarParaMi() {
-    const e = efectiva();
-    if (!e) return;
-    guardarAparienciaPropia(e);
-    setError(null);
-    setAviso("Guardada para ti, en este equipo.");
-    router.refresh();
-  }
-
   function usarLaDelNegocio() {
     guardarAparienciaPropia(null);
-    setAviso("Ahora ves la apariencia del negocio.");
+    setAviso("Ahora ves la apariencia del equipo.");
     router.refresh();
     setTimeout(() => window.location.reload(), 50);
   }
@@ -94,7 +97,7 @@ export function AparienciaClient({
       setError(d?.error?.message ?? "No se pudo guardar. Revisa la conexión.");
       return;
     }
-    setAviso("Guardada como la del negocio: la ve quien no eligió la suya.");
+    setAviso("Aplicada a todo el equipo: la ve quien no eligió la suya.");
     router.refresh();
   }
 
@@ -122,7 +125,7 @@ export function AparienciaClient({
                   aria-checked={activo}
                   aria-label={nombre}
                   data-tema-opcion={id}
-                  onClick={() => setA((x) => ({ ...x, tema: id }))}
+                  onClick={() => cambiar((x) => ({ ...x, tema: id }))}
                   className={cn(
                     "group rounded-2xl border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     activo ? "border-brand ring-2 ring-brand-soft" : "border-border hover:border-border-strong"
@@ -156,7 +159,10 @@ export function AparienciaClient({
                       type="color"
                       aria-label={`Color de ${etiqueta.toLowerCase()}`}
                       value={colores[k]}
-                      onChange={(e) => setColores((c) => ({ ...c, [k]: e.target.value }))}
+                      onChange={(e) => {
+                        tocado.current = true;
+                        setColores((c) => ({ ...c, [k]: e.target.value }));
+                      }}
                       className="h-9 w-9 cursor-pointer rounded-lg border bg-transparent p-0.5"
                     />
                     {etiqueta}
@@ -194,7 +200,7 @@ export function AparienciaClient({
                   role="radio"
                   aria-checked={a.letra === id}
                   aria-label={LETRAS[id].nombre}
-                  onClick={() => setA((x) => ({ ...x, letra: id }))}
+                  onClick={() => cambiar((x) => ({ ...x, letra: id }))}
                   className={cn(
                     "rounded-xl border px-3 py-2.5 text-left transition-colors",
                     a.letra === id ? "border-brand bg-brand-tint" : "border-border hover:border-border-strong"
@@ -211,13 +217,13 @@ export function AparienciaClient({
             titulo="Tamaño"
             opciones={(Object.keys(TAMANOS) as TamanoId[]).map((id) => [id, TAMANOS[id].nombre])}
             valor={a.tamano}
-            onCambio={(v) => setA((x) => ({ ...x, tamano: v as TamanoId }))}
+            onCambio={(v) => cambiar((x) => ({ ...x, tamano: v as TamanoId }))}
           />
           <Segmentos
             titulo="Densidad"
             opciones={(Object.keys(DENSIDADES) as DensidadId[]).map((id) => [id, DENSIDADES[id].nombre])}
             valor={a.densidad}
-            onCambio={(v) => setA((x) => ({ ...x, densidad: v as DensidadId }))}
+            onCambio={(v) => cambiar((x) => ({ ...x, densidad: v as DensidadId }))}
           />
         </CardContent>
       </Card>
@@ -225,23 +231,21 @@ export function AparienciaClient({
       <div className="space-y-3">
         <p className="text-[13px] text-text-3">
           {propia
-            ? "Estás viendo tu propia apariencia en este equipo."
+            ? "Tus cambios se guardan solos, solo para ti y en este equipo."
             : delNegocio
-              ? "Estás viendo la apariencia del negocio."
-              : "Estás viendo la apariencia de siempre de Vocero."}
+              ? "Estás viendo la apariencia del equipo. Lo que cambies se guarda solo para ti."
+              : "Estás viendo la apariencia de siempre de Vocero. Lo que cambies se guarda solo para ti."}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={guardarParaMi} disabled={a.tema === "propio" && !propio.ok}>
-            Guardar para mí
-          </Button>
+          {/* Solo dueño y administradores: lo ven todos los que no eligieron la suya. */}
           {puedeConfigurar && (
-            <Button variant="outline" onClick={() => void guardarDelNegocio()} disabled={guardando || (a.tema === "propio" && !propio.ok)}>
-              {guardando ? "Guardando…" : "Guardar como predeterminado del negocio"}
+            <Button onClick={() => void guardarDelNegocio()} disabled={guardando || (a.tema === "propio" && !propio.ok)}>
+              {guardando ? "Aplicando…" : "Aplicar a todo el equipo"}
             </Button>
           )}
           {propia && (
             <Button variant="ghost" onClick={usarLaDelNegocio}>
-              Usar el del negocio
+              Usar la del equipo
             </Button>
           )}
         </div>

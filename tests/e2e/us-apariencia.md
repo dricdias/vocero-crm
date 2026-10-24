@@ -15,8 +15,8 @@ quien en su equipo, con un predeterminado del negocio.
    `data-tamano` y `data-densidad`, y los temas listos en el `<head>`: sin
    parpadeo.
 2. **AC1.** Hay 8 temas listos más el propio. Elegir Papel lo pinta al
-   momento, y «Guardar para mí» lo mantiene al recargar.
-3. **AC2.** Un tema propio con texto ilegible avisa y no deja guardar. Con
+   momento, y se guarda solo (no hay botón) y se mantiene al recargar.
+3. **AC2.** Un tema propio con texto ilegible avisa y no se guarda. Con
    colores legibles se aplica y se mantiene al recargar, con sus variables en
    el `<head>`.
 4. **AC3.**
@@ -25,10 +25,10 @@ quien en su equipo, con un predeterminado del negocio.
    - «Compacta» deja las filas en 7 px.
 5. **AC6.** El sol y la luna: Menta → Noche → Menta.
 6. **AC4.**
-   - El dueño guarda Papel como predeterminado del negocio, y quien no
+   - El dueño aplica Papel a todo el equipo, y quien no
      eligió la suya lo ve.
    - Quien eligió Medianoche no la pierde.
-   - «Usar el del negocio» vuelve a Papel.
+   - «Usar la del equipo» vuelve a Papel.
 7. **AC8.** A 390 px la pantalla no desborda.
 
 AC5 (un miembro del equipo recibe 403) está en

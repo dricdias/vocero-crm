@@ -80,20 +80,23 @@ try {
   await p.getByRole("radio", { name: "Papel" }).click();
   ok("elegir Papel lo pinta al momento", Boolean(await hasta(async () => (await attr("data-tema")) === "papel")));
   await p.screenshot({ path: `${SALIDA}/062-papel.png` });
-  await p.getByRole("button", { name: "Guardar para mí" }).click();
+  ok("no hay botón «Guardar para mí»: se guarda solo", (await p.getByRole("button", { name: "Guardar para mí" }).count()) === 0);
+  await espera(300);
   await p.reload();
-  ok("y tras «Guardar para mí» sobrevive a recargar", (await attr("data-tema")) === "papel");
-  ok("la página dice que es tu propia apariencia", (await p.getByText("Estás viendo tu propia apariencia").count()) === 1);
+  ok("y sin pulsar nada sobrevive a recargar", (await attr("data-tema")) === "papel");
+  ok("la página dice que se guarda solo para ti", (await p.getByText(/se guardan solos, solo para ti/).count()) === 1);
 
   console.log("\n== AC2 · el tema propio ==");
   await p.getByRole("radio", { name: "Propio" }).click();
   await p.getByLabel("Color de texto").fill("#eeeeee");
   ok("con texto ilegible avisa", Boolean(await hasta(async () => (await p.getByRole("alert").filter({ hasText: /no se lee/ }).count()) === 1)));
-  ok("y no deja guardar", await p.getByRole("button", { name: "Guardar para mí" }).isDisabled());
+  const cookieApariencia = async () =>
+    decodeURIComponent((await ctx.cookies()).find((c) => c.name === "vocero-apariencia")?.value ?? "");
+  ok("y no se guarda", !(await cookieApariencia()).includes("#eeeeee"));
   await p.getByLabel("Color de texto").fill("#1b1430");
   await p.getByLabel("Color de marco").fill("#cdb8ff");
   ok("con colores legibles se aplica", Boolean(await hasta(async () => (await attr("data-tema")) === "propio")));
-  await p.getByRole("button", { name: "Guardar para mí" }).click();
+  ok("y se guarda solo", Boolean(await hasta(async () => (await cookieApariencia()).includes("#cdb8ff"))));
   await p.reload();
   ok("y sobrevive a recargar, con sus variables en el <head>", (await attr("data-tema")) === "propio" && (await p.content()).includes(':root:root[data-tema="propio"]'));
   await p.screenshot({ path: `${SALIDA}/062-propio.png` });
@@ -103,7 +106,7 @@ try {
   await p.getByRole("radio", { name: "Inter" }).click();
   await p.getByRole("radiogroup", { name: "Tamaño" }).getByRole("radio", { name: "Grande" }).click();
   await p.getByRole("radiogroup", { name: "Densidad" }).getByRole("radio", { name: "Compacta" }).click();
-  await p.getByRole("button", { name: "Guardar para mí" }).click();
+  await espera(300);
   await p.goto(`${BASE}/inbox`);
   await p.locator("ul > li button").first().waitFor({ timeout: 20000 });
   const medidas = await p.evaluate(() => ({
@@ -129,8 +132,8 @@ try {
   console.log("\n== AC4 · el predeterminado del negocio ==");
   await p.goto(`${BASE}/settings/appearance`);
   await p.getByRole("radio", { name: "Papel" }).click();
-  await p.getByRole("button", { name: "Guardar como predeterminado del negocio" }).click();
-  ok("el dueño lo guarda", Boolean(await hasta(async () => (await p.getByText(/Guardada como la del negocio/).count()) === 1)));
+  await p.getByRole("button", { name: "Aplicar a todo el equipo" }).click();
+  ok("el dueño lo aplica a todo el equipo", Boolean(await hasta(async () => (await p.getByText(/Aplicada a todo el equipo/).count()) === 1)));
   const otro = await browser.newContext({ viewport: { width: 1280, height: 800 }, storageState: { cookies: sesion.cookies, origins: [] } });
   const o = await otro.newPage();
   await o.goto(`${BASE}/inbox`);
@@ -138,11 +141,11 @@ try {
   ok("quien no eligió la suya ve Papel", (await o.evaluate(() => document.documentElement.getAttribute("data-tema"))) === "papel");
   await otro.close();
   await p.getByRole("radio", { name: "Medianoche" }).click();
-  await p.getByRole("button", { name: "Guardar para mí" }).click();
+  await espera(300);
   await p.reload();
   ok("quien eligió la suya no la pierde", (await attr("data-tema")) === "medianoche");
-  await p.getByRole("button", { name: "Usar el del negocio" }).click();
-  ok("«Usar el del negocio» vuelve a Papel", Boolean(await hasta(async () => (await attr("data-tema")) === "papel", 15000)));
+  await p.getByRole("button", { name: "Usar la del equipo" }).click();
+  ok("«Usar la del equipo» vuelve a Papel", Boolean(await hasta(async () => (await attr("data-tema")) === "papel", 15000)));
 
   console.log("\n== AC8 · celular ==");
   const tel = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, storageState: sesion });
