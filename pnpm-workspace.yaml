@@ -2,3 +2,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+overrides:
+  sharp: ^0.35.5
+  "zod@>=4.0.0 <4.6.6": ^4.6.7
