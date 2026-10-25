@@ -280,6 +280,8 @@ export const TEMAS: Record<TemaId, Tema> = {
       "--row-hover": "#f2f2f2",
       "--cal-off": "#f2f2f2",
       "--chat-bg": "#f2f2f2",
+      // Sin dibujos detrás de los mensajes: aquí manda que todo se lea.
+      "--chat-dibujos": "none",
       "--bubble-in": "#000000",
       "--bubble-in-border": "#000000",
       "--bubble-in-text": "#ffffff",

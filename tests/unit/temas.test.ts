@@ -161,3 +161,20 @@ describe("062 — la miniatura usa los tokens de globals.css", () => {
     for (const [k, v] of Object.entries(BASE_MINIATURA.dark)) expect(hex(baseOscura, k), k).toBe(v);
   });
 });
+
+describe("el fondo del chat con dibujos", () => {
+  it("claro y oscuro apuntan a su mosaico, y los dos existen", () => {
+    expect(bloque(":root {")["--chat-dibujos"]).toBe('url("/fondo-chat/claro.svg")');
+    expect(bloque(':root[data-theme="dark"] {')["--chat-dibujos"]).toBe('url("/fondo-chat/oscuro.svg")');
+    for (const archivo of ["claro", "oscuro"]) {
+      const svg = readFileSync(`public/fondo-chat/${archivo}.svg`, "utf8");
+      // El lado del mosaico es el `background-size` de .thread-bg.
+      expect(svg).toMatch(/^<svg [^>]*width="440" height="440"/);
+      expect(css).toContain("background-size: 440px 440px");
+    }
+  });
+
+  it("Alto contraste no pone dibujos detrás de los mensajes", () => {
+    expect(TEMAS["alto-contraste"].tokens["--chat-dibujos"]).toBe("none");
+  });
+});

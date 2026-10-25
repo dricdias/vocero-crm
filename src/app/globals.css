@@ -50,6 +50,11 @@
 
     /* Chat: el cliente entra en verde WhatsApp, el CRM contesta en el acento */
     --chat-bg: #eef4f0;
+    /* Los dibujos del fondo del chat, a la WhatsApp (ver .thread-bg). El
+       tono va dentro del SVG: negro muy tenue en claro, blanco en oscuro.
+       Ruta absoluta: dentro de una variable, una relativa se resolvería
+       contra la página. */
+    --chat-dibujos: url("/fondo-chat/claro.svg");
     --bubble-in: #151b18;
     --bubble-in-border: #151b18;
     --bubble-out: #ffffff;
@@ -175,6 +180,7 @@
 
     /* Chat */
     --chat-bg: #121916;
+    --chat-dibujos: url("/fondo-chat/oscuro.svg");
     --bubble-in: #e6eee9;
     --bubble-in-border: #e6eee9;
 
@@ -368,13 +374,19 @@
   /* 061 — El fondo del hilo: el lavado del tema, con un brillo suave del
      marco arriba (ya no el resplandor del acento: el chat es neutro, como en
      la referencia, y el acento se queda para lo que se toca). */
+  /* Los dibujos van encima del brillo y se quedan quietos al desplazar el
+     hilo, como en WhatsApp: el fondo es de la tarjeta (hilo y compositor
+     juntos), no del contenido que se desplaza. */
   .thread-bg {
     background-color: var(--chat-bg);
-    background-image: radial-gradient(
-      circle at 82% 0%,
-      color-mix(in srgb, var(--marco-2) 55%, transparent),
-      transparent 60%
-    );
+    background-image: var(--chat-dibujos, none),
+      radial-gradient(
+        circle at 82% 0%,
+        color-mix(in srgb, var(--marco-2) 55%, transparent),
+        transparent 60%
+      );
+    background-size: 440px 440px, auto;
+    background-repeat: repeat, no-repeat;
   }
 
   /* 215 — Rejilla del calendario de Citas: una línea por hora. El alto de la
@@ -437,7 +449,9 @@
     background: linear-gradient(150deg, var(--marco-1) 0%, var(--marco-2) 100%);
   }
   .tarjeta {
-    background: var(--bg);
+    /* Solo el color: el atajo `background` borraba la imagen de fondo de lo
+       que también es tarjeta (los dibujos del chat, .thread-bg). */
+    background-color: var(--bg);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--sombra-tarjeta);
     position: relative;

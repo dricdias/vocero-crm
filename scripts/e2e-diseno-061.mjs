@@ -3,6 +3,10 @@
  * en tarjetas, burbujas y compositor en cápsula), en claro y en oscuro, a 1440
  * y a 390 px. Guion: tests/e2e/us-diseno-tarjetas.md.
  *
+ * 063 — Y el fondo del chat con dibujos: el mosaico de su modo en la tarjeta
+ * del chat, el compositor sin taparlo, los SVG servidos y Alto contraste sin
+ * dibujos. Guion: tests/e2e/us-fondo-chat.md.
+ *
  * Requiere la app viva con WA_MOCK_ENABLED=true. `E2E_EMAIL` / `E2E_PASSWORD`
  * para entrar con una cuenta que ya exista. `CAPTURAS_DIR` para las capturas.
  *
@@ -125,6 +129,10 @@ try {
         enviarFuera: enviar && capsula ? !capsula.contains(enviar) : false,
         capsulaRadio: capsula ? parseFloat(css(capsula).borderTopLeftRadius) : 0,
         desborde: document.documentElement.scrollWidth > window.innerWidth,
+        // 063 — El fondo con dibujos es de la tarjeta del chat; el compositor
+        // va transparente encima.
+        dibujos: css(document.querySelector('[aria-label="Chat: adjuntar imagen"]'))?.backgroundImage ?? "",
+        compositor: css(caja?.closest("[aria-label='Chat: adjuntar imagen'] > div"))?.backgroundColor ?? "",
       };
     });
     ok("AC1 · el marco lleva su degradado", m.marco.includes("gradient"), m.marco.slice(0, 60));
@@ -139,6 +147,9 @@ try {
     ok("AC4 · el envío es un botón redondo fuera de la cápsula", m.enviarRedondo && m.enviarFuera, JSON.stringify({ r: m.enviarRedondo, f: m.enviarFuera }));
     ok("AC4 · la caja es una cápsula", m.capsulaRadio >= 20, String(m.capsulaRadio));
     ok("sin desplazamiento horizontal", !m.desborde);
+    const mosaico = tema === "dark" ? "fondo-chat/oscuro.svg" : "fondo-chat/claro.svg";
+    ok(`063 · el chat lleva los dibujos de su modo (${mosaico})`, m.dibujos.includes(mosaico), m.dibujos.slice(0, 120));
+    ok("063 · el compositor no tapa los dibujos", m.compositor === "rgba(0, 0, 0, 0)", m.compositor);
 
     const cuenta = p.getByRole("button", { name: "Tu cuenta" });
     await cuenta.click();
@@ -176,6 +187,30 @@ try {
     ok("AC5 · el hilo en el teléfono, sin desborde", await t.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await t.screenshot({ path: `${SALIDA}/061-hilo-390-${tema}.png` });
     await tel.close();
+  }
+
+  console.log("\n== 063 · los dibujos del fondo ==");
+  for (const archivo of ["claro", "oscuro"]) {
+    const res = await base.request.get(`${BASE}/fondo-chat/${archivo}.svg`);
+    ok(
+      `063 · el mosaico ${archivo} se sirve`,
+      res.ok() && (res.headers()["content-type"] ?? "").includes("image/svg+xml"),
+      `${res.status()} ${res.headers()["content-type"]}`
+    );
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, storageState: sesion });
+    const apariencia = { tema: "alto-contraste", letra: "urbanist", tamano: "normal", densidad: "normal" };
+    await ctx.addCookies([{ name: "vocero-apariencia", value: encodeURIComponent(JSON.stringify(apariencia)), url: BASE }]);
+    const ac = await ctx.newPage();
+    ac.on("pageerror", (e) => errores.push(e.message));
+    await ac.goto(`${BASE}/inbox?conversation=${conv.id}`);
+    await hasta(async () => (await ac.locator("[data-message-id]").count()) >= 2, 20000);
+    const fondo = await ac.evaluate(
+      () => getComputedStyle(document.querySelector('[aria-label="Chat: adjuntar imagen"]')).backgroundImage
+    );
+    ok("063 · Alto contraste no pone dibujos detrás de los mensajes", !fondo.includes("fondo-chat"), fondo.slice(0, 120));
+    await ctx.close();
   }
 } finally {
   ok("sin errores de la página", errores.length === 0, errores.join(" | "));

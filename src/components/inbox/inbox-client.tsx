@@ -552,7 +552,7 @@ export function InboxClient({
             </Composer>
           </>
         ) : (
-          <div className="thread-bg flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center lg:tarjeta">
+          <div className="thread-bg flex flex-1 flex-col items-center justify-center gap-2 bg-chat px-6 text-center lg:tarjeta">
             <p className="font-serif text-[24px] italic leading-tight text-text-2">
               Escolha uma conversa para ver as mensagens
             </p>

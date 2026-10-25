@@ -451,7 +451,7 @@ export function MessageThread({
         const el = e.currentTarget;
         pegadoAbajo.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
       }}
-      className="thread-bg flex flex-1 flex-col overflow-y-auto px-3 py-5 sm:px-[6%]"
+      className="flex flex-1 flex-col overflow-y-auto px-3 py-5 sm:px-[6%]"
     >
       <div ref={contenidoRef} className="flex shrink-0 flex-col gap-[3px]">
       {forwarding && (
