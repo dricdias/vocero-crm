@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
@@ -8,6 +8,14 @@ import { BrandTile } from "@/components/brand-mark";
 import { BotonInstalar } from "@/components/pwa";
 import { BotonActivarAvisos } from "@/components/activar-avisos";
 import { limpiarBorradores } from "@/lib/borradores";
+import {
+  alDesmontarBandeja,
+  alPublicarLista,
+  bandejaMontada,
+  esperarLista,
+  unaALaVez,
+  type ConversacionDeLista,
+} from "@/lib/lista-compartida";
 import type { Branding } from "@/lib/branding";
 import type { Apariencia } from "@/lib/temas";
 import { cn, initials } from "@/lib/utils";
@@ -99,21 +107,36 @@ export function AppNav({
   const [chats, setChats] = useState(0);
   const [sonido, setSonido] = useState(true);
 
-  async function refetchUnread() {
+  const contar = useCallback((lista: ConversacionDeLista[]) => {
+    setUnread(lista.reduce((a, c) => a + c.unreadCount, 0));
+    setChats(lista.filter((c) => c.unreadCount > 0).length);
+  }, []);
+
+  const pedirLista = useCallback(async () => {
     const res = await fetch("/api/conversations").catch(() => null);
     if (!res?.ok) return null;
-    const data = (await res.json()) as {
-      conversations: { id: string; unreadCount: number; contact: { name: string } }[];
-    };
-    setUnread(data.conversations.reduce((a, c) => a + c.unreadCount, 0));
-    setChats(data.conversations.filter((c) => c.unreadCount > 0).length);
+    const data = (await res.json()) as { conversations: ConversacionDeLista[] };
+    contar(data.conversations);
     return data.conversations;
-  }
+  }, [contar]);
 
+  // 064 — Con la Bandeja abierta, el contador sale de la lista que ella ya
+  // trajo: el menú no pide otra. Fuera de la Bandeja pide la suya, y las
+  // recargas seguidas se juntan en una.
+  const pedirJunta = useMemo(() => unaALaVez(pedirLista), [pedirLista]);
+  const refetchUnread = useCallback(
+    () => (bandejaMontada() ? Promise.resolve(null) : pedirJunta()),
+    [pedirJunta]
+  );
+
+  useEffect(() => alPublicarLista(contar), [contar]);
+  // Al salir de la Bandeja, el contador vuelve a depender del menú.
+  useEffect(() => alDesmontarBandeja(() => void pedirLista()), [pedirLista]);
   useEffect(() => {
-    void refetchUnread();
-    setSonido(sonidoActivado());
-  }, []);
+    if (!bandejaMontada()) void pedirLista();
+  }, [pedirLista]);
+
+  useEffect(() => setSonido(sonidoActivado()), []);
 
   useDesbloquearAudio();
   useTituloNoLeidos(chats);
@@ -144,7 +167,10 @@ export function AppNav({
         visible: document.visibilityState === "visible",
         foco: document.hasFocus(),
       });
-      const lista = await refetchUnread();
+      // Con la Bandeja abierta, el nombre llega en la lista que ella publica.
+      const lista = bandejaMontada()
+        ? await esperarLista(8000, (l) => !avisar || l.some((c) => c.id === conversationId))
+        : await refetchUnread();
       // El nombre sale de la Bandeja: una conversación del Laboratorio no está
       // en la lista y no avisa.
       const conv = avisar ? lista?.find((c) => c.id === conversationId) : undefined;

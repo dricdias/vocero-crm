@@ -36,6 +36,7 @@ producto** — y saberlo antes de leerla ahorra una confusión.
 | `061-diseno-tarjetas` | Ligero | spec (diseño de tarjetas inspirado en la referencia 6: marco, riel de iconos, Bandeja en tarjetas, cliente en burbuja oscura, compositor en cápsula; tema Menta / Noche) |
 | `062-apariencia` | Ligero | spec (Ajustes → Apariencia: temas listos, tema propio, letra, tamaño y densidad; predeterminado del negocio y elección por persona) |
 | `063-fondo-chat-dibujos` | Ligero | spec (fondo del chat con dibujos a la WhatsApp, con el carnero, el pulpo, el plato de DJ y la diosa de AISHIA; Alto contraste sin dibujos) |
+| `064-lista-conversaciones-rapida` | Ligero | spec (la vista previa de la lista usa el índice de `message` y una ráfaga de mensajes recarga la lista una vez por pestaña, no cuatro; menú y Ctrl+K toman la lista de la Bandeja; sin migración) |
 | `055-atajos-de-teclado` | Ligero | spec (Ctrl+K para ir a una pantalla o conversación, «?» para la ayuda; Alt+J/K, «/», Alt+R y Alt+N en la Bandeja) |
 | `054-eventos-en-el-hilo` | Ligero | spec (cambios de etapa y traspaso a una persona pintados en el hilo, con lo que ya se guarda; `GET …/eventos`) |
 | `056-avisos-y-sin-conexion` | Ligero | spec (avisos del sistema con Vocero oculto, sin push; banda «sin conexión» y reconexión del SSE con espera creciente) |

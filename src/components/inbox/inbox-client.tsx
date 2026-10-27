@@ -23,6 +23,7 @@ import {
   setConversacionAbierta,
 } from "@/components/avisos-de-mensajes";
 import { citaDe } from "./helpers";
+import { marcarBandejaMontada, publicarLista, unaALaVez } from "@/lib/lista-compartida";
 import { ContactPanel } from "./contact-panel";
 
 /**
@@ -109,7 +110,14 @@ export function InboxClient({
     const data = (await res.json()) as { conversations: ConversationDto[] };
     setConversations(data.conversations);
     lastFetchRef.current = new Date().toISOString();
+    // 064 — El menú y Ctrl+K toman la lista de aquí en vez de pedir otra.
+    publicarLista(data.conversations);
   }, []);
+
+  // 064 — Los eventos en vivo recargan la lista juntos: una ráfaga de
+  // mensajes es una petición, no una por evento, y nunca dos a la vez.
+  const refetchJunta = useMemo(() => unaALaVez(refetchConversations), [refetchConversations]);
+  useEffect(() => marcarBandejaMontada(), []);
 
   const refetchMessages = useCallback(async (conversationId: string) => {
     const res = await fetch(
@@ -216,7 +224,7 @@ export function InboxClient({
           body: JSON.stringify({ markRead: true }),
         });
       }
-      void refetchConversations();
+      void refetchJunta();
       // Un entrante nuevo puede crear/mover el lead: refresca el panel.
       setDetailRev((v) => v + 1);
     },
@@ -243,7 +251,7 @@ export function InboxClient({
       );
     },
     onConversationUpdated: () => {
-      void refetchConversations();
+      void refetchJunta();
       // 054 — Cambió la etapa o la IA: el hilo pinta el evento en vivo.
       if (selectedIdRef.current) void refetchEventos(selectedIdRef.current);
       // El agente movió de etapa o cambió el handoff: refresca el panel en vivo.
@@ -254,11 +262,11 @@ export function InboxClient({
       // ya, sin esperar al refetch, para que nadie le escriba a un hilo que
       // no existe.
       quitarConversacion(conversationId);
-      void refetchConversations();
+      void refetchJunta();
     },
     onReconnect: () => {
       // Catch-up tras reconexión (contrato sse.md): refetch completo.
-      void refetchConversations();
+      void refetchJunta();
       if (selectedIdRef.current) {
         void refetchMessages(selectedIdRef.current);
         void refetchEventos(selectedIdRef.current);
