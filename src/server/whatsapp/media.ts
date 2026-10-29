@@ -238,7 +238,7 @@ export async function ensureAssetAvailable(
       const creds = await getEvolutionByOrg(organizationId);
       const payload = z.object({evolutionCipher: z.string(), evolutionIv: z.string(), evolutionTag: z.string()}).safeParse(asset.payload);
       if (!creds || !payload.success) return null;
-      const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
+      const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.string(), z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
       const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(result.base64);
       if (!match) throw new MediaFetchError("O Evolution Go não retornou um arquivo válido");
       const data = Buffer.from(match[2]!, "base64");

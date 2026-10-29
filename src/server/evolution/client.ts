@@ -60,10 +60,12 @@ export async function evolutionRequest<T extends z.ZodTypeAny>(
   }
   if (!res.ok) throw new EvolutionError(res.status);
   const parsed = z
-    .object({ message: z.literal("success"), data: schema })
+    .object({ message: z.literal("success"), data: z.unknown() })
     .safeParse(await res.json().catch(() => null));
   if (!parsed.success) throw new EvolutionError(502);
-  return parsed.data.data;
+  const data = schema.safeParse(parsed.data.data);
+  if (!data.success) throw new EvolutionError(502);
+  return data.data as z.infer<T>;
 }
 
 export const statusSchema = z.object({

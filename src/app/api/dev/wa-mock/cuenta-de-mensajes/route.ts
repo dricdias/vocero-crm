@@ -22,7 +22,7 @@ const bodySchema = z.object({
         language: z.string().default("es_MX"),
         category: z.string().default("UTILITY"),
         status: z.enum(["PENDING", "APPROVED", "REJECTED"]).default("APPROVED"),
-        components: z.array(z.record(z.unknown())).min(1),
+        components: z.array(z.record(z.string(), z.unknown())).min(1),
       })
     )
     .max(500)
