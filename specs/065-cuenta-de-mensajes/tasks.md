@@ -13,4 +13,4 @@
 - [x] T009 Gates: typecheck, lint, test (y build)
 - [x] T010 `migrar.md`, `specs/README.md`
 - [ ] T011 Verificación en vivo en la instancia del caso real (con el OK de Kevin) y confirmar `paid_messaging_account_id`
-- [ ] T012 Ampliar el arnés E2E (wa-mock: responder 2388339 en la cuenta de WhatsApp) y PR
+- [x] T012 Ampliar el arnés E2E (wa-mock: responder 2388339 en la cuenta de WhatsApp) y PR — `scripts/e2e-cuenta-de-mensajes.mjs` (36 checks) + guion `tests/e2e/us-cuenta-de-mensajes.md`
