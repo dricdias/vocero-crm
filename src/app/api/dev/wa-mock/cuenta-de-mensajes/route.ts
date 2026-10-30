@@ -11,6 +11,8 @@ const bodySchema = z.object({
   messagingAccountId: z.string().regex(/^\d+$/),
   /** Si `?fields=paid_messaging_account_id` la revela. */
   descubrible: z.boolean().default(false),
+  /** 066 — Si `POST {wabaId}/subscribed_apps` también responde 2388339. */
+  rechazaSuscripcion: z.boolean().default(false),
   /**
    * Plantillas creadas FUERA de Vocero (Administrador de WhatsApp, Graph
    * directo, `hello_world`): el «panel de Meta» ya las tiene, el CRM no.
@@ -44,6 +46,7 @@ export async function POST(req: Request) {
   state.splitAccounts[body.data.wabaId] = {
     messagingAccountId: body.data.messagingAccountId,
     descubrible: body.data.descubrible ?? false,
+    rechazaSuscripcion: body.data.rechazaSuscripcion ?? false,
   };
   for (const t of body.data.plantillasExternas ?? []) {
     const bodyText = t.components.find(

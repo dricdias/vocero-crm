@@ -412,6 +412,14 @@ Embedded Signup. Hay dos formas de obtenerlo:
 
 ### Modo directo (el negocio tiene su propia app de Meta)
 
+> **Atajo: «Conectar con Meta».** Con `META_APP_ID`,
+> `META_EMBEDDED_CONFIG_ID` y `META_APP_SECRET` en la instancia, Ajustes →
+> WhatsApp muestra un botón que abre la ventana oficial de Meta (Embedded
+> Signup v4) y deja el número conectado sin pegar tokens: registra el número y
+> el webhook solo. Qué poner en el panel de Meta (dominios, configuración de
+> login): [docs/embedded-signup.md](docs/embedded-signup.md). Sin esas
+> variables, sigue el alta manual de abajo.
+
 1. Crea una app en [developers.facebook.com](https://developers.facebook.com)
    con el producto WhatsApp y vincula tu número.
 2. Crea un **usuario del sistema** (Business Settings → System users) con

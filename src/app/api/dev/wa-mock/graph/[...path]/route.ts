@@ -172,6 +172,46 @@ export async function GET(req: Request, ctx: Params) {
   const token = bearerToken(req);
   if (token.endsWith("-invalid")) return invalidTokenResponse();
 
+  // 066 — GET oauth/access_token?client_id&client_secret&code → el canje del
+  // Embedded Signup. Como Meta: el secreto tiene que ser el de la app y cada
+  // `code` sirve una sola vez. El token sale del código, para que el arnés
+  // pueda pedir uno «-sin-gestion».
+  if (path.length === 2 && path[0] === "oauth" && path[1] === "access_token") {
+    const params = new URL(req.url).searchParams;
+    const code = params.get("code") ?? "";
+    const state = getWaMockState();
+    const secret = getEnv().META_APP_SECRET ?? "";
+    if (
+      !code ||
+      code.startsWith("es-invalido") ||
+      state.usedCodes.includes(code) ||
+      !params.get("client_id") ||
+      params.get("client_secret") !== secret
+    ) {
+      return Response.json(
+        {
+          error: {
+            message: "Invalid verification code format.",
+            type: "OAuthException",
+            code: 100,
+            fbtrace_id: "mock",
+          },
+        },
+        { status: 400 }
+      );
+    }
+    state.usedCodes.push(code);
+    return Response.json({
+      access_token: `EAAG-embedded-${code}`,
+      token_type: "bearer",
+    });
+  }
+
+  // 066 — GET {wabaId}/phone_numbers → los números sembrados de esa WABA.
+  if (path.length === 2 && path[1] === "phone_numbers") {
+    return Response.json({ data: getWaMockState().wabaNumbers[path[0]!] ?? [] });
+  }
+
   // GET {wabaId}/message_templates → lista para el sync. 065: paginada por
   // cursor como Meta (`limit` + `after`, `paging.next` solo si hay más), y
   // una cuenta de WhatsApp ya partida la rechaza con 2388339.
@@ -551,12 +591,41 @@ export async function POST(req: Request, ctx: Params) {
     return Response.json({ id: tpl.id, status: "PENDING", category: tpl.category });
   }
 
+  // 066 — POST {phoneNumberId}/register → registra el número en la Cloud API
+  // con su PIN. "000000" imita un número que ya tenía otro PIN.
+  if (path.length === 2 && path[1] === "register") {
+    const pin = String(body.pin ?? "");
+    if (body.messaging_product !== "whatsapp" || !/^\d{6}$/.test(pin) || pin === "000000") {
+      return Response.json(
+        {
+          error: {
+            message: "(#133005) Two step verification PIN Mismatch",
+            type: "OAuthException",
+            code: 133005,
+            fbtrace_id: "mock",
+          },
+        },
+        { status: 400 }
+      );
+    }
+    const state = getWaMockState();
+    state.registrations[path[0]!] = pin;
+    for (const numeros of Object.values(state.wabaNumbers)) {
+      for (const n of numeros) if (n.id === path[0]) n.status = "CONNECTED";
+    }
+    return Response.json({ success: true });
+  }
+
   // POST {wabaId}/subscribed_apps → suscribe la app. Como en Meta, el override
   // de callback se fija mandándolo en el cuerpo y un POST SIN él lo BORRA
   // ("Delete WABA alternate callback"): un CRM que re-suscribe a ciegas
   // desconecta aquí al cerebro externo igual que en producción.
   if (path.length === 2 && path[1] === "subscribed_apps") {
     if (token.endsWith(SIN_GESTION)) return permissionErrorResponse();
+    // 066 — La cuenta de WhatsApp partida que ya rechaza la suscripción.
+    if (getWaMockState().splitAccounts[path[0]!]?.rechazaSuscripcion) {
+      return cuentaSinPlantillasResponse();
+    }
     const uri =
       typeof body.override_callback_uri === "string"
         ? body.override_callback_uri.trim()

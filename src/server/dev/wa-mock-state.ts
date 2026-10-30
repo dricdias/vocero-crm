@@ -71,6 +71,23 @@ export type MockSplitAccount = {
   messagingAccountId: string;
   /** Si `?fields=paid_messaging_account_id` la revela (campo no oficial). */
   descubrible: boolean;
+  /**
+   * 066 — Si `POST {cuenta de WhatsApp}/subscribed_apps` también responde
+   * 2388339, como desde la noche del 28-oct-2026 en producción.
+   */
+  rechazaSuscripcion?: boolean;
+};
+
+/**
+ * 066 — Un número de una WABA, como lo lista `GET {waba}/phone_numbers`.
+ * Lo siembra el self-test del Embedded Signup.
+ */
+export type MockWabaNumber = {
+  id: string;
+  display_phone_number: string;
+  verified_name: string;
+  status: string;
+  platform_type?: string;
 };
 
 /** 044 — Un archivo subido a `{phoneNumberId}/media`, para las aserciones. */
@@ -99,6 +116,12 @@ type WaMockState = {
   phoneWebhooks: Record<string, string>;
   /** 065 — Por WABA ID: las cuentas ya partidas. Sin entrada = sin split. */
   splitAccounts: Record<string, MockSplitAccount>;
+  /** 066 — Por WABA ID: los números que lista `phone_numbers`. */
+  wabaNumbers: Record<string, MockWabaNumber[]>;
+  /** 066 — Por phone_number_id: el PIN con el que se registró. */
+  registrations: Record<string, string>;
+  /** 066 — Los `code` que ya se canjearon (Meta los acepta una vez). */
+  usedCodes: string[];
   counter: number;
 };
 
@@ -113,6 +136,9 @@ function freshState(): WaMockState {
     wabaSubscriptions: {},
     phoneWebhooks: {},
     splitAccounts: {},
+    wabaNumbers: {},
+    registrations: {},
+    usedCodes: [],
     // Arranca en la hora, no en 0: los ids del mock (`wamid.mock.N`) no
     // chocan con los de un arranque anterior sobre la misma base, que el CRM
     // descartaría como duplicados (idempotencia por wa_message_id).
@@ -128,6 +154,9 @@ export function getWaMockState(): WaMockState {
   globalForMock.__waMockState.phoneWebhooks ??= {};
   globalForMock.__waMockState.uploads ??= [];
   globalForMock.__waMockState.splitAccounts ??= {};
+  globalForMock.__waMockState.wabaNumbers ??= {};
+  globalForMock.__waMockState.registrations ??= {};
+  globalForMock.__waMockState.usedCodes ??= [];
   return globalForMock.__waMockState;
 }
 

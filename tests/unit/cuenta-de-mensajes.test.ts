@@ -277,6 +277,52 @@ describe("registro del webhook en la Cuenta de mensajes", () => {
     });
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes("/333/"))).toBe(false);
   });
+
+  // 066 — Desde la noche del 28-oct-2026 Meta también rechaza la suscripción
+  // en la cuenta de WhatsApp partida; lo que cuenta es la de mensajes.
+  const cuentaPartida = () => metaError(400, 100, { error_subcode: 2388339 });
+
+  it("2388339 en la cuenta de WhatsApp no es fatal si la de mensajes quedó (066)", async () => {
+    sinOverride(); // GET 111
+    cuentaPartida(); // POST 111 → 2388339
+    sinOverride(); // GET 333
+    respond({ success: true }); // POST 333 con override
+    conOverride(URL_PROPIA); // GET 333 confirmado
+    respond({ success: true }); // POST 222 override del número
+    numeroConfirmado();
+    expect(await registerWebhookForNumber(opts)).toEqual({
+      ok: true,
+      appWithoutWebhook: false,
+      messagingAccount: { ok: true },
+    });
+    expect(call(5)).toMatchObject({ url: `${G}/222`, method: "POST" });
+  });
+
+  it("2388339 con la de mensajes fallando devuelve ese error, y sin ella pide la ID (066)", async () => {
+    sinOverride();
+    cuentaPartida();
+    sinOverride();
+    metaError(403, 200);
+    expect(await registerWebhookForNumber(opts)).toMatchObject({
+      ok: false,
+      code: "missing_permission",
+    });
+    expect(fetchMock.mock.calls.some(([u]) => String(u) === `${G}/222`)).toBe(false);
+
+    fetchMock.mockReset();
+    sinOverride();
+    cuentaPartida();
+    const sinCuenta = await registerWebhookForNumber({ ...opts, messagingAccountId: null });
+    expect(sinCuenta).toMatchObject({ ok: false, code: "meta_error" });
+    expect(!sinCuenta.ok && sinCuenta.message).toContain("Cuenta de mensajes");
+  });
+
+  it("otro error de la cuenta de WhatsApp sigue siendo fatal aunque haya cuenta de mensajes", async () => {
+    sinOverride();
+    metaError(403, 200);
+    expect(await registerWebhookForNumber(opts)).toMatchObject({ ok: false, code: "missing_permission" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("al desconectar, la cuenta de mensajes", () => {
