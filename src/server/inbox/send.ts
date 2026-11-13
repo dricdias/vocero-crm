@@ -1,7 +1,7 @@
 import { getEvolutionByOrg, setEvolutionStatus, type EvolutionCredentials } from "@/server/evolution/credentials";
 import { sendEvolutionText, sendEvolutionMedia, EvolutionError } from "@/server/evolution/client";
 import { evolutionGroupTarget } from "@/server/evolution/groups";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { graphRequest, MetaApiError, normalizeRecipient } from "@/lib/meta/client";
@@ -35,6 +35,7 @@ import {
   type TiktokCredentials,
 } from "@/server/tiktok/credentials";
 import { sendTiktokText } from "@/server/tiktok/send";
+import { prepararAudioSaliente } from "@/server/whatsapp/nota-de-voz";
 import {
   cabeOtroMensaje,
   salientesDesdeElUltimoEntrante,
@@ -50,6 +51,7 @@ import {
 } from "@/server/channels/capabilities";
 import { isChannelEnabled } from "@/server/channels/enabled";
 import { serializeMessage } from "@/server/inbox/ingest";
+import { conCita, type CitaEncontrada } from "@/server/inbox/quotes";
 import {
   saveMediaFile,
   uploadGraphMedia,
@@ -69,7 +71,9 @@ export class SendError extends Error {
     | "text_too_long"
     | "meta_error"
     | "meta_unavailable"
-    | "upload_failed";
+    | "upload_failed"
+    /** 039: el mensaje a citar no es de aquí, no salió a la plataforma, o el canal no cita. */
+    | "reply_unavailable";
   /** 008: presente cuando el fallo ocurrió TRAS persistir el mensaje (failed). */
   messageId?: string;
 
@@ -360,6 +364,56 @@ async function prepareSend(
   return { conversation: row.conversation, credentials, destinatario, recipient };
 }
 
+/**
+ * 039 — El mensaje al que se responde citando, validado ANTES de enviar: de
+ * esta conversación, con id en la plataforma y en un canal que cita. Si no,
+ * no se envía: mandarlo sin la cita en silencio haría creer al operador que
+ * el cliente verá a qué responde.
+ */
+async function resolverMensajeCitado(
+  target: SendTarget,
+  replyToMessageId: string | undefined
+): Promise<CitaEncontrada | null> {
+  if (!replyToMessageId) return null;
+  const caps = capabilitiesFor(target.conversation.channel);
+  // Fork pt-BR: o Evolution Go ainda não envia a citação; melhor avisar do que mandar sem ela.
+  if (!caps.quoteReplies || target.evolution) {
+    throw new SendError(
+      "reply_unavailable",
+      `${caps.label} não permite responder citando uma mensagem`
+    );
+  }
+  const rows = await getDb()
+    .select({ message: schema.message, media: schema.mediaAsset })
+    .from(schema.message)
+    .leftJoin(
+      schema.mediaAsset,
+      eq(schema.message.mediaAssetId, schema.mediaAsset.id)
+    )
+    .where(
+      and(
+        eq(schema.message.organizationId, target.conversation.organizationId),
+        eq(schema.message.conversationId, target.conversation.id),
+        eq(schema.message.id, replyToMessageId)
+      )
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) {
+    throw new SendError(
+      "reply_unavailable",
+      "A mensagem que você quer citar não é desta conversa"
+    );
+  }
+  if (!row.message.waMessageId) {
+    throw new SendError(
+      "reply_unavailable",
+      "Essa mensagem não chegou ao WhatsApp, então não pode ser citada"
+    );
+  }
+  return row;
+}
+
 async function persistOutbound(input: {
   organizationId: string;
   conversationId: string;
@@ -379,6 +433,8 @@ async function persistOutbound(input: {
   origin: "ai" | "operator";
   mediaAssetId?: string | null;
   media?: typeof schema.mediaAsset.$inferSelect | null;
+  /** 039: el mensaje citado, ya validado por `resolverMensajeCitado`. */
+  cita?: CitaEncontrada | null;
 }): Promise<string> {
   const db = getDb();
   const inserted = await db
@@ -396,6 +452,7 @@ async function persistOutbound(input: {
       aiGenerated: input.aiGenerated ?? false,
       origin: input.origin,
       mediaAssetId: input.mediaAssetId ?? null,
+      replyToWaMessageId: input.cita?.message.waMessageId ?? null,
     })
     .returning();
   const message = inserted[0]!;
@@ -409,7 +466,7 @@ async function persistOutbound(input: {
     type: "message.new",
     data: {
       conversationId: input.conversationId,
-      message: serializeMessage(message, input.media ?? null),
+      message: serializeMessage(message, input.media ?? null, input.cita ?? null),
     },
   });
 
@@ -422,6 +479,8 @@ export async function sendText(input: {
   organizationId: string;
   text: string;
   aiGenerated?: boolean;
+  /** 039: id local del mensaje al que se responde citando. */
+  replyToMessageId?: string;
 }): Promise<SendResult> {
   const target = await prepareSend(
     input.conversationId,
@@ -451,6 +510,8 @@ export async function sendText(input: {
     throw new SendError("text_too_long", textLimitMessage(canal));
   }
 
+  const cita = await resolverMensajeCitado(target, input.replyToMessageId);
+
   const waMessageId = target.evolution
     ? await callEvolutionSend(target, () => sendEvolutionText(target.evolution!, target.recipient, text, target.groupParticipant))
     : target.instagram
@@ -459,12 +520,18 @@ export async function sendText(input: {
       ? await callMessengerSend(target, text)
       : target.tiktok
         ? await callTiktokSend(target, text)
-        : await callGraphSend(credentials!, {
-          messaging_product: "whatsapp",
-          ...target.destinatario,
-          type: "text",
-          text: { body: text },
-        });
+        : await callGraphSend(
+          credentials!,
+          conCita(
+            {
+              messaging_product: "whatsapp",
+              ...target.destinatario,
+              type: "text",
+              text: { body: text },
+            },
+            cita?.message.waMessageId
+          )
+        );
 
   const messageId = await persistOutbound({
     organizationId: input.organizationId,
@@ -480,6 +547,7 @@ export async function sendText(input: {
       : "sent",
     aiGenerated: input.aiGenerated,
     origin: input.aiGenerated ? "ai" : "operator",
+    cita,
   });
 
   return { messageId };
@@ -496,9 +564,18 @@ export async function sendMediaMessage(input: {
   organizationId: string;
   file: { data: Buffer; mimeType: string; fileName?: string };
   caption?: string;
+  /** 039: id local del mensaje al que se responde citando. */
+  replyToMessageId?: string;
+  /** 044: grabado en el compositor; sale como nota de voz si es Ogg/Opus. */
+  voz?: boolean;
 }): Promise<SendResult> {
+  // 044: un WebM grabado se pasa a Ogg antes de validar (WhatsApp no acepta WebM).
+  const audio = input.file.mimeType.startsWith("audio/")
+    ? prepararAudioSaliente(input.file, input.voz === true)
+    : { file: input.file, voice: false };
+  const file = audio.file;
   // Validación previa (FR-007): tipo y tamaño antes de tocar disco o red.
-  const kind = validateOutgoing(input.file.mimeType, input.file.data.byteLength);
+  const kind = validateOutgoing(file.mimeType, file.data.byteLength);
 
   const target = await prepareSend(input.conversationId, input.organizationId);
   const { credentials } = target;
@@ -509,13 +586,14 @@ export async function sendMediaMessage(input: {
       `Ainda não é possível enviar anexos pelo ${sendCaps.label}; envie o texto`
     );
   }
+  const cita = await resolverMensajeCitado(target, input.replyToMessageId);
 
   const db = getDb();
   const assetId = newId("mediaAsset");
   const storagePath = await saveMediaFile(
     input.organizationId,
     assetId,
-    input.file.data
+    file.data
   );
   const assetRows = await db
     .insert(schema.mediaAsset)
@@ -523,9 +601,9 @@ export async function sendMediaMessage(input: {
       id: assetId,
       organizationId: input.organizationId,
       kind,
-      mimeType: input.file.mimeType,
-      fileName: input.file.fileName ?? null,
-      fileSize: input.file.data.byteLength,
+      mimeType: file.mimeType,
+      fileName: file.fileName ?? null,
+      fileSize: file.data.byteLength,
       caption: input.caption ?? null,
       storagePath,
       fetchStatus: "available",
@@ -536,9 +614,9 @@ export async function sendMediaMessage(input: {
   try {
     let waMessageId: string;
     if (target.evolution) {
-      waMessageId = await callEvolutionSend(target, () => sendEvolutionMedia(target.evolution!, target.recipient, kind, input.file, input.caption));
+      waMessageId = await callEvolutionSend(target, () => sendEvolutionMedia(target.evolution!, target.recipient, kind, file, input.caption));
     } else {
-    const waMediaId = await uploadGraphMedia(credentials!, input.file);
+    const waMediaId = await uploadGraphMedia(credentials!, file);
     await db
       .update(schema.mediaAsset)
       .set({ waMediaId, updatedAt: new Date() })
@@ -546,15 +624,22 @@ export async function sendMediaMessage(input: {
 
     const mediaPayload: Record<string, unknown> = { id: waMediaId };
     if (input.caption && kind !== "audio") mediaPayload.caption = input.caption;
-    if (kind === "document" && input.file.fileName) {
-      mediaPayload.filename = input.file.fileName;
+    if (kind === "audio" && audio.voice) mediaPayload.voice = true;
+    if (kind === "document" && file.fileName) {
+      mediaPayload.filename = file.fileName;
     }
-    waMessageId = await callGraphSend(credentials!, {
-      messaging_product: "whatsapp",
-      ...target.destinatario,
-      type: kind,
-      [kind]: mediaPayload,
-    });
+    waMessageId = await callGraphSend(
+      credentials!,
+      conCita(
+        {
+          messaging_product: "whatsapp",
+          ...target.destinatario,
+          type: kind,
+          [kind]: mediaPayload,
+        },
+        cita?.message.waMessageId
+      )
+    );
     }
 
     const messageId = await persistOutbound({
@@ -567,6 +652,7 @@ export async function sendMediaMessage(input: {
       origin: "operator",
       mediaAssetId: assetId,
       media: asset,
+      cita,
     });
     return { messageId };
   } catch (err) {
@@ -598,6 +684,7 @@ export async function sendMediaMessage(input: {
       origin: "operator",
       mediaAssetId: assetId,
       media: asset,
+      cita,
     });
     throw sendErr;
   }
@@ -617,6 +704,8 @@ export async function sendStructured(
   input: {
     conversationId: string;
     organizationId: string;
+    /** 039: id local del mensaje al que se responde citando. */
+    replyToMessageId?: string;
   } & (
     | { kind: "location"; location: LocationInput }
     | { kind: "contacts"; contacts: ContactInput[] }
@@ -634,6 +723,7 @@ export async function sendStructured(
       "Este canal não aceita localizações nem contatos; envie o texto"
     );
   }
+  const cita = await resolverMensajeCitado(target, input.replyToMessageId);
 
   const payload =
     input.kind === "location"
@@ -646,11 +736,17 @@ export async function sendStructured(
           })),
         };
 
-  const waMessageId = await callGraphSend(target.credentials, {
-    messaging_product: "whatsapp",
-    ...target.destinatario,
-    ...payload,
-  });
+  const waMessageId = await callGraphSend(
+    target.credentials,
+    conCita(
+      {
+        messaging_product: "whatsapp",
+        ...target.destinatario,
+        ...payload,
+      },
+      cita?.message.waMessageId
+    )
+  );
 
   const db = getDb();
   const assetRows = await db
@@ -675,6 +771,7 @@ export async function sendStructured(
     origin: "operator",
     mediaAssetId: asset.id,
     media: asset,
+    cita,
   });
   return { messageId };
 }

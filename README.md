@@ -235,6 +235,19 @@ flota encima se distinguen, y el texto pasa el contraste AA. Con un color
 propio, los tonos derivados y la tinta de los botones se calculan solos para
 que se lean.
 
+### 📱 En el celular, como una app
+
+Vocero se instala desde el navegador, sin tiendas y con el nombre y el icono
+de tu negocio:
+
+- **Android y computadora (Chrome o Edge)**: en el menú aparece **Instalar
+  app** cuando el navegador lo permite.
+- **iPhone (Safari)**: Compartir → **Agregar a inicio**.
+
+Abre directo en la Bandeja, sin la barra del navegador. Si se va la red, dice
+«Sin conexión» en vez de mostrar conversaciones viejas: no guarda datos de tus
+clientes en el teléfono.
+
 ### 📄 Plantillas · 👥 Multi-usuario · 🔐 Self-hosted
 
 Plantillas con varias variables `{{1}}…{{n}}` y aprobación de Meta
@@ -398,6 +411,14 @@ Vocero **consume** un token de la WhatsApp Cloud API — no implementa el
 Embedded Signup. Hay dos formas de obtenerlo:
 
 ### Modo directo (el negocio tiene su propia app de Meta)
+
+> **Atajo: «Conectar con Meta».** Con `META_APP_ID`,
+> `META_EMBEDDED_CONFIG_ID` y `META_APP_SECRET` en la instancia, Ajustes →
+> WhatsApp muestra un botón que abre la ventana oficial de Meta (Embedded
+> Signup v4) y deja el número conectado sin pegar tokens: registra el número y
+> el webhook solo. Qué poner en el panel de Meta (dominios, configuración de
+> login): [docs/embedded-signup.md](docs/embedded-signup.md). Sin esas
+> variables, sigue el alta manual de abajo.
 
 1. Crea una app en [developers.facebook.com](https://developers.facebook.com)
    con el producto WhatsApp y vincula tu número.

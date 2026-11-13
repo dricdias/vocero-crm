@@ -79,7 +79,10 @@ export class MediaValidationError extends Error {
  * documento (#78): el navegador de quien los abra los trataría como una
  * página, y se servirían desde el origen del CRM.
  */
-export function validateOutgoing(mime: string, sizeBytes: number) {
+export function validateOutgoing(mimeConParametros: string, sizeBytes: number) {
+  // 044: `audio/ogg; codecs=opus` (la nota de voz, o lo que graba Firefox)
+  // trae parámetros; el tipo es lo de antes del `;`.
+  const mime = mimeConParametros.split(";")[0]!.trim();
   if (!/^[\w.-]+\/[\w.+-]+$/.test(mime)) {
     throw new MediaValidationError("unsupported_type", "Tipo de arquivo não reconhecido");
   }
@@ -211,7 +214,12 @@ export async function downloadGraphMedia(
  */
 export async function ensureAssetAvailable(
   organizationId: string,
-  assetId: string
+  assetId: string,
+  /**
+   * Bajarlo aunque figure como disponible: el archivo se perdió (volumen sin
+   * montar, restauración a medias) y la fila todavía no lo sabe.
+   */
+  opts: { forzar?: boolean } = {}
 ): Promise<typeof schema.mediaAsset.$inferSelect | null> {
   const db = getDb();
   const rows = await db
@@ -221,7 +229,7 @@ export async function ensureAssetAvailable(
     .limit(1);
   const asset = rows[0];
   if (!asset || asset.organizationId !== organizationId) return null;
-  if (asset.fetchStatus === "available") return asset;
+  if (asset.fetchStatus === "available" && !opts.forzar) return asset;
   if (!asset.waMediaId) return null; // location/contacts no tienen binario
 
   try {
@@ -230,7 +238,7 @@ export async function ensureAssetAvailable(
       const creds = await getEvolutionByOrg(organizationId);
       const payload = z.object({evolutionCipher: z.string(), evolutionIv: z.string(), evolutionTag: z.string()}).safeParse(asset.payload);
       if (!creds || !payload.success) return null;
-      const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
+      const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.string(), z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
       const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(result.base64);
       if (!match) throw new MediaFetchError("O Evolution Go não retornou um arquivo válido");
       const data = Buffer.from(match[2]!, "base64");
@@ -263,6 +271,35 @@ export async function ensureAssetAvailable(
       .set({ fetchStatus: "failed", fetchError: message, updatedAt: new Date() })
       .where(eq(schema.mediaAsset.id, assetId));
     console.warn(`[media] descarga del asset ${assetId} falló: ${message}`);
+    return null;
+  }
+}
+
+/**
+ * Lee el archivo de un adjunto ya disponible.
+ *
+ * Si la base dice «disponible» pero el archivo no está —el contenedor se
+ * redesplegó sin un volumen en `/data` y se llevó los adjuntos—, se vuelve a
+ * bajar de Meta una vez, que los conserva unos 30 días. Sin esto, el adjunto
+ * quedaba en 410 para siempre aunque Meta todavía lo tuviera. `null` si ni
+ * así se puede: el archivo ya no existe en ningún lado.
+ */
+export async function leerAdjunto(
+  organizationId: string,
+  asset: typeof schema.mediaAsset.$inferSelect
+): Promise<{ asset: typeof schema.mediaAsset.$inferSelect; data: Buffer } | null> {
+  try {
+    return { asset, data: await readMediaFile(organizationId, asset.id) };
+  } catch {
+    // El archivo no está: se intenta recuperar de Meta.
+  }
+  const recuperado = await ensureAssetAvailable(organizationId, asset.id, { forzar: true });
+  if (!recuperado || recuperado.fetchStatus !== "available") return null;
+  try {
+    const data = await readMediaFile(organizationId, asset.id);
+    console.log(`[media] ${asset.id} no estaba en el volumen; se recuperó de Meta`);
+    return { asset: recuperado, data };
+  } catch {
     return null;
   }
 }

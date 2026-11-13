@@ -62,8 +62,48 @@ export type MockWabaSubscription = {
   overrideCallbackUri: string | null;
 };
 
+/**
+ * 065 — Una cuenta de WhatsApp ya partida por el split de Meta de 2026: sus
+ * plantillas viven en `messagingAccountId` y pedírselas a la de WhatsApp
+ * responde `#100` subcode `2388339`, como en producción.
+ */
+export type MockSplitAccount = {
+  messagingAccountId: string;
+  /** Si `?fields=paid_messaging_account_id` la revela (campo no oficial). */
+  descubrible: boolean;
+  /**
+   * 066 — Si `POST {cuenta de WhatsApp}/subscribed_apps` también responde
+   * 2388339, como desde la noche del 28-oct-2026 en producción.
+   */
+  rechazaSuscripcion?: boolean;
+};
+
+/**
+ * 066 — Un número de una WABA, como lo lista `GET {waba}/phone_numbers`.
+ * Lo siembra el self-test del Embedded Signup.
+ */
+export type MockWabaNumber = {
+  id: string;
+  display_phone_number: string;
+  verified_name: string;
+  status: string;
+  platform_type?: string;
+};
+
+/** 044 — Un archivo subido a `{phoneNumberId}/media`, para las aserciones. */
+export type MockUpload = {
+  id: string;
+  /** El campo `type` del formulario, que Meta valida. */
+  type: string;
+  fileName: string;
+  size: number;
+  /** Primeros bytes en hexadecimal (la firma del formato: `4f676753` = OggS). */
+  head: string;
+};
+
 type WaMockState = {
   outbox: OutboxEntry[];
+  uploads: MockUpload[];
   templates: MockTemplate[];
   capiEvents: CapiMockEvent[];
   /** Por WABA ID. Sin entrada = la app no está suscrita a esa WABA. */
@@ -74,6 +114,14 @@ type WaMockState = {
    * que quedó puesto (y que desconectar lo quita) sin mirar dentro del CRM.
    */
   phoneWebhooks: Record<string, string>;
+  /** 065 — Por WABA ID: las cuentas ya partidas. Sin entrada = sin split. */
+  splitAccounts: Record<string, MockSplitAccount>;
+  /** 066 — Por WABA ID: los números que lista `phone_numbers`. */
+  wabaNumbers: Record<string, MockWabaNumber[]>;
+  /** 066 — Por phone_number_id: el PIN con el que se registró. */
+  registrations: Record<string, string>;
+  /** 066 — Los `code` que ya se canjearon (Meta los acepta una vez). */
+  usedCodes: string[];
   counter: number;
 };
 
@@ -82,11 +130,19 @@ const globalForMock = globalThis as unknown as { __waMockState?: WaMockState };
 function freshState(): WaMockState {
   return {
     outbox: [],
+    uploads: [],
     templates: [],
     capiEvents: [],
     wabaSubscriptions: {},
     phoneWebhooks: {},
-    counter: 0,
+    splitAccounts: {},
+    wabaNumbers: {},
+    registrations: {},
+    usedCodes: [],
+    // Arranca en la hora, no en 0: los ids del mock (`wamid.mock.N`) no
+    // chocan con los de un arranque anterior sobre la misma base, que el CRM
+    // descartaría como duplicados (idempotencia por wa_message_id).
+    counter: Date.now(),
   };
 }
 
@@ -96,6 +152,11 @@ export function getWaMockState(): WaMockState {
   }
   // Un proceso de `next dev` que ya tenía el estado viejo en memoria.
   globalForMock.__waMockState.phoneWebhooks ??= {};
+  globalForMock.__waMockState.uploads ??= [];
+  globalForMock.__waMockState.splitAccounts ??= {};
+  globalForMock.__waMockState.wabaNumbers ??= {};
+  globalForMock.__waMockState.registrations ??= {};
+  globalForMock.__waMockState.usedCodes ??= [];
   return globalForMock.__waMockState;
 }
 

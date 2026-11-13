@@ -111,6 +111,8 @@ export function buildInboundPayload(input: {
   text?: string;
   waMessageId?: string;
   timestamp?: number;
+  /** 039 — `wamid` del mensaje que el cliente cita (va en `context.id`). */
+  replyTo?: string;
 } & MockMediaInput &
   MockReferralInput &
   MockButtonInput) {
@@ -123,6 +125,7 @@ export function buildInboundPayload(input: {
   if (input.from) message.from = input.from;
   if (input.fromUserId) message.from_user_id = input.fromUserId;
   applyMockContent(message, type, input);
+  if (input.replyTo) message.context = { from: input.from, id: input.replyTo };
 
   // 016 — El referral solo viaja cuando la conversación nació de un anuncio, y
   // normalmente solo en el primer mensaje. Se arma igual que el real para que

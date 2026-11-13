@@ -438,6 +438,11 @@ export const message = pgTable(
     mediaAssetId: text("media_asset_id").references(() => mediaAsset.id, {
       onDelete: "set null",
     }),
+    /**
+     * 039 — `wamid` del mensaje al que responde (cita). Sin FK: el citado
+     * puede no estar en el CRM; se resuelve al leer (`inbox/quotes.ts`).
+     */
+    replyToWaMessageId: text("reply_to_wa_message_id"),
     waTimestamp: timestamp("wa_timestamp"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
@@ -507,6 +512,12 @@ export const metaCredentials = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
     wabaId: text("waba_id").notNull(),
+    /**
+     * 065 — La Cuenta de mensajes del split de 2026: donde viven las
+     * plantillas y el método de pago. `waba_id` sigue siendo la Cuenta de
+     * WhatsApp (la del número). Nula = instancia de una sola ID, como antes.
+     */
+    messagingAccountId: text("messaging_account_id"),
     phoneNumberId: text("phone_number_id").notNull(),
     displayPhoneNumber: text("display_phone_number"),
     verifiedName: text("verified_name"),
@@ -1293,3 +1304,118 @@ export const evolutionGroupSettings = pgTable("evolution_group_settings", {
   uniqueIndex("evolution_group_settings_org_group_uq").on(t.organizationId, t.groupJid),
   check("evolution_group_settings_mode_ck", sql`${t.replyMode} in ('mentions', 'all')`),
 ]);
+/* ============================================================
+ * 047 — Eventos de webhook guardados antes de procesarse
+ * ============================================================ */
+
+/**
+ * El cuerpo de cada entrega de Meta o Zernio, tal como llegó, guardado ANTES
+ * de acusar recibo. Si procesarlo falla, el barrido lo reintenta con espera
+ * creciente (`src/server/webhooks/`); si no se pudo ni guardar, la ruta
+ * responde 503 y reintenta quien lo mandó.
+ *
+ * Trae datos del cliente: se borra a los 7 días de procesado y a los 30 de
+ * agotado, y nunca sale a la API ni a los logs.
+ */
+export const webhookEvent = pgTable(
+  "webhook_event",
+  {
+    id: text("id").primaryKey(),
+    /** Resuelto al recibir, con las mismas credenciales que usa la ingesta. */
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Quién lo procesa: el adaptador del canal y la fuente. */
+    fuente: text("fuente", {
+      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio"],
+    }).notNull(),
+    payload: jsonb("payload").notNull(),
+    /** SHA-256 del cuerpo crudo: la misma entrega dos veces es una fila. */
+    huella: text("huella").notNull(),
+    status: text("status", {
+      enum: ["pendiente", "en_proceso", "procesado", "agotado"],
+    })
+      .notNull()
+      .default("pendiente"),
+    /** Sube al reclamar: distingue a dos dueños de una misma reserva. */
+    attempts: integer("attempts").notNull().default(0),
+    notBefore: timestamp("not_before").notNull().defaultNow(),
+    leasedUntil: timestamp("leased_until"),
+    /** El mensaje de la excepción, recortado. Nunca el cuerpo. */
+    lastError: text("last_error"),
+    processedAt: timestamp("processed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("webhook_event_huella_uq").on(t.huella),
+    // El barrido solo lee lo vivo: con el índice parcial, una tabla llena de
+    // procesados no lo hace más lento.
+    index("webhook_event_barrido_idx")
+      .on(t.status, t.notBefore)
+      .where(sql`${t.status} in ('pendiente', 'en_proceso')`),
+    // Los conteos de Ajustes → WhatsApp.
+    index("webhook_event_org_status_idx").on(t.organizationId, t.status),
+  ]
+);
+
+/* ============================================================
+ * 049 — Respuestas rápidas («/atajo» en el compositor)
+ * ============================================================ */
+
+/**
+ * Textos que el equipo inserta con `/atajo` en vez de teclearlos otra vez
+ * (horario, pago, envío…). Compartidas por la organización: las administra
+ * quien configura y las usa cualquiera. No son plantillas de Meta: solo sirven
+ * con la ventana abierta.
+ */
+export const quickReply = pgTable(
+  "quick_reply",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Normalizado: minúsculas, sin acentos, `[a-z0-9_-]{1,32}`. */
+    atajo: text("atajo").notNull(),
+    /** Hasta 4 096 caracteres (el tope de WhatsApp). Admite `{nombre}`. */
+    texto: text("texto").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("quick_reply_org_atajo_uq").on(t.organizationId, t.atajo)]
+);
+
+/* ============================================================
+ * 050 — Notas internas en el hilo
+ * ============================================================ */
+
+/**
+ * Lo que el equipo se anota dentro de una conversación y el cliente nunca ve.
+ *
+ * Tabla propia A PROPÓSITO, no un tipo de `message`: el envío a Meta, el
+ * despacho al cerebro, «sin responder», la ventana y las métricas leen
+ * `message`, y así ninguno puede tocar una nota por descuido. Una prueba
+ * vigila que esas rutas no la mencionen.
+ */
+export const conversationNote = pgTable(
+  "conversation_note",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    /** Si se borra la cuenta, la nota queda («Alguien del equipo»). */
+    authorUserId: text("author_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    texto: text("texto").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
+  ]
+);

@@ -65,6 +65,12 @@ export type ChannelCapabilities = {
    * — sin esto se queda con el reloj puesto para siempre.
    */
   deliveryReceipts: boolean;
+  /**
+   * 039 — ¿Se puede responder citando un mensaje concreto? Solo WhatsApp
+   * (`context.message_id`). Zernio ignora la cita en Instagram y Messenger, e
+   * Instagram con Instagram Login no la documenta (spec 039 · D5).
+   */
+  quoteReplies: boolean;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -85,6 +91,7 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     outboundMedia: true,
     structuredMessages: true,
     deliveryReceipts: true,
+    quoteReplies: true,
   },
   instagram: {
     label: CHANNEL_LABEL.instagram,
@@ -100,6 +107,7 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     outboundMedia: false,
     structuredMessages: false,
     deliveryReceipts: false,
+    quoteReplies: false,
   },
   // 017: Messenger comparte la plataforma de mensajería de Meta con Instagram
   // (misma ventana de 24 h, misma etiqueta HUMAN_AGENT fuera de ella, sin
@@ -117,6 +125,7 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     outboundMedia: false,
     structuredMessages: false,
     deliveryReceipts: false,
+    quoteReplies: false,
   },
   /**
    * 022: lo que TikTok impone a los mensajes directos de una cuenta de
@@ -137,6 +146,7 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     outboundMedia: false,
     structuredMessages: false,
     deliveryReceipts: false,
+    quoteReplies: false,
   },
 };
 

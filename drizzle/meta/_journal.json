@@ -162,6 +162,41 @@
       "when": 1792555016502,
       "tag": "0022_evolution_group_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794538836616,
+      "tag": "0023_responder_citando",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794538989265,
+      "tag": "0024_webhook_event",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794539058095,
+      "tag": "0025_quick_reply",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794539090514,
+      "tag": "0026_conversation_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794539410725,
+      "tag": "0027_cuenta_de_mensajes",
+      "breakpoints": true
     }
   ]
 }

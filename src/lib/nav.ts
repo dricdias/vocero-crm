@@ -133,7 +133,11 @@ export function settingsSections({
 
   const negocio: SettingsLink[] = [
     { href: "/settings/branding", label: "Marca" },
+    // 062 — Tema, fonte, tamanho e densidade (cada um com a sua).
+    { href: "/settings/appearance", label: "Aparência" },
     { href: "/settings/templates", label: "Templates" },
+    // 049 — o que a equipe insere com «/atalho» na Caixa de entrada.
+    { href: "/settings/quick-replies", label: "Respostas rápidas" },
     { href: "/settings/team", label: "Equipe" },
   ];
   if (atribucion) negocio.push({ href: "/settings/ads", label: "Anúncios" });

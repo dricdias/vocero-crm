@@ -1,13 +1,12 @@
-import { after } from "next/server";
 import { getEnv } from "@/lib/env";
 import { isValidSignature, isValidWebhookToken } from "@/server/inbox/webhook";
-import { processMetaInstagramPayload } from "@/server/instagram/ingest";
 import {
   channelDisabledResponse,
   isChannelEnabled,
 } from "@/server/channels/enabled";
 import { zernioSignatureFrom } from "@/server/zernio";
-import { isAuthenticZernioDelivery, processZernioPayload } from "@/server/zernio/dispatch";
+import { isAuthenticZernioDelivery } from "@/server/zernio/dispatch";
+import { recibirEvento } from "@/server/webhooks/recibir";
 
 /**
  * 014 — Webhook público del canal de Instagram.
@@ -81,22 +80,10 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
 
-  // Zernio corta a los 5 segundos y reintenta: se acusa recibo YA y se procesa
-  // fuera de la ruta.
-  after(async () => {
-    try {
-      // Un evento de Zernio se reparte por plataforma: esa API entrega TODAS
-      // las cuentas de la llave por un solo webhook, asi que esta URL tambien
-      // puede traer mensajes de la pagina de Facebook.
-      if (isMeta) {
-        await processMetaInstagramPayload(payload);
-      } else {
-        await processZernioPayload(payload);
-      }
-    } catch (err) {
-      console.error("[ig] error procesando payload:", err);
-    }
-  });
-
-  return Response.json({ received: true });
+  // Zernio corta a los 5 segundos y reintenta: se guarda, se acusa recibo YA
+  // y se procesa fuera de la ruta (047: si falla, lo reintenta el barrido).
+  // Un evento de Zernio se reparte por plataforma: esa API entrega TODAS las
+  // cuentas de la llave por un solo webhook, asi que esta URL tambien puede
+  // traer mensajes de la pagina de Facebook.
+  return recibirEvento(isMeta ? "meta_instagram" : "zernio", payload, rawBody, "ig");
 }
