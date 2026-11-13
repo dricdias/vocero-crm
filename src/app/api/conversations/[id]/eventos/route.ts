@@ -9,6 +9,6 @@ type Params = { params: Promise<{ id: string }> };
 export const GET = withAuth(async (session, _req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const eventos = await eventosDeConversacion(session.organizationId, id);
-  if (!eventos) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!eventos) return apiError(404, "not_found", "Conversa não encontrada");
   return Response.json({ eventos });
 });

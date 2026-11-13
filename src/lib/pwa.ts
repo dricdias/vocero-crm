@@ -62,7 +62,7 @@ export function buildManifest(
     name: branding.name,
     short_name: shortAppName(branding.name),
     description,
-    lang: "es",
+    lang: "pt-BR",
     dir: "ltr",
     // Quien abre la app instalada viene a contestar: directo a la Bandeja, no a
     // la guía de inicio (que sigue a un clic en el menú). `id` se queda en «/»

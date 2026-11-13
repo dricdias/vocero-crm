@@ -76,7 +76,7 @@ export function AparienciaClient({
 
   function usarLaDelNegocio() {
     guardarAparienciaPropia(null);
-    setAviso("Ahora ves la apariencia del equipo.");
+    setAviso("Agora você vê a aparência da equipe.");
     router.refresh();
     setTimeout(() => window.location.reload(), 50);
   }
@@ -94,10 +94,10 @@ export function AparienciaClient({
     setGuardando(false);
     if (!res?.ok) {
       const d = (await res?.json().catch(() => null)) as { error?: { message?: string } } | null;
-      setError(d?.error?.message ?? "No se pudo guardar. Revisa la conexión.");
+      setError(d?.error?.message ?? "Não foi possível salvar. Verifique a conexão.");
       return;
     }
-    setAviso("Aplicada a todo el equipo: la ve quien no eligió la suya.");
+    setAviso("Aplicada a toda a equipe: vale para quem não escolheu a própria.");
     router.refresh();
   }
 
@@ -107,15 +107,15 @@ export function AparienciaClient({
         <CardHeader>
           <CardTitle>Tema</CardTitle>
           <CardDescription>
-            Cambia los colores, el fondo y la forma de toda la app. El acento de tu
-            marca se queda en todos.
+            Muda as cores, o fundo e o formato de todo o app. A cor de destaque da
+            sua marca fica em todos.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div role="radiogroup" aria-label="Tema" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[...TEMA_IDS, "propio" as const].map((id) => {
               const activo = a.tema === id;
-              const nombre = id === "propio" ? "Propio" : TEMAS[id].nombre;
+              const nombre = id === "propio" ? "Personalizado" : TEMAS[id].nombre;
               const t = tokensMiniatura(id === "propio" ? { tema: "propio", propio: colores } : { tema: id });
               return (
                 <button
@@ -137,7 +137,7 @@ export function AparienciaClient({
                     {activo && <Check className="h-4 w-4 shrink-0 text-brand-ink" strokeWidth={2.2} aria-hidden />}
                   </span>
                   <span className="block px-1 pb-0.5 text-[11.5px] leading-snug text-text-3">
-                    {id === "propio" ? "Tus tres colores." : TEMAS[id].descripcion}
+                    {id === "propio" ? "Suas três cores." : TEMAS[id].descripcion}
                   </span>
                 </button>
               );
@@ -149,15 +149,15 @@ export function AparienciaClient({
               <div className="flex flex-wrap gap-4">
                 {(
                   [
-                    ["fondo", "Fondo"],
+                    ["fondo", "Fundo"],
                     ["texto", "Texto"],
-                    ["marco", "Marco"],
+                    ["marco", "Moldura"],
                   ] as const
                 ).map(([k, etiqueta]) => (
                   <label key={k} className="flex items-center gap-2 text-[13px] font-medium">
                     <input
                       type="color"
-                      aria-label={`Color de ${etiqueta.toLowerCase()}`}
+                      aria-label={`Cor de ${etiqueta.toLowerCase()}`}
                       value={colores[k]}
                       onChange={(e) => {
                         tocado.current = true;
@@ -172,7 +172,7 @@ export function AparienciaClient({
               </div>
               {propio.ok ? (
                 <p className="text-xs text-text-3">
-                  Vocero arma los demás tonos con estos tres ({propio.modo === "dark" ? "tema oscuro" : "tema claro"}).
+                  O Vocero monta os outros tons com estas três ({propio.modo === "dark" ? "tema escuro" : "tema claro"}).
                 </p>
               ) : (
                 <p role="alert" className="text-xs text-destructive">
@@ -186,13 +186,13 @@ export function AparienciaClient({
 
       <Card>
         <CardHeader>
-          <CardTitle>Letra, tamaño y densidad</CardTitle>
-          <CardDescription>Para ver mejor o para ver más a la vez.</CardDescription>
+          <CardTitle>Fonte, tamanho e densidade</CardTitle>
+          <CardDescription>Para enxergar melhor ou ver mais de uma vez.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <fieldset>
-            <legend className="mb-2 text-[13px] font-semibold">Letra</legend>
-            <div role="radiogroup" aria-label="Letra" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <legend className="mb-2 text-[13px] font-semibold">Fonte</legend>
+            <div role="radiogroup" aria-label="Fonte" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {(Object.keys(LETRAS) as LetraId[]).map((id) => (
                 <button
                   key={id}
@@ -208,19 +208,19 @@ export function AparienciaClient({
                   style={{ fontFamily: `var(${LETRAS[id].variable})` }}
                 >
                   <span className="block text-[15px] font-semibold">Aa · {LETRAS[id].nombre}</span>
-                  <span className="block truncate text-[12px] text-text-3">Hola, ¿tienen envíos?</span>
+                  <span className="block truncate text-[12px] text-text-3">Oi, vocês fazem entrega?</span>
                 </button>
               ))}
             </div>
           </fieldset>
           <Segmentos
-            titulo="Tamaño"
+            titulo="Tamanho"
             opciones={(Object.keys(TAMANOS) as TamanoId[]).map((id) => [id, TAMANOS[id].nombre])}
             valor={a.tamano}
             onCambio={(v) => cambiar((x) => ({ ...x, tamano: v as TamanoId }))}
           />
           <Segmentos
-            titulo="Densidad"
+            titulo="Densidade"
             opciones={(Object.keys(DENSIDADES) as DensidadId[]).map((id) => [id, DENSIDADES[id].nombre])}
             valor={a.densidad}
             onCambio={(v) => cambiar((x) => ({ ...x, densidad: v as DensidadId }))}
@@ -231,21 +231,21 @@ export function AparienciaClient({
       <div className="space-y-3">
         <p className="text-[13px] text-text-3">
           {propia
-            ? "Tus cambios se guardan solos, solo para ti y en este equipo."
+            ? "Suas mudanças são salvas sozinhas, só para você e neste computador."
             : delNegocio
-              ? "Estás viendo la apariencia del equipo. Lo que cambies se guarda solo para ti."
-              : "Estás viendo la apariencia de siempre de Vocero. Lo que cambies se guarda solo para ti."}
+              ? "Você está vendo a aparência da equipe. O que mudar fica salvo só para você."
+              : "Você está vendo a aparência padrão do Vocero. O que mudar fica salvo só para você."}
         </p>
         <div className="flex flex-wrap gap-2">
           {/* Solo dueño y administradores: lo ven todos los que no eligieron la suya. */}
           {puedeConfigurar && (
             <Button onClick={() => void guardarDelNegocio()} disabled={guardando || (a.tema === "propio" && !propio.ok)}>
-              {guardando ? "Aplicando…" : "Aplicar a todo el equipo"}
+              {guardando ? "Aplicando…" : "Aplicar a toda a equipe"}
             </Button>
           )}
           {propia && (
             <Button variant="ghost" onClick={usarLaDelNegocio}>
-              Usar la del equipo
+              Usar a da equipe
             </Button>
           )}
         </div>

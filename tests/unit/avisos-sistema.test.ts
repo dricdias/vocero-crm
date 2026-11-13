@@ -41,11 +41,11 @@ describe("056 — qué dice", () => {
   });
 
   it("un adjunto dice qué es, o su pie si trae", () => {
-    expect(cuerpoAviso({ type: "audio", text: null, media: { kind: "audio" } })).toBe("Audio");
+    expect(cuerpoAviso({ type: "audio", text: null, media: { kind: "audio" } })).toBe("Áudio");
     expect(cuerpoAviso({ type: "image", text: null, media: { kind: "image", caption: "Así lo quiero" } })).toBe(
       "Así lo quiero"
     );
-    expect(cuerpoAviso({ type: "location", text: null })).toBe("Ubicación");
+    expect(cuerpoAviso({ type: "location", text: null })).toBe("Localização");
   });
 
   it("lleva a su conversación, y solo a rutas de la Bandeja", () => {

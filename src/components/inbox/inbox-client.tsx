@@ -523,7 +523,7 @@ export function InboxClient({
                 }).catch(() => null);
                 if (!res?.ok) {
                   const d = (await res?.json().catch(() => null)) as { error?: { message?: string } } | null;
-                  return d?.error?.message ?? "No se pudo guardar la nota. Revisa la conexión.";
+                  return d?.error?.message ?? "Não foi possível salvar a nota. Verifique a conexão.";
                 }
                 const { nota } = (await res.json()) as { nota: NotaDto };
                 if (selectedIdRef.current === id) {
@@ -537,7 +537,7 @@ export function InboxClient({
                 notas={notas}
                 eventos={eventos}
                 onBorrarNota={async (n) => {
-                  if (!window.confirm("¿Borrar esta nota interna?")) return;
+                  if (!window.confirm("Apagar esta nota interna?")) return;
                   const res = await fetch(`/api/conversations/${n.conversationId}/notes/${n.id}`, {
                     method: "DELETE",
                   }).catch(() => null);

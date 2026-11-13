@@ -37,21 +37,21 @@ export type Tema = {
 export const TEMAS: Record<TemaId, Tema> = {
   menta: {
     nombre: "Menta",
-    descripcion: "Tarjetas blancas sobre menta suave. El de siempre.",
+    descripcion: "Cartões brancos sobre menta suave. O de sempre.",
     modo: "light",
     pareja: "noche",
     tokens: {},
   },
   noche: {
-    nombre: "Noche",
-    descripcion: "La pareja oscura de Menta.",
+    nombre: "Noite",
+    descripcion: "O par escuro do Menta.",
     modo: "dark",
     pareja: "menta",
     tokens: {},
   },
   vocero: {
     nombre: "Vocero",
-    descripcion: "El azul papel frío de la 2.x.",
+    descripcion: "O azul papel frio da 2.x.",
     modo: "light",
     pareja: "vocero-oscuro",
     tokens: {
@@ -92,8 +92,8 @@ export const TEMAS: Record<TemaId, Tema> = {
     },
   },
   "vocero-oscuro": {
-    nombre: "Vocero oscuro",
-    descripcion: "El azul marino de la 2.x.",
+    nombre: "Vocero escuro",
+    descripcion: "O azul-marinho da 2.x.",
     modo: "dark",
     pareja: "vocero",
     tokens: {
@@ -135,7 +135,7 @@ export const TEMAS: Record<TemaId, Tema> = {
   },
   papel: {
     nombre: "Papel",
-    descripcion: "Cálido: crema, tinta café y esquinas suaves.",
+    descripcion: "Quente: creme, tinta café e cantos suaves.",
     modo: "light",
     pareja: "carbon",
     tokens: {
@@ -176,8 +176,8 @@ export const TEMAS: Record<TemaId, Tema> = {
     },
   },
   carbon: {
-    nombre: "Carbón",
-    descripcion: "La pareja oscura de Papel: negro cálido.",
+    nombre: "Carvão",
+    descripcion: "O par escuro do Papel: preto quente.",
     modo: "dark",
     pareja: "papel",
     tokens: {
@@ -218,8 +218,8 @@ export const TEMAS: Record<TemaId, Tema> = {
     },
   },
   medianoche: {
-    nombre: "Medianoche",
-    descripcion: "Casi negro y nítido, al estilo Linear.",
+    nombre: "Meia-noite",
+    descripcion: "Quase preto e nítido, no estilo Linear.",
     modo: "dark",
     pareja: "menta",
     tokens: {
@@ -261,7 +261,7 @@ export const TEMAS: Record<TemaId, Tema> = {
   },
   "alto-contraste": {
     nombre: "Alto contraste",
-    descripcion: "Blanco y negro, bordes marcados. Para ver mejor.",
+    descripcion: "Preto e branco, bordas marcadas. Para enxergar melhor.",
     modo: "light",
     pareja: "medianoche",
     tokens: {
@@ -318,7 +318,7 @@ export const LETRAS = {
 export type LetraId = keyof typeof LETRAS;
 
 export const TAMANOS = {
-  chico: { nombre: "Chico", escala: 0.93 },
+  chico: { nombre: "Pequeno", escala: 0.93 },
   normal: { nombre: "Normal", escala: 1 },
   grande: { nombre: "Grande", escala: 1.1 },
 } as const;
@@ -428,12 +428,12 @@ function suavizar(texto: string, fondos: string[], min: number, hasta: number): 
 export function temaPropio(
   c: { fondo: string; texto: string; marco: string } | undefined
 ): { ok: true; modo: Modo; tokens: Record<string, string> } | { ok: false; error: string } {
-  if (!c) return { ok: false, error: "Elige los tres colores." };
+  if (!c) return { ok: false, error: "Escolha as três cores." };
   const { fondo, texto, marco } = c;
   if (contraste(texto, fondo) < 7) {
     return {
       ok: false,
-      error: `El texto casi no se lee sobre el fondo (${contraste(texto, fondo).toFixed(1)}:1; hace falta 7:1).`,
+      error: `O texto quase não se lê sobre o fundo (${contraste(texto, fondo).toFixed(1)}:1; precisa de 7:1).`,
     };
   }
   const modo: Modo = luminancia(fondo) < luminancia(texto) ? "dark" : "light";
@@ -445,7 +445,7 @@ export function temaPropio(
   const texto2 = suavizar(texto, superficies, 7, 0.4);
   const texto3 = suavizar(texto, superficies, 4.6, 0.6);
   if (superficies.some((s) => contraste(texto3, s) < 4.5)) {
-    return { ok: false, error: "Con ese marco, los textos secundarios no se leen. Prueba un marco más cercano al fondo." };
+    return { ok: false, error: "Com essa moldura, os textos secundários não se leem. Tente uma moldura mais próxima do fundo." };
   }
   const tokens: Record<string, string> = {
     "--bg": fondo,

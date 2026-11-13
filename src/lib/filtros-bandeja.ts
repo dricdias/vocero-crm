@@ -17,9 +17,9 @@ export function porVencer(c: ConVentana): boolean {
 /** «Vence en 1 h 20 min» / «Vence en 45 min» / «Vence en menos de 1 min». */
 export function etiquetaVence(ms: number): string {
   const min = Math.floor(ms / 60_000);
-  if (min < 1) return "Vence en menos de 1 min";
+  if (min < 1) return "Vence em menos de 1 min";
   const h = Math.floor(min / 60);
   const m = min % 60;
-  if (h === 0) return `Vence en ${m} min`;
-  return m === 0 ? `Vence en ${h} h` : `Vence en ${h} h ${m} min`;
+  if (h === 0) return `Vence em ${m} min`;
+  return m === 0 ? `Vence em ${h} h` : `Vence em ${h} h ${m} min`;
 }

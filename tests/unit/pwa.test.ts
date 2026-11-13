@@ -38,7 +38,7 @@ describe("el manifest", () => {
       start_url: "/inbox",
       scope: "/",
       id: "/",
-      lang: "es",
+      lang: "pt-BR",
       theme_color: NAV_INK,
       background_color: NAV_INK,
     });

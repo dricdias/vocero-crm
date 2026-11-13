@@ -63,15 +63,15 @@ export function EntregasCard() {
     }).catch(() => null);
     setReintentando(false);
     if (!res?.ok) {
-      setAviso("No se pudo reintentar. Revisa la conexión con el servidor.");
+      setAviso("Não foi possível tentar de novo. Verifique a conexão com o servidor.");
       return;
     }
     const data = (await res.json()) as Entregas & { reintentados: number };
     setEstado(data);
     setAviso(
       data.agotados === 0 && data.pendientes === 0
-        ? `Listo: ${data.reintentados === 1 ? "entró el evento" : `entraron los ${data.reintentados} eventos`}.`
-        : "Se reintentó. Lo que vuelva a fallar sigue aquí."
+        ? `Pronto: ${data.reintentados === 1 ? "o evento entrou" : `os ${data.reintentados} eventos entraram`}.`
+        : "Tentamos de novo. O que voltar a falhar continua aqui."
     );
   }
 
@@ -82,9 +82,9 @@ export function EntregasCard() {
       <CardHeader>
         <CardTitle>Entregas</CardTitle>
         <CardDescription>
-          Cada mensaje que llega se guarda antes de procesarse. Si algo falla,
-          se reintenta solo; lo que no entra después de seis intentos se queda
-          aquí para que lo reintentes.
+          Cada mensagem que chega é salva antes de ser processada. Se algo falhar,
+          tentamos de novo sozinhos; o que não entrar depois de seis tentativas fica
+          aqui para você tentar de novo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -97,8 +97,8 @@ export function EntregasCard() {
             <div className="min-w-[12rem] flex-1 space-y-1">
               <p className="font-medium text-danger-text">
                 {estado.agotados === 1
-                  ? "1 entrega no pudo entrar a la bandeja."
-                  : `${estado.agotados} entregas no pudieron entrar a la bandeja.`}
+                  ? "1 entrega não conseguiu entrar na caixa de entrada."
+                  : `${estado.agotados} entregas não conseguiram entrar na caixa de entrada.`}
               </p>
               {estado.ultimoError && (
                 <p className="break-words text-danger-text opacity-80">
@@ -114,14 +114,14 @@ export function EntregasCard() {
               onClick={() => void reintentar()}
             >
               <RotateCw className="h-4 w-4" />
-              {reintentando ? "Reintentando…" : "Reintentar"}
+              {reintentando ? "Tentando de novo…" : "Tentar de novo"}
             </Button>
           </div>
         ) : (
           !enReintento && (
             <p className="flex items-center gap-2 text-sm text-success">
-              <CheckCircle2 className="h-4 w-4" /> Entregas al día: todo lo que
-              llegó entró a la bandeja.
+              <CheckCircle2 className="h-4 w-4" /> Entregas em dia: tudo o que
+              chegou entrou na caixa de entrada.
             </p>
           )
         )}
@@ -129,8 +129,8 @@ export function EntregasCard() {
           <p className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-xs text-warning-text">
             <RotateCw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             {estado.pendientes === 1
-              ? "1 entrega en reintento: entra sola en cuanto se pueda procesar."
-              : `${estado.pendientes} entregas en reintento: entran solas en cuanto se puedan procesar.`}
+              ? "1 entrega em nova tentativa: entra sozinha assim que puder ser processada."
+              : `${estado.pendientes} entregas em nova tentativa: entram sozinhas assim que puderem ser processadas.`}
           </p>
         )}
         {aviso && <p className="text-xs text-muted-foreground">{aviso}</p>}

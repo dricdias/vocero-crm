@@ -50,7 +50,7 @@ const putSchema = z.object({
    * 065 — La Cuenta de mensajes del split de 2026 (plantillas y pago).
    * Ausente: se conserva la guardada, o se intenta descubrir. Vacía: se borra.
    */
-  messagingAccountId: z.string().trim().regex(/^\d*$/, "Debe ser un ID numérico").optional(),
+  messagingAccountId: z.string().trim().regex(/^\d*$/, "Deve ser um ID numérico").optional(),
 });
 
 /**

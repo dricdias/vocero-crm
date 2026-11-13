@@ -126,7 +126,7 @@ async function intentar(fila: FilaEvento): Promise<void> {
       programarBarrido(cuando);
     } else {
       console.error(
-        `[webhooks] ${fila.id} agotado tras ${fila.attempts} intentos: ${mensaje(err)}. Se puede reintentar en Configuración → WhatsApp.`
+        `[webhooks] ${fila.id} agotado tras ${fila.attempts} intentos: ${mensaje(err)}. Dá para tentar de novo em Configurações → WhatsApp.`
       );
     }
     return;

@@ -22,9 +22,9 @@ describe("por vencer", () => {
 
 describe("el chip «Vence en…»", () => {
   it("horas y minutos, sin ceros de más", () => {
-    expect(etiquetaVence(80 * 60_000)).toBe("Vence en 1 h 20 min");
-    expect(etiquetaVence(2 * H)).toBe("Vence en 2 h");
-    expect(etiquetaVence(45 * 60_000 + 30_000)).toBe("Vence en 45 min");
-    expect(etiquetaVence(20_000)).toBe("Vence en menos de 1 min");
+    expect(etiquetaVence(80 * 60_000)).toBe("Vence em 1 h 20 min");
+    expect(etiquetaVence(2 * H)).toBe("Vence em 2 h");
+    expect(etiquetaVence(45 * 60_000 + 30_000)).toBe("Vence em 45 min");
+    expect(etiquetaVence(20_000)).toBe("Vence em menos de 1 min");
   });
 });

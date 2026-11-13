@@ -299,7 +299,7 @@ export function AudioPlayer({ src, className }: { src: string; className?: strin
       <button
         type="button"
         onClick={() => void alternar()}
-        aria-label={reproduciendo ? "Pausar audio" : "Reproducir audio"}
+        aria-label={reproduciendo ? "Pausar áudio" : "Reproduzir áudio"}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-brand-fg shadow-sm transition-colors hover:bg-brand-hover"
       >
         {estado === "cargando" && !analisis ? (
@@ -315,7 +315,7 @@ export function AudioPlayer({ src, className }: { src: string; className?: strin
           ref={ondaRef}
           role="slider"
           tabIndex={0}
-          aria-label="Posición del audio"
+          aria-label="Posição do áudio"
           aria-valuemin={0}
           aria-valuemax={Math.round(duracion ?? 0)}
           aria-valuenow={Math.round(actual)}
@@ -362,8 +362,8 @@ export function AudioPlayer({ src, className }: { src: string; className?: strin
       <button
         type="button"
         onClick={cambiarVelocidad}
-        aria-label={`Velocidad ${velocidad}×. Cambiar velocidad`}
-        title="Velocidad de reproducción"
+        aria-label={`Velocidade ${velocidad}×. Mudar velocidade`}
+        title="Velocidade de reprodução"
         className="w-[42px] shrink-0 rounded-full border border-border-strong bg-background px-1.5 py-0.5 text-center text-[11.5px] font-semibold tabular-nums text-text-2 transition-colors hover:border-brand hover:text-brand-ink"
       >
         {velocidad}×

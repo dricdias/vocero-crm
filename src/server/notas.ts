@@ -24,7 +24,7 @@ export class NotaError extends Error {
 }
 
 export const notaSchema = z.object({
-  texto: z.string().trim().min(1, "la nota no puede ir vacía").max(NOTA_MAX),
+  texto: z.string().trim().min(1, "a nota não pode ficar vazia").max(NOTA_MAX),
 });
 
 type Quien = { organizationId: string; userId: string; configura: boolean };
@@ -35,7 +35,7 @@ async function conversacionDeLaOrganizacion(organizationId: string, conversation
     .from(schema.conversation)
     .where(scoped(schema.conversation.organizationId, organizationId, eq(schema.conversation.id, conversationId)))
     .limit(1);
-  if (!conv) throw new NotaError(404, "not_found", "Conversación no encontrada");
+  if (!conv) throw new NotaError(404, "not_found", "Conversa não encontrada");
 }
 
 function aDto(
@@ -48,7 +48,7 @@ function aDto(
     conversationId: fila.conversationId,
     texto: fila.texto,
     createdAt: fila.createdAt.toISOString(),
-    autor: fila.authorUserId ? { id: fila.authorUserId, nombre: autorNombre ?? "Alguien del equipo" } : null,
+    autor: fila.authorUserId ? { id: fila.authorUserId, nombre: autorNombre ?? "Alguém da equipe" } : null,
     puedeBorrar: puedeBorrarNota(fila.authorUserId, quien.userId, quien.configura),
   };
 }
@@ -112,9 +112,9 @@ export async function borrarNota(quien: Quien, conversationId: string, noteId: s
       )
     )
     .limit(1);
-  if (!fila) throw new NotaError(404, "not_found", "Nota no encontrada");
+  if (!fila) throw new NotaError(404, "not_found", "Nota não encontrada");
   if (!puedeBorrarNota(fila.authorUserId, quien.userId, quien.configura)) {
-    throw new NotaError(403, "forbidden", "Solo quien la escribió o quien administra puede borrarla");
+    throw new NotaError(403, "forbidden", "Só quem a escreveu ou quem administra pode apagá-la");
   }
   await db
     .delete(schema.conversationNote)

@@ -88,7 +88,7 @@ export function BotonInstalar({ className }: { className?: string }) {
         setEvento(null);
         await evento.prompt().catch(() => {});
       }}
-      title="Instalar la app en este dispositivo"
+      title="Instalar o app neste dispositivo"
       className={cn("w-full text-left", className)}
     >
       <MonitorDown className="h-5 w-5 shrink-0 text-text-3" strokeWidth={1.8} aria-hidden />

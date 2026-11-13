@@ -220,7 +220,7 @@ export async function registerWebhookForNumber(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta ya no acepta suscribir la app en la cuenta de WhatsApp (#100/2388339, el split de 2026): escribe el ID de la Cuenta de mensajes y vuelve a registrar el webhook.",
+          "A Meta não aceita mais inscrever o app na conta do WhatsApp (#100/2388339, a separação de 2026): informe o ID da Conta de mensagens e registre o webhook de novo.",
       };
     }
     if (!messagingAccount.ok) return messagingAccount;
@@ -340,7 +340,7 @@ async function registerWebhookForMessagingAccount(opts: {
       body: { override_callback_uri: webhookUrl, verify_token: verifyToken },
     });
   } catch (err) {
-    return messagingAccountError(err, "No se pudo suscribir la app a la Cuenta de mensajes");
+    return messagingAccountError(err, "Não foi possível inscrever o app na Conta de mensagens");
   }
 
   try {
@@ -353,12 +353,12 @@ async function registerWebhookForMessagingAccount(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta aceptó el webhook en la Cuenta de mensajes pero no lo confirma. Vuelve a intentarlo en unos minutos.",
+          "A Meta aceitou o webhook na Conta de mensagens mas não o confirma. Tente de novo em alguns minutos.",
       };
     }
     return { ok: true };
   } catch (err) {
-    return messagingAccountError(err, "No se pudo confirmar el webhook en la Cuenta de mensajes");
+    return messagingAccountError(err, "Não foi possível confirmar o webhook na Conta de mensagens");
   }
 }
 
@@ -501,7 +501,7 @@ function messagingAccountError(
   if (res.ok || res.code !== "missing_permission") return res.ok ? { ok: true } : res;
   return {
     ...res,
-    message: `${context}: el usuario del sistema no tiene asignada la Cuenta de mensajes (Usuarios del sistema › Asignar activos › Messaging accounts). El mismo token sirve en cuanto se asigna.`,
+    message: `${context}: o usuário do sistema não tem a Conta de mensagens atribuída (Usuários do sistema › Atribuir ativos › Messaging accounts). O mesmo token serve assim que for atribuída.`,
   };
 }
 

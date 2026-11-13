@@ -34,15 +34,15 @@ function elegirFormato() {
 function motivoDelError(err: unknown): string {
   const nombre = err instanceof DOMException ? err.name : "";
   if (nombre === "NotAllowedError" || nombre === "SecurityError") {
-    return "Permite el micrófono en el navegador para grabar notas de voz.";
+    return "Permita o microfone no navegador para gravar notas de voz.";
   }
   if (nombre === "NotFoundError" || nombre === "OverconstrainedError") {
-    return "No se encontró un micrófono en este equipo.";
+    return "Nenhum microfone foi encontrado neste computador.";
   }
   if (nombre === "NotReadableError") {
-    return "Otro programa está usando el micrófono. Ciérralo y vuelve a intentar.";
+    return "Outro programa está usando o microfone. Feche-o e tente de novo.";
   }
-  return "No se pudo empezar a grabar. Vuelve a intentar.";
+  return "Não foi possível começar a gravar. Tente de novo.";
 }
 
 export function VoiceRecorder({
@@ -90,8 +90,8 @@ export function VoiceRecorder({
       if (!navigator.mediaDevices?.getUserMedia || !formato) {
         onError(
           window.isSecureContext
-            ? "Este navegador no puede grabar audio. Prueba con Chrome, Edge, Firefox o Safari al día."
-            : "Grabar notas de voz necesita abrir el CRM por https."
+            ? "Este navegador não consegue gravar áudio. Use Chrome, Edge, Firefox ou Safari atualizado."
+            : "Gravar notas de voz exige abrir o CRM por https."
         );
         return;
       }
@@ -247,7 +247,7 @@ export function VoiceRecorder({
               {formatoTiempo(segundos)}
             </span>
             <span className="sr-only">
-              {fase === "pidiendo" ? "Pidiendo el micrófono…" : "Grabando nota de voz"}
+              {fase === "pidiendo" ? "Pedindo o microfone…" : "Gravando nota de voz"}
             </span>
             <div aria-hidden className="flex h-6 min-w-0 flex-1 items-center gap-px overflow-hidden">
               {niveles.map((n, i) => (
@@ -262,8 +262,8 @@ export function VoiceRecorder({
               <button
                 type="button"
                 onClick={() => recorder.current?.state === "recording" && recorder.current.stop()}
-                aria-label="Detener y escuchar"
-                title="Detener y escuchar antes de enviar"
+                aria-label="Parar e ouvir"
+                title="Parar e ouvir antes de enviar"
                 className="rounded-full p-1.5 text-danger-text transition-colors hover:bg-danger-tint"
               >
                 <Square className="h-4 w-4" fill="currentColor" strokeWidth={0} />

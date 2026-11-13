@@ -235,12 +235,12 @@ describe("042 — la imagen que acepta el compositor", () => {
   it("rechaza varias, otro formato o más de 5 MB, con el verbo del gesto", () => {
     expect(validarImagenAdjunta([png(), png()], "paste")).toEqual({
       ok: false,
-      error: "Pega una imagen a la vez.",
+      error: "Cole uma imagem por vez.",
     });
-    expect(validarImagenAdjunta([], "drop")).toEqual({ ok: false, error: "Arrastra una imagen a la vez." });
+    expect(validarImagenAdjunta([], "drop")).toEqual({ ok: false, error: "Arraste uma imagem por vez." });
     expect(validarImagenAdjunta([png(10, "image/gif")], "paste")).toEqual({
       ok: false,
-      error: "Pega una imagen JPEG, PNG o WebP.",
+      error: "Cole uma imagem JPEG, PNG ou WebP.",
     });
     expect(validarImagenAdjunta([png(5 * 1024 * 1024 + 1)], "paste")).toMatchObject({ ok: false });
   });

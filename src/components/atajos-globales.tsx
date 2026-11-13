@@ -146,8 +146,8 @@ function BarraDeComandos({
             aria-expanded="true"
             aria-controls="barra-resultados"
             aria-activedescendant={resultados.length ? `barra-opcion-${activo}` : undefined}
-            aria-label="Buscar pantalla o conversación"
-            placeholder="Busca una pantalla o una conversación…"
+            aria-label="Buscar tela ou conversa"
+            placeholder="Busque uma tela ou uma conversa…"
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -168,13 +168,13 @@ function BarraDeComandos({
         </div>
         <ul id="barra-resultados" ref={listaRef} role="listbox" className="min-h-0 flex-1 overflow-y-auto p-1.5">
           {resultados.length === 0 && (
-            <li className="px-3 py-6 text-center text-sm text-text-3">Nada coincide con «{q}».</li>
+            <li className="px-3 py-6 text-center text-sm text-text-3">Nada encontrado para «{q}».</li>
           )}
           {resultados.map((r, i) => (
             <li key={r.clase === "pantalla" ? r.item.href : r.conv.id} role="presentation">
               {(i === 0 || i === primeraConversacion) && (
                 <span className="kicker block px-2.5 pb-1 pt-2 text-text-3" aria-hidden>
-                  {r.clase === "pantalla" ? "Pantallas" : "Conversaciones"}
+                  {r.clase === "pantalla" ? "Telas" : "Conversas"}
                 </span>
               )}
               <div
@@ -205,7 +205,7 @@ function BarraDeComandos({
           ))}
         </ul>
         <p className="border-t px-3 py-2 text-[11.5px] text-text-3">
-          ↑ ↓ para moverte · Enter para ir · <kbd className="font-mono">?</kbd> para ver los atajos
+          ↑ ↓ para navegar · Enter para abrir · <kbd className="font-mono">?</kbd> para ver os atalhos
         </p>
       </div>
     </Velo>
@@ -221,17 +221,17 @@ function AyudaAtajos({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const grupos = ["Cualquier pantalla", "Bandeja"] as const;
+  const grupos = ["Qualquer tela", "Caixa de entrada"] as const;
   return (
     <Velo onClose={onClose}>
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Atajos de teclado"
+        aria-label="Atalhos de teclado"
         className="max-h-[80dvh] w-full max-w-md overflow-y-auto rounded-xl border border-border-strong bg-popover p-5 text-popover-foreground shadow-2xl"
       >
-        <h2 className="mb-1 font-semibold">Atajos de teclado</h2>
-        <p className="mb-4 text-xs text-text-3">En Mac, Ctrl es ⌘ y Alt es Option.</p>
+        <h2 className="mb-1 font-semibold">Atalhos de teclado</h2>
+        <p className="mb-4 text-xs text-text-3">No Mac, Ctrl é ⌘ e Alt é Option.</p>
         {grupos.map((g) => (
           <section key={g} className="mb-4 last:mb-0">
             <h3 className="kicker mb-2 text-text-3">{g}</h3>
@@ -254,7 +254,7 @@ function AyudaAtajos({ onClose }: { onClose: () => void }) {
             </dl>
           </section>
         ))}
-        <p className="mt-4 text-xs text-text-3">Escape para cerrar.</p>
+        <p className="mt-4 text-xs text-text-3">Esc para fechar.</p>
       </div>
     </Velo>
   );

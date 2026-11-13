@@ -14,7 +14,7 @@ type Params = { params: Promise<{ id: string }> };
 /** 049 — Editar una respuesta rápida: solo quien configura. */
 export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra edita respuestas rápidas");
+    return apiError(403, "forbidden", "Só quem administra edita respostas rápidas");
   }
   const { id } = await ctx.params;
   const body = await parseBody(req, respuestaSchema);
@@ -30,7 +30,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
 /** Borrar: solo quien configura. */
 export const DELETE = withAuth(async (session, _req: Request, ctx: Params) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra borra respuestas rápidas");
+    return apiError(403, "forbidden", "Só quem administra apaga respostas rápidas");
   }
   const { id } = await ctx.params;
   try {

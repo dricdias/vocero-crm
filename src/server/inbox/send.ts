@@ -380,7 +380,7 @@ async function resolverMensajeCitado(
   if (!caps.quoteReplies || target.evolution) {
     throw new SendError(
       "reply_unavailable",
-      `${caps.label} no permite responder citando un mensaje`
+      `${caps.label} não permite responder citando uma mensagem`
     );
   }
   const rows = await getDb()
@@ -402,13 +402,13 @@ async function resolverMensajeCitado(
   if (!row) {
     throw new SendError(
       "reply_unavailable",
-      "El mensaje que quieres citar no es de esta conversación"
+      "A mensagem que você quer citar não é desta conversa"
     );
   }
   if (!row.message.waMessageId) {
     throw new SendError(
       "reply_unavailable",
-      "Ese mensaje no llegó a WhatsApp, así que no se puede citar"
+      "Essa mensagem não chegou ao WhatsApp, então não pode ser citada"
     );
   }
   return row;

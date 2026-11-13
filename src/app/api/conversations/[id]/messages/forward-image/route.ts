@@ -40,12 +40,12 @@ const SEND_ERROR_STATUS: Record<SendError["code"], number> = {
 export const POST = withAuth(async (session, req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const target = await getConversation(session.organizationId, id);
-  if (!target) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!target) return apiError(404, "not_found", "Conversa não encontrada");
   if (target.conversation.isTest) {
-    return apiError(403, "sandbox_violation", "No se reenvían imágenes al Laboratorio");
+    return apiError(403, "sandbox_violation", "Não é possível encaminhar imagens para o Laboratório");
   }
   if (!capabilitiesFor(target.conversation.channel).outboundMedia) {
-    return apiError(422, "invalid", "Esa conversación no admite imágenes; elige una de WhatsApp");
+    return apiError(422, "invalid", "Essa conversa não aceita imagens; escolha uma do WhatsApp");
   }
   const body = await parseBody(req, bodySchema);
   if (!body.ok) return body.response;

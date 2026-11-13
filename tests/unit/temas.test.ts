@@ -122,7 +122,7 @@ describe("062 — tema propio", () => {
   it("si el texto no se lee sobre el fondo, no hay tema y dice por qué", () => {
     const t = temaPropio({ fondo: "#ffffff", texto: "#bbbbbb", marco: "#eeeeee" });
     expect(t.ok).toBe(false);
-    if (!t.ok) expect(t.error).toMatch(/no se lee/);
+    if (!t.ok) expect(t.error).toMatch(/não se lê/);
   });
 });
 

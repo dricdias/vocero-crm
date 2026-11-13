@@ -530,8 +530,8 @@ function MessagingAccountNotice({ result }: { result: MessagingAccountRegistrati
       <p className="flex items-start gap-2 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          Tu Cuenta de mensajes ya enruta sus webhooks a{" "}
-          <span className="text-foreground">{result.host}</span>. Se respeta.
+          Sua Conta de mensagens já direciona os webhooks para{" "}
+          <span className="text-foreground">{result.host}</span>. Isso é respeitado.
         </span>
       </p>
     );
@@ -540,7 +540,7 @@ function MessagingAccountNotice({ result }: { result: MessagingAccountRegistrati
     return (
       <p className="flex items-start gap-2 text-sm text-success">
         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-        Webhook registrado también en la Cuenta de mensajes.
+        Webhook registrado também na Conta de mensagens.
       </p>
     );
   }
@@ -548,8 +548,8 @@ function MessagingAccountNotice({ result }: { result: MessagingAccountRegistrati
     <p className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-xs text-warning-text">
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
       <span>
-        {result.message} Sin esto, en las cuentas de Meta ya separadas los
-        mensajes entrantes pueden no llegar.
+        {result.message} Sem isso, nas contas da Meta já separadas as
+        mensagens recebidas podem não chegar.
       </span>
     </p>
   );

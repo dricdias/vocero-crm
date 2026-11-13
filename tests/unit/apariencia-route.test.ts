@@ -52,7 +52,7 @@ describe("062 — PUT /api/settings/appearance", () => {
   it("un tema propio ilegible es 422 con el motivo", async () => {
     const res = await pedir({ ...valida, tema: "propio", propio: { fondo: "#ffffff", texto: "#eeeeee", marco: "#dddddd" } });
     expect(res.status).toBe(422);
-    expect((await res.json()).error.message).toMatch(/no se lee/);
+    expect((await res.json()).error.message).toMatch(/não se lê/);
   });
 
   it("GET devuelve la del negocio", async () => {

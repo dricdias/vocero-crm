@@ -48,7 +48,7 @@ export function huellaDe(rawBody: string): string {
 /** Pura: lo que se guarda de un error. Nunca el cuerpo: solo el mensaje, recortado. */
 export function resumenDeError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
-  return (msg || "error desconocido").slice(0, 300);
+  return (msg || "erro desconhecido").slice(0, 300);
 }
 
 /**

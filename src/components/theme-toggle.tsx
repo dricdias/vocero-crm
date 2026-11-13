@@ -45,7 +45,7 @@ export function ThemeToggle({ initial, className }: { initial: Apariencia; class
   }
 
   const Icon = ICONS[modoDe(a)];
-  const nombre = a.tema === "propio" ? "Propio" : TEMAS[a.tema].nombre;
+  const nombre = a.tema === "propio" ? "Personalizado" : TEMAS[a.tema].nombre;
   const label = `Tema: ${nombre}`;
 
   return (

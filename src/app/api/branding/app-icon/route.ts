@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const params = parseAppIconParams(url.searchParams);
   if (!params) {
     return Response.json(
-      { error: { code: "invalid_size", message: "size debe ser 180, 192 o 512 y purpose any o maskable" } },
+      { error: { code: "invalid_size", message: "size deve ser 180, 192 ou 512 e purpose any ou maskable" } },
       { status: 400 }
     );
   }

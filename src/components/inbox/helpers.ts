@@ -92,5 +92,5 @@ export function textoDeCita(cita: QuotedMessageDto): string {
   if (cita.text) return cita.text;
   if (cita.mediaKind) return mediaLabel(cita.mediaKind);
   if (cita.type && cita.type !== "text") return mediaLabel(cita.type);
-  return cita.id ? "Mensaje" : "Mensaje no disponible";
+  return cita.id ? "Mensagem" : "Mensagem indisponível";
 }

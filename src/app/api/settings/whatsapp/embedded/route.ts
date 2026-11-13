@@ -53,16 +53,16 @@ const inputSchema = z.object({
 export const POST = withAuth(async (session, req: Request) => {
   if (!embeddedConfig().ready) return new Response(null, { status: 404 });
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra la cuenta puede conectar WhatsApp.");
+    return apiError(403, "forbidden", "Só quem administra a conta pode conectar o WhatsApp.");
   }
-  if (!mismoOrigen(req)) return apiError(403, "invalid_origin", "Origen no autorizado.");
+  if (!mismoOrigen(req)) return apiError(403, "invalid_origin", "Origem não autorizada.");
   if (
     !checkRateLimit(`embedded:${session.organizationId}:${session.userId}`, {
       max: 10,
       windowMs: 60_000,
     }).allowed
   ) {
-    return apiError(429, "rate_limit", "Espera un minuto antes de volver a intentarlo.");
+    return apiError(429, "rate_limit", "Espere um minuto antes de tentar de novo.");
   }
   const body = await parseBody(req, inputSchema);
   if (!body.ok) return body.response;
@@ -79,7 +79,7 @@ export const POST = withAuth(async (session, req: Request) => {
     return apiError(
       503,
       "connection_failed",
-      "No pudimos guardar la conexión. Repite el proceso; tu conexión anterior se conserva."
+      "Não conseguimos salvar a conexão. Repita o processo; a sua conexão anterior foi mantida."
     );
   }
 });

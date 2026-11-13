@@ -141,7 +141,7 @@ export async function createTemplate(
       if (esCuentaSinPlantillas(err) && !creds.messagingAccountId) {
         throw new TemplateError(
           "meta_error",
-          "Meta ya no crea plantillas en la cuenta de WhatsApp: ahora viven en la Cuenta de mensajes. Agrega su ID en Ajustes → WhatsApp (Business Settings › Cuentas › Cuentas de mensajes) y vuelve a intentarlo."
+          "A Meta não cria mais templates na conta do WhatsApp: agora eles ficam na Conta de mensagens. Adicione o ID dela em Configurações → WhatsApp (Configurações do negócio › Contas › Contas de mensagens) e tente de novo."
         );
       }
       throw new TemplateError("meta_error", err.message);

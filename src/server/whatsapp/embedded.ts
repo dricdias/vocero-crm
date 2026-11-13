@@ -69,7 +69,7 @@ export async function canjearCodigo(code: string): Promise<string> {
   }
   throw new EmbeddedSignupError(
     "exchange_failed",
-    "Meta no pudo completar la autorización. Revisa que META_APP_ID, META_APP_SECRET y la configuración de Embedded Signup sean de la misma app y vuelve a conectar."
+    "A Meta não conseguiu concluir a autorização. Verifique se META_APP_ID, META_APP_SECRET e a configuração do Embedded Signup são do mesmo app e conecte de novo."
   );
 }
 
@@ -131,13 +131,13 @@ async function graph<T>(
     if (err instanceof MetaApiError && (err.status === 0 || err.status >= 500)) {
       throw new EmbeddedSignupError(
         "meta_unavailable",
-        "No pudimos contactar con Meta. Inténtalo de nuevo; tu conexión anterior se conserva.",
+        "Não conseguimos falar com a Meta. Tente de novo; a sua conexão anterior foi mantida.",
         503
       );
     }
     throw new EmbeddedSignupError(
       "meta_rejected",
-      "Meta no aceptó este paso. Revisa que hayas compartido la cuenta de WhatsApp y el número en la ventana de Meta, y vuelve a conectar."
+      "A Meta não aceitou esta etapa. Verifique se você compartilhou a conta do WhatsApp e o número na janela da Meta e conecte de novo."
     );
   }
 }
@@ -178,19 +178,19 @@ export async function resolverNumero(
     throw new EmbeddedSignupError(
       phoneNumberId ? "asset_mismatch" : numeros.length > 1 ? "varios_numeros" : "sin_numero",
       phoneNumberId
-        ? "El número elegido no pertenece a la cuenta de WhatsApp que se autorizó."
+        ? "O número escolhido não pertence à conta do WhatsApp autorizada."
         : numeros.length > 1
-          ? "La cuenta de WhatsApp tiene varios números y Meta no dijo cuál se conectó. Repite la conexión eligiendo el número, o conéctalo a mano."
-          : "Meta no devolvió ningún número en esa cuenta de WhatsApp. Repite la conexión y agrega el número en la ventana de Meta."
+          ? "A conta do WhatsApp tem vários números e a Meta não disse qual foi conectado. Repita a conexão escolhendo o número, ou conecte manualmente."
+          : "A Meta não devolveu nenhum número nessa conta do WhatsApp. Repita a conexão e adicione o número na janela da Meta."
     );
   }
   if (!elegido.display_phone_number) {
-    throw new EmbeddedSignupError("asset_mismatch", "Meta no devolvió los datos del número.");
+    throw new EmbeddedSignupError("asset_mismatch", "A Meta não devolveu os dados do número.");
   }
   if (elegido.platform_type === "ON_PREMISE") {
     throw new EmbeddedSignupError(
       "migration_required",
-      "Ese número usa la API local antigua y requiere una migración. No se modificó nada."
+      "Esse número usa a API local antiga e precisa de uma migração. Nada foi alterado."
     );
   }
   return elegido;
@@ -221,7 +221,7 @@ export async function registrarNumero(
     if (err instanceof EmbeddedSignupError && err.code === "meta_rejected") {
       throw new EmbeddedSignupError(
         "registration_failed",
-        "Meta no registró el número. Si ya tenía verificación en dos pasos, escribe su PIN y repite la conexión. No se guardó nada."
+        "A Meta não registrou o número. Se ele já tinha verificação em duas etapas, informe o PIN e repita a conexão. Nada foi salvo."
       );
     }
     throw err;
@@ -229,7 +229,7 @@ export async function registrarNumero(
   if (!res.success) {
     throw new EmbeddedSignupError(
       "registration_failed",
-      "Meta no confirmó el registro del número. Repite la conexión; no se guardó nada."
+      "A Meta não confirmou o registro do número. Repita a conexão; nada foi salvo."
     );
   }
   return true;

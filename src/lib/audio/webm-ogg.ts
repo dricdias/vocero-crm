@@ -60,7 +60,7 @@ type Pista = {
 function leerVint(buf: Uint8Array, pos: number, conMarcador: boolean) {
   const primero = buf[pos];
   if (primero === undefined || primero === 0) {
-    throw new WebmOggError("WebM corrupto: número de longitud inválido");
+    throw new WebmOggError("WebM corrompido: número de comprimento inválido");
   }
   let largo = 1;
   while (largo <= 8 && !(primero & (0x80 >> (largo - 1)))) largo++;
@@ -121,7 +121,7 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
       continue;
     }
     if (tam.desconocido) {
-      throw new WebmOggError("WebM con un elemento de tamaño desconocido inesperado");
+      throw new WebmOggError("WebM com um elemento de tamanho desconhecido inesperado");
     }
     const fin = inicio + tam.valor;
     if (fin > webm.length) {
@@ -155,9 +155,9 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
     pos = fin;
   }
 
-  if (!vioEbml) throw new WebmOggError("El archivo no es WebM");
+  if (!vioEbml) throw new WebmOggError("O arquivo não é WebM");
   const pista = pistas.find((p) => p.codec === "A_OPUS");
-  if (!pista) throw new WebmOggError("El WebM no trae audio Opus");
+  if (!pista) throw new WebmOggError("O WebM não traz áudio Opus");
 
   const paquetes: Uint8Array[] = [];
   for (const b of bloques) {
@@ -167,12 +167,12 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
     const flags = b[pistaDelBloque.largo + 2] ?? 0;
     if (flags & 0x06) {
       // MediaRecorder no usa lacing; otro grabador podría. Mejor decirlo.
-      throw new WebmOggError("WebM con lacing: no se puede convertir sin recodificar");
+      throw new WebmOggError("WebM com lacing: não dá para converter sem recodificar");
     }
     const paquete = b.subarray(cabecera);
     if (paquete.length > 0) paquetes.push(paquete);
   }
-  if (paquetes.length === 0) throw new WebmOggError("La grabación está vacía");
+  if (paquetes.length === 0) throw new WebmOggError("A gravação está vazia");
   return { pista, paquetes };
 }
 
@@ -289,7 +289,7 @@ export function empaquetarOgg(
       granulo += muestrasDePaquete(p);
       i++;
     }
-    if (grupo.length === 0) throw new WebmOggError("Paquete Opus demasiado grande");
+    if (grupo.length === 0) throw new WebmOggError("Pacote Opus grande demais");
     const ultima = i >= paquetes.length;
     paginas.push(
       pagina(grupo, { tipo: ultima ? 0x04 : 0, granulo, serie, secuencia: secuencia++ })

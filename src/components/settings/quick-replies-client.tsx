@@ -58,7 +58,7 @@ export function QuickRepliesClient() {
     setGuardando(false);
     if (!res?.ok) {
       const d = (await res?.json().catch(() => null)) as { error?: { message?: string } } | null;
-      setError(d?.error?.message ?? "No se pudo guardar. Revisa la conexión.");
+      setError(d?.error?.message ?? "Não foi possível salvar. Verifique a conexão.");
       return;
     }
     setEditando(null);
@@ -66,7 +66,7 @@ export function QuickRepliesClient() {
   }
 
   async function borrar(r: RespuestaRapida) {
-    if (!window.confirm(`¿Borrar la respuesta /${r.atajo}?`)) return;
+    if (!window.confirm(`Apagar a resposta /${r.atajo}?`)) return;
     const res = await fetch(`/api/quick-replies/${r.id}`, { method: "DELETE" }).catch(() => null);
     if (res?.ok) void cargar();
   }
@@ -77,22 +77,22 @@ export function QuickRepliesClient() {
     <div className="max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Respuestas rápidas</CardTitle>
+          <CardTitle>Respostas rápidas</CardTitle>
           <CardDescription>
-            Lo que escribes treinta veces al día. En la Bandeja, escribe{" "}
-            <span className="font-mono">/</span> y el atajo (por ejemplo{" "}
-            <span className="font-mono">/horario</span>) y elige la respuesta: se
-            pone en la caja y la revisas antes de mandarla.{" "}
-            <span className="font-mono">{"{nombre}"}</span> se cambia por el primer
-            nombre del cliente. Solo dentro de la ventana de 24 h: para reabrirla
-            están las plantillas.
+            O que você escreve trinta vezes por dia. Na Caixa de entrada, digite{" "}
+            <span className="font-mono">/</span> e o atalho (por exemplo{" "}
+            <span className="font-mono">/horario</span>) e escolha a resposta: ela
+            vai para a caixa e você revisa antes de enviar.{" "}
+            <span className="font-mono">{"{nombre}"}</span> vira o primeiro
+            nome do cliente. Só dentro da janela de 24 h: para reabri-la
+            existem os templates.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {lista === null ? (
-            <p className="text-sm text-muted-foreground">Cargando…</p>
+            <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : lista.length === 0 && editando === null ? (
-            <p className="text-sm text-text-2">Aún no hay respuestas rápidas.</p>
+            <p className="text-sm text-text-2">Ainda não há respostas rápidas.</p>
           ) : (
             <ul className="divide-y rounded-md border">
               {lista.map((r) => (
@@ -106,7 +106,7 @@ export function QuickRepliesClient() {
                       <Button variant="ghost" size="icon" aria-label={`Editar /${r.atajo}`} onClick={() => abrir(r)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" aria-label={`Borrar /${r.atajo}`} onClick={() => void borrar(r)}>
+                      <Button variant="ghost" size="icon" aria-label={`Apagar /${r.atajo}`} onClick={() => void borrar(r)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </span>
@@ -118,14 +118,14 @@ export function QuickRepliesClient() {
 
           {puedeEditar && editando === null && (
             <Button variant="outline" size="sm" onClick={() => abrir(null)}>
-              <Plus className="h-4 w-4" /> Nueva respuesta
+              <Plus className="h-4 w-4" /> Nova resposta
             </Button>
           )}
 
           {editando !== null && (
             <div className="space-y-3 rounded-md border bg-subtle p-3" data-testid="form-respuesta">
               <div className="space-y-1.5">
-                <Label htmlFor="qr-atajo">Atajo</Label>
+                <Label htmlFor="qr-atajo">Atalho</Label>
                 <Input
                   id="qr-atajo"
                   value={atajo}
@@ -135,8 +135,8 @@ export function QuickRepliesClient() {
                   autoFocus
                 />
                 <p className="text-xs text-text-3">
-                  Se escribe como <span className="font-mono">/{atajoFinal || "atajo"}</span>: letras,
-                  números, - o _, sin espacios.
+                  Escreve-se como <span className="font-mono">/{atajoFinal || "atalho"}</span>: letras,
+                  números, - ou _, sem espaços.
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -147,7 +147,7 @@ export function QuickRepliesClient() {
                   onChange={(e) => setTexto(e.target.value)}
                   rows={4}
                   maxLength={TEXTO_MAX}
-                  placeholder="Abrimos de lunes a sábado de 8:00 a 19:00."
+                  placeholder="Abrimos de segunda a sábado, das 8h às 19h."
                 />
               </div>
               {error && (
@@ -157,7 +157,7 @@ export function QuickRepliesClient() {
               )}
               <div className="flex gap-2">
                 <Button size="sm" disabled={guardando || !atajoFinal || !texto.trim()} onClick={() => void guardar()}>
-                  {guardando ? "Guardando…" : "Guardar"}
+                  {guardando ? "Salvando…" : "Salvar"}
                 </Button>
                 <Button size="sm" variant="outline" disabled={guardando} onClick={() => setEditando(null)}>
                   Cancelar

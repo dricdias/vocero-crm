@@ -266,11 +266,11 @@ export function Composer({
   function attachImage(files: File[], origen: "paste" | "drop") {
     if (sending || mediaSending.current) return;
     if (!conversation.composer.media) {
-      setError(`Pegar y arrastrar imágenes está disponible en WhatsApp; ${CHANNEL_LABEL[conversation.channel]} no admite adjuntos.`);
+      setError(`Colar e arrastrar imagens está disponível no WhatsApp; ${CHANNEL_LABEL[conversation.channel]} não aceita anexos.`);
       return;
     }
     if (!textoLibre) {
-      setError("La ventana está cerrada: no se puede adjuntar una imagen. Solo sale una plantilla.");
+      setError("A janela está fechada: não dá para anexar uma imagem. Só sai um template.");
       return;
     }
     const result = validarImagenAdjunta(files, origen);
@@ -301,7 +301,7 @@ export function Composer({
     return (
       <div
         role="region"
-        aria-label="Chat: adjuntar imagen"
+        aria-label="Chat: anexar imagem"
         // 061 — El hilo con su compositor es una tarjeta en escritorio. El
         // fondo (con sus dibujos) es de la tarjeta: hilo y compositor van
         // transparentes encima, así los dibujos no se cortan entre los dos.
@@ -344,7 +344,7 @@ export function Composer({
             className="pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-brand bg-brand-tint p-4"
           >
             <p className="rounded-md bg-background px-4 py-3 text-center text-sm font-semibold text-brand-ink shadow-sm">
-              Suelta la imagen para adjuntarla
+              Solte a imagem para anexá-la
             </p>
           </div>
         )}
@@ -360,9 +360,9 @@ export function Composer({
       const data = (await res.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      return data?.error?.message ?? `Error ${res.status}`;
+      return data?.error?.message ?? `Erro ${res.status}`;
     } catch {
-      return "No se pudo conectar con el servidor. Lo que ibas a mandar sigue aquí para reintentar.";
+      return "Não foi possível conectar ao servidor. O que você ia enviar continua aqui para tentar de novo.";
     }
   }
 
@@ -425,7 +425,7 @@ export function Composer({
 
   /** 044 — La nota grabada sale por el mismo envío de adjuntos, marcada como voz. */
   async function enviarNota(nota: NotaGrabada): Promise<string | null> {
-    if (mediaSending.current) return "Ya se está enviando un adjunto.";
+    if (mediaSending.current) return "Já está enviando um anexo.";
     mediaSending.current = true;
     setSending(true);
     setError(null);
@@ -451,7 +451,7 @@ export function Composer({
   // 050 — Las pestañas van arriba en TODAS las ramas: anotar no depende de
   // la ventana de Meta, y con la ventana cerrada es cuando más se necesita.
   const pestanas = onNota ? (
-    <div role="tablist" aria-label="Qué escribir" className="mb-2 flex gap-1">
+    <div role="tablist" aria-label="O que escrever" className="mb-2 flex gap-1">
       {(
         [
           ["responder", "Responder"],
@@ -508,7 +508,7 @@ export function Composer({
             value={nota}
             rows={2}
             autoFocus
-            placeholder="Nota interna: solo la ve tu equipo…"
+            placeholder="Nota interna: só a sua equipe vê…"
             aria-label="Nota interna"
             onChange={(e) => setNota(e.target.value)}
             onKeyDown={(e) => {
@@ -529,7 +529,7 @@ export function Composer({
               (guardandoNota || !nota.trim()) && "opacity-40"
             )}
           >
-            {guardandoNota ? "Guardando…" : "Guardar nota"}
+            {guardandoNota ? "Salvando…" : "Salvar nota"}
           </button>
         </div>
         <div className="mt-1.5 flex items-center justify-between">
@@ -541,7 +541,7 @@ export function Composer({
             <span />
           )}
           <p className="font-mono text-[10.5px] tracking-[0.04em] text-text-3">
-            No se envía al cliente
+            Não é enviada ao cliente
           </p>
         </div>
       </div>
@@ -676,8 +676,8 @@ export function Composer({
           />
           <button
             onClick={() => onReplyChange?.(null)}
-            aria-label="Cancelar respuesta"
-            title="Cancelar respuesta"
+            aria-label="Cancelar resposta"
+            title="Cancelar resposta"
             className="shrink-0 rounded p-1 text-text-3 hover:bg-secondary hover:text-foreground"
           >
             <X className="h-4 w-4" strokeWidth={1.7} />
@@ -777,7 +777,7 @@ export function Composer({
             e.preventDefault();
             const files = images.map((item) => item.getAsFile());
             if (files.some((f) => !f)) {
-              setError("No se pudo leer la imagen del portapapeles. Cópiala de nuevo.");
+              setError("Não foi possível ler a imagem da área de transferência. Copie de novo.");
               return;
             }
             attachImage(files as File[], "paste");
@@ -828,8 +828,8 @@ export function Composer({
               setGrabando(true);
             }}
             disabled={sending}
-            aria-label="Grabar nota de voz"
-            title="Grabar nota de voz"
+            aria-label="Gravar nota de voz"
+            title="Gravar nota de voz"
             className={cn(
               "flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-enviar text-enviar-texto shadow-sm transition-[opacity,transform] hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               sending && "opacity-40"

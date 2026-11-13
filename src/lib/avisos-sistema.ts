@@ -40,7 +40,7 @@ export function cuerpoAviso(m: {
       : texto;
   }
   if (m.media) return mediaLabel(m.media.kind);
-  return m.type && m.type !== "text" ? mediaLabel(m.type) : "Mensaje nuevo";
+  return m.type && m.type !== "text" ? mediaLabel(m.type) : "Mensagem nova";
 }
 
 /** D3 — A dónde lleva el aviso al tocarlo. */

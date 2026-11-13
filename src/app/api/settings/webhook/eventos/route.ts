@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  */
 export const GET = withAuth(async (session) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra ve las entregas del webhook");
+    return apiError(403, "forbidden", "Só quem administra vê as entregas do webhook");
   }
   return Response.json(await estadoDeEntregas(session.organizationId));
 });
@@ -20,7 +20,7 @@ export const GET = withAuth(async (session) => {
 /** «Reintentar»: los agotados vuelven a empezar y se procesan ya. */
 export const POST = withAuth(async (session, req: Request) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra puede reintentar las entregas");
+    return apiError(403, "forbidden", "Só quem administra pode tentar de novo as entregas");
   }
   const body = await parseBody(req, z.object({ accion: z.literal("reintentar") }));
   if (!body.ok) return body.response;
