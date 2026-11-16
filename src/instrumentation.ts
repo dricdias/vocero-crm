@@ -11,11 +11,13 @@ export async function register(): Promise<void> {
       encryptLegacySecrets,
       resumeDispatch,
       resumeWebhooks,
+      startTeamAlerts,
     } = await import("./instrumentation-node");
     await checkMediaDir();
     await cleanupOrphanRuns();
     await encryptLegacySecrets();
     resumeDispatch();
     resumeWebhooks();
+    startTeamAlerts();
   }
 }
