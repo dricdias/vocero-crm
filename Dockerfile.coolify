@@ -1,0 +1,19 @@
+# ============================================================
+# Fork pt-BR — despliegue en Coolify SIN compilar en el VPS.
+#
+# La imagen la construye y publica GitHub Actions (`imagen.yml`) en cada push
+# a `pt-br`, etiquetada con el commit completo. Coolify pasa SOURCE_COMMIT
+# como build arg («Include Source Commit in Build» en Advanced) y este
+# Dockerfile solo descarga esa imagen: el despliegue tarda segundos y no usa
+# la RAM del VPS para `next build`.
+#
+# Sin SOURCE_COMMIT cae en la etiqueta móvil `pt-br` (puede quedar en caché:
+# preferir siempre el commit). Entrypoint, CMD, HEALTHCHECK, puerto y
+# variables vienen de la imagen base (`Dockerfile`).
+#
+# Si la imagen del commit todavía no existe (Actions sigue corriendo), el
+# despliegue falla rápido sin tocar el contenedor en marcha: esperar a que
+# termine el workflow «Imagen» y volver a desplegar.
+# ============================================================
+ARG SOURCE_COMMIT=pt-br
+FROM ghcr.io/dricdias/vocero-crm:${SOURCE_COMMIT}
