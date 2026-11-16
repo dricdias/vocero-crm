@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { TeamAlertsCard } from "@/components/settings/team-alerts-card";
 import { WhatsappWizard } from "@/components/settings/whatsapp-wizard";
 import { Button } from "@/components/ui/button";
 import {
@@ -252,6 +253,7 @@ export function WhatsappProviders() {
           </CardContent>
         </Card>
       )}
+      {provider === "evolution" && connection && <TeamAlertsCard />}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

@@ -51,3 +51,12 @@ Depois do primeiro atendimento no grupo, abrir uma conversa desse grupo na Bande
 A escolha vale para todos os participantes daquele grupo, sem alterar outros grupos ou o privado. No modo todas, perguntas novas entram sem @; no modo menções, continua aceitando @ e Responder numa saída do agente no atendimento daquele participante. Os históricos seguem separados por participante. O agente mantém as regras de encerramento, handoff e pausa da IA: alterar o modo não reativa um atendimento pausado.
 
 A troca afeta as próximas entradas, sem importar mensagens antigas nem cancelar turnos já em processamento. A preferência é salva no banco por organização e grupo, sem precisar reconectar o WhatsApp ou fazer Deploy para cada teste. Este recurso requer publicar a versão com a migração aditiva `0022_evolution_group_mode.sql`, aplicada automaticamente no arranque. Sem preferência salva, continua em menções. As flags `EVOLUTION_GO` e `EVOLUTION_GO_GROUP_BOT_NUMBER` continuam necessárias.
+
+## Avisos da equipe (atendimento humano)
+
+Em Configurações → WhatsApp, com o Evolution Go conectado, o card **Avisos da equipe** escolhe um grupo de WhatsApp de que o número do CRM participa e o tempo do lembrete (5 a 240 min, padrão 15). **Enviar teste** manda uma mensagem ao grupo. Só administradores alteram.
+
+- **Aviso de atendimento humano**: quando a IA passa a conversa para uma pessoa (cliente pediu, modelo escalou, erro, janela fechada, hostilidade), o grupo recebe cliente, motivo, trecho da última mensagem e o link da conversa. Quando a pausa foi porque alguém respondeu pelo celular (`manual_reply`), não avisa.
+- **Lembrete**: conversa em atendimento humano cuja última mensagem do cliente passou do tempo configurado sem resposta de uma pessoa (CRM, celular ou modelo; resposta da IA não conta). Um lembrete por mensagem do cliente; se ele escrever de novo, conta outra vez.
+
+Um barrido a cada 30 s (`src/server/evolution/team-alerts.ts`, iniciado em `instrumentation.ts`) decide pelos dados do banco, então cobre todos os caminhos de traspaso e retoma após reinícios. Cada aviso é reservado em `team_alert_state` antes do envio; se o envio falha, a reserva é desfeita e o próximo barrido tenta de novo. Ligar o recurso ou trocar de grupo só avisa o que acontecer depois. Avisos de traspasos com mais de 2 h e lembretes de mensagens com mais de 12 h não são enviados (evita despejar fila velha após uma queda). Requer `EVOLUTION_GO=on` e a migração `0028_team_alerts.sql`, aplicada no arranque.

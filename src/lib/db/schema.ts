@@ -1304,6 +1304,36 @@ export const evolutionGroupSettings = pgTable("evolution_group_settings", {
   uniqueIndex("evolution_group_settings_org_group_uq").on(t.organizationId, t.groupJid),
   check("evolution_group_settings_mode_ck", sql`${t.replyMode} in ('mentions', 'all')`),
 ]);
+
+/**
+ * Avisos da equipe: o grupo de WhatsApp que recebe «atendimento humano» e o
+ * lembrete de «ninguém respondeu». `enabledAt` marca desde quando avisar —
+ * ligar o recurso não dispara avisos de traspasos antigos.
+ */
+export const teamAlertSettings = pgTable("team_alert_settings", {
+  organizationId: text("organization_id").primaryKey().references(() => organization.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull().default(false),
+  groupJid: text("group_jid"),
+  groupName: text("group_name"),
+  reminderMinutes: integer("reminder_minutes").notNull().default(15),
+  enabledAt: timestamp("enabled_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  check("team_alert_settings_minutes_ck", sql`${t.reminderMinutes} between 5 and 240`),
+]);
+
+/**
+ * O que já foi avisado por conversa. Guarda o `handoff_at` avisado e o
+ * `last_inbound_at` lembrado: um traspaso novo ou uma mensagem nova do cliente
+ * geram um aviso novo, e o mesmo nunca se repete.
+ */
+export const teamAlertState = pgTable("team_alert_state", {
+  conversationId: text("conversation_id").primaryKey().references(() => conversation.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  alertedHandoffAt: timestamp("alerted_handoff_at"),
+  remindedInboundAt: timestamp("reminded_inbound_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 /* ============================================================
  * 047 — Eventos de webhook guardados antes de procesarse
  * ============================================================ */

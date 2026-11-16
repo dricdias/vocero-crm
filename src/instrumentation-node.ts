@@ -5,6 +5,16 @@ import { leerConfigDespacho } from "@/server/brains/config";
 import { iniciarWorker, tanda } from "@/server/dispatch/worker";
 import { cifrarSecretosEnClaro } from "@/server/zernio/secreto-guardado";
 import { barrido, iniciarBarrido } from "@/server/webhooks/worker";
+import { startTeamAlerts as iniciarAvisosEquipe } from "@/server/evolution/team-alerts";
+
+/**
+ * Avisos da equipe (Evolution Go): barrido que avisa o grupo da equipe quando
+ * a IA passa uma conversa para uma pessoa e quando o cliente fica sem
+ * resposta. Só liga com `EVOLUTION_GO=on`; sem grupo configurado não envia nada.
+ */
+export function startTeamAlerts(): void {
+  iniciarAvisosEquipe();
+}
 
 /**
  * 008 — Aviso al arranque si MEDIA_DIR no es escribible. Sin esto, el primer
