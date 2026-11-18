@@ -107,7 +107,16 @@ describe("envío por Evolution en la puerta real del CRM", () => {
     ).rejects.toThrow();
     expect(m.evo).not.toHaveBeenCalled();
   });
-  it("conserva la guarda de ventana", async () => {
+  it("no aplica la ventana de 24 h de Meta (Evolution Go no la tiene)", async () => {
+    (
+      m.row as { conversation: { lastInboundAt: Date } }
+    ).conversation.lastInboundAt = new Date(0);
+    await sendText(input);
+    expect(m.send).toHaveBeenCalled();
+    expect(m.graph).not.toHaveBeenCalled();
+  });
+  it("sin Evolution conserva la guarda de ventana", async () => {
+    m.evo.mockResolvedValue(null);
     (
       m.row as { conversation: { lastInboundAt: Date } }
     ).conversation.lastInboundAt = new Date(0);

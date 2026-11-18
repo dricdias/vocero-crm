@@ -15,6 +15,8 @@ export type ConversationDto = {
   lastInboundAt: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
+  /** Fork pt-BR: canal sem janela (WhatsApp pelo Evolution Go). */
+  noWindow?: boolean;
   windowOpen: boolean;
   windowRemainingMs: number;
   /**
