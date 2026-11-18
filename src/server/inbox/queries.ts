@@ -165,6 +165,7 @@ export function serializeConversation(
     caps.humanAgentWindowMs !== null
       ? replyWindow(c.channel, c.lastInboundAt)
       : null;
+  const semJanela = c.channel === "whatsapp" && evolutionEnabled();
   return {
     id: c.id,
     channel: c.channel,
@@ -178,12 +179,12 @@ export function serializeConversation(
     lastMessageAt: c.lastMessageAt?.toISOString() ?? null,
     unreadCount: c.unreadCount,
     // 022: la ventana es la del canal (48 h en TikTok, 24 en los demás).
-    windowOpen: isWindowOpen(c.lastInboundAt, new Date(), windowMsFor(c.channel)),
-    windowRemainingMs: windowRemainingMs(
-      c.lastInboundAt,
-      new Date(),
-      windowMsFor(c.channel)
-    ),
+    // Fork pt-BR: WhatsApp pelo Evolution Go não tem janela de 24 h.
+    noWindow: semJanela,
+    windowOpen: semJanela || isWindowOpen(c.lastInboundAt, new Date(), windowMsFor(c.channel)),
+    windowRemainingMs: semJanela
+      ? 0
+      : windowRemainingMs(c.lastInboundAt, new Date(), windowMsFor(c.channel)),
     humanWindow: reply
       ? { open: reply.humanAgentTag, remainingMs: reply.humanAgentTag ? reply.operatorRemainingMs : 0 }
       : null,

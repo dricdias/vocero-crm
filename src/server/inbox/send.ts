@@ -303,7 +303,11 @@ async function prepareSend(
   // fuera de ventana; Instagram etiqueta y sigue; otro canal podria no tener
   // ventana en absoluto.
   const caps = capabilitiesFor(row.conversation.channel);
+  // Fork pt-BR: a janela de 24 h é regra da API oficial da Meta. Pelo
+  // Evolution Go não existe janela, então o envio não passa por essa porta.
+  const evolution = await getEvolutionByOrg(organizationId);
   if (
+    !evolution &&
     caps.windowMs !== null &&
     caps.outsideWindow === "template" &&
     !isWindowOpen(row.conversation.lastInboundAt)
@@ -314,7 +318,6 @@ async function prepareSend(
     );
   }
 
-  const evolution = await getEvolutionByOrg(organizationId);
   const group = evolutionGroupTarget(row.contact.waIdentity);
   if (row.contact.waIdentity.startsWith("evo-group:") && (!evolution || !group)) {
     throw new SendError("not_connected", "Esta conversa de grupo exige o Evolution Go conectado");
