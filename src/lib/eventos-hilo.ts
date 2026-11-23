@@ -21,7 +21,7 @@ export const HANDOFF_LABELS: Record<string, string> = {
   error: "Erro do provedor de IA",
   ventana: "Janela de 24h fechada",
   hostilidad: "O cliente ficou agressivo e o agente se retirou",
-  manual_reply: "Você respondeu pelo celular — IA em pausa",
+  manual_reply: "Uma pessoa da equipe respondeu — IA em pausa",
 };
 
 /** D1 — «Pasó a Interesado · por Ana», «Entró al embudo en Nuevo»… */
