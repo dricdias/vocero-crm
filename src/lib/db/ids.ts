@@ -43,6 +43,8 @@ const prefixes = {
   conversationNote: "nota",
   // 070 — chats fijados
   conversationPin: "pin",
+  // 072 — reacciones a mensajes
+  messageReaction: "rx",
 } as const;
 
 export type IdKind = keyof typeof prefixes;
