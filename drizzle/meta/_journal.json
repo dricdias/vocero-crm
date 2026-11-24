@@ -204,6 +204,13 @@
       "when": 1794859186012,
       "tag": "0028_team_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795655640823,
+      "tag": "0029_fijar_chats",
+      "breakpoints": true
     }
   ]
 }

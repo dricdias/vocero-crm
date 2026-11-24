@@ -1450,3 +1450,25 @@ export const conversationNote = pgTable(
     index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
   ]
 );
+
+/** 070 — chats fixados (até 3 por pessoa da equipe). */
+export const conversationPin = pgTable(
+  "conversation_pin",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    pinnedAt: timestamp("pinned_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("conversation_pin_user_conv_uq").on(t.userId, t.conversationId),
+    index("conversation_pin_org_user_idx").on(t.organizationId, t.userId),
+  ]
+);

@@ -1,5 +1,6 @@
 import { withAuth } from "@/lib/api";
 import { listConversations } from "@/server/inbox/queries";
+import { withPins } from "@/server/inbox/pins";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +12,8 @@ export const GET = withAuth(async (session, req: Request) => {
     session.organizationId,
     since && !Number.isNaN(since.getTime()) ? since : undefined
   );
-  return Response.json({ conversations });
+  // 070 — os fixados são de cada pessoa da equipe.
+  return Response.json({
+    conversations: await withPins(conversations, session.organizationId, session.userId),
+  });
 });
