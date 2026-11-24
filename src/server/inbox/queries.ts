@@ -6,6 +6,8 @@ import { capabilitiesFor, windowMsFor } from "@/server/channels/capabilities";
 import type { ConversationDto } from "@/lib/types";
 import { evolutionEnabled } from "@/server/evolution/flag";
 import { evolutionGroupTarget } from "@/server/evolution/groups";
+import { businessTimezone } from "@/server/analytics/period";
+import { finDePausa, type DuracionPausa } from "@/server/inbox/reactivacion";
 
 /**
  * 018 — El anuncio de origen viaja con la conversación. La llave única
@@ -174,6 +176,7 @@ export function serializeConversation(
     stageName,
     aiEnabled: c.aiEnabled,
     handoffAt: c.handoffAt?.toISOString() ?? null,
+    aiPausedUntil: c.aiPausedUntil?.toISOString() ?? null,
     handoffReason: c.handoffReason,
     lastInboundAt: c.lastInboundAt?.toISOString() ?? null,
     lastMessageAt: c.lastMessageAt?.toISOString() ?? null,
@@ -202,15 +205,30 @@ export function serializeConversation(
 export async function updateConversation(
   organizationId: string,
   conversationId: string,
-  patch: { aiEnabled?: boolean; reactivate?: boolean; markRead?: boolean }
+  patch: {
+    aiEnabled?: boolean;
+    reactivate?: boolean;
+    markRead?: boolean;
+    /** 076 — Cuánto dura la pausa al apagar la IA. Sin él, indefinida. */
+    pauseFor?: DuracionPausa;
+  }
 ) {
   const db = getDb();
   const set: Record<string, unknown> = { updatedAt: new Date() };
-  if (patch.aiEnabled !== undefined) set.aiEnabled = patch.aiEnabled;
+  if (patch.aiEnabled !== undefined) {
+    set.aiEnabled = patch.aiEnabled;
+    // «Hasta mañana» es en la zona del negocio: la de su agenda.
+    set.aiPausedUntil = patch.aiEnabled
+      ? null
+      : patch.pauseFor && patch.pauseFor !== "indefinida"
+        ? finDePausa(patch.pauseFor, await businessTimezone(organizationId))
+        : null;
+  }
   if (patch.reactivate) {
     set.handoffAt = null;
     set.handoffReason = null;
     set.aiEnabled = patch.aiEnabled ?? true;
+    set.aiPausedUntil = null;
   }
   if (patch.markRead) set.unreadCount = 0;
 

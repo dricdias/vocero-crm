@@ -26,6 +26,7 @@ import { registrarAnuncioDeOrigen } from "@/server/attribution/store";
 import { onLeadActivity } from "@/server/inbox/lead-activity";
 import { maybeRunAgentTurn } from "@/server/ai/trigger";
 import { pausarIaPorRespuestaManual } from "@/server/inbox/pausa-manual";
+import { devolverALaIaSiToca } from "@/server/inbox/reactivacion";
 import { registrarReaccionWhatsApp } from "@/server/inbox/reacciones";
 import { esReaccionable, type ReaccionDto } from "@/lib/reacciones";
 import {
@@ -417,8 +418,9 @@ async function ingestManualEcho(
     .where(eq(schema.conversation.id, conversation.id));
 
   // Pausa automática de la IA, idempotente y atómica (solo si no hay handoff).
-  // 068: la misma que usa la Bandeja (`pausa-manual.ts`).
-  await pausarIaPorRespuestaManual(organizationId, conversation.id);
+  // 068: la misma que usa la Bandeja (`pausa-manual.ts`). 076: anota la hora
+  // en que escribió la persona, la de Meta.
+  await pausarIaPorRespuestaManual(organizationId, conversation.id, waTimestamp);
 
   publish(organizationId, {
     type: "message.new",
@@ -542,6 +544,19 @@ export async function ingestInboundMessage(input: {
     type: "conversation.updated",
     data: { conversation: { id: conversation.id } },
   });
+
+  // 076: una pausa vencida, o un traspaso que el equipo dejó de atender, se
+  // levanta con este mensaje del cliente, que es el que abre la ventana. Antes
+  // del despacho, que lee la conversación ya sin pausa.
+  if (!conversation.aiEnabled || conversation.handoffAt) {
+    const vuelta = await devolverALaIaSiToca(organizationId, conversation.id);
+    if (vuelta) {
+      publish(organizationId, {
+        type: "conversation.updated",
+        data: { conversation: { id: conversation.id } },
+      });
+    }
+  }
 
   await maybeRunAgentTurn(conversation.id, organizationId, message.id);
 }

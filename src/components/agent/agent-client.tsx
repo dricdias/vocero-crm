@@ -25,6 +25,8 @@ type Profile = {
   instructions: string | null;
   escalationRules: string | null;
   greeting: string | null;
+  /** 076 — Horas sin que el equipo escriba para que la IA vuelva sola; null = nunca. */
+  reactivateAfterHours: number | null;
 };
 
 type SupportSource = {status: "ready" | "cached" | "unavailable" | "unconfigured"; articles: number; syncedAt: string | null};
@@ -244,7 +246,55 @@ function ProfileSection({
             onChange={(e) => setForm({ ...form, greeting: e.target.value })}
           />
         </div>
-        <Button onClick={() => void onSave(form)}>Salvar comportamento</Button>
+        <div className="space-y-1.5">
+          <Label htmlFor="agent-reactivate">Quando a IA volta</Label>
+          <p className="text-[12px] text-text-3">
+            Quando sua equipe responde ou o agente passa a conversa para uma pessoa, a IA
+            pausa nesse chat. Se o cliente voltar a escrever e ninguém da equipe tiver escrito para
+            ele nessas horas, a IA retoma sozinha.
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span>Devolver a conversa para a IA se a equipe não escrever em</span>
+            <Input
+              id="agent-reactivate"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={720}
+              className="h-8 w-20"
+              placeholder="—"
+              value={form.reactivateAfterHours ?? ""}
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                const n = Number(v);
+                setForm({
+                  ...form,
+                  reactivateAfterHours: v === "" || !Number.isFinite(n) ? null : Math.trunc(n),
+                });
+              }}
+            />
+            <span>horas</span>
+          </div>
+          <p className="text-[12px] text-text-3">
+            Vazio = nunca: a conversa fica com sua equipe até alguém reativar a IA manualmente.
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            const { name, tone, instructions, escalationRules, greeting, reactivateAfterHours } =
+              form;
+            void onSave({
+              name,
+              tone,
+              instructions,
+              escalationRules,
+              greeting,
+              reactivateAfterHours,
+            });
+          }}
+        >
+          Salvar comportamento
+        </Button>
       </CardContent>
     </Card>
   );

@@ -3,6 +3,7 @@ import { apiError, parseBody, withAuth } from "@/lib/api";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
 import { estadoIaDe, mensajeDeEstado } from "@/lib/ai/provider";
+import { HORAS_REACTIVACION_MAX } from "@/server/inbox/reactivacion";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,8 @@ export const GET = withAuth(async (session) => {
       instructions: p.instructions,
       escalationRules: p.escalationRules,
       greeting: p.greeting,
+      // 076 — depois de quantas horas sem a equipe escrever a IA volta sozinha.
+      reactivateAfterHours: p.reactivateAfterHours,
     },
     aiConfigured: estado.activa,
     // Por qué no (sin configurar, llave rechazada, sin saldo): la pantalla
@@ -39,6 +42,14 @@ const putSchema = z.object({
   instructions: z.string().max(8000).nullable().optional(),
   escalationRules: z.string().max(4000).nullable().optional(),
   greeting: z.string().max(1000).nullable().optional(),
+  // 076 — null = nunca.
+  reactivateAfterHours: z
+    .number({ message: "As horas devem ser um número inteiro" })
+    .int("As horas devem ser um número inteiro")
+    .min(1, "As horas devem ser pelo menos 1 (ou vazio para nunca)")
+    .max(HORAS_REACTIVACION_MAX, `As horas não podem passar de ${HORAS_REACTIVACION_MAX} (30 dias)`)
+    .nullable()
+    .optional(),
 });
 
 export const PUT = withAuth(async (session, req: Request) => {

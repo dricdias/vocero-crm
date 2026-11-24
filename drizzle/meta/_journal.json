@@ -218,6 +218,13 @@
       "when": 1795655729757,
       "tag": "0030_reacciones",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795655850936,
+      "tag": "0031_la_ia_vuelve_sola",
+      "breakpoints": true
     }
   ]
 }
