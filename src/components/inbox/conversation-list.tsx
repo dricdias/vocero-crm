@@ -19,6 +19,8 @@ import { hayDialogoAbierto } from "@/components/atajos-globales";
 import { etiquetaVence, porVencer } from "@/lib/filtros-bandeja";
 import { fijadosPrimero } from "@/lib/fijados";
 import { PinMark, PinRowButton } from "./pin-toggle";
+import { ResultadosMensajes, TituloSeccion } from "./resultados-mensajes";
+import { buscaEnMensajes } from "@/lib/busqueda-mensajes";
 import {
   EVENTO_VER_ESPERANDO,
   estaEsperando,
@@ -103,6 +105,7 @@ export function ConversationList({
   onSelect,
   onSeeded,
   onTogglePin,
+  onOpenMessage,
 }: {
   conversations: ConversationDto[] | null;
   /** Canales encendidos en esta instancia (ADR-001). */
@@ -112,6 +115,8 @@ export function ConversationList({
   onSeeded: () => void;
   /** 070 — Fijar o desfijar el chat (de cada usuario). */
   onTogglePin?: (conversation: ConversationDto) => void;
+  /** 079 — Abrir un mensaje encontrado por el buscador. Sin él, no se busca en mensajes. */
+  onOpenMessage?: (r: { conversationId: string; messageId: string }) => void;
 }) {
   const [query, setQuery] = useState("");
   // 052 (enmienda) — Dos pestañas y un botón «Filtrar» con lo demás.
@@ -259,6 +264,7 @@ export function ConversationList({
   // Con un solo canal encendido no hay bandejas que distinguir: ni marca en
   // los renglones ni filtro. La pantalla queda exactamente como antes de 014.
   const multiChannel = channels.length > 1;
+  const enMensajes = onOpenMessage !== undefined && buscaEnMensajes(query);
 
   // Etapas presentes en la bandeja, en el orden en que llegan del pipeline.
   const stages: string[] = [];
@@ -281,7 +287,7 @@ export function ConversationList({
           <Search className="h-4 w-4 shrink-0 text-text-3" strokeWidth={1.7} />
           <input
             ref={inputRef}
-            placeholder="Buscar por nome ou telefone…"
+            placeholder={onOpenMessage ? "Buscar conversas ou mensagens…" : "Buscar por nome ou telefone…"}
             aria-label="Buscar conversa"
             defaultValue=""
             onChange={(e) => setQuery(e.target.value)}
@@ -477,6 +483,9 @@ export function ConversationList({
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* 079 — Desde 3 letras, los mensajes van en su propia sección, debajo:
+            nunca filtran la lista de chats. */}
+        {enMensajes && <TituloSeccion>Chats</TituloSeccion>}
         {loading ? (
           <p className="p-6 text-center text-xs text-text-3">Carregando…</p>
         ) : conversations.length === 0 ? (
@@ -495,7 +504,7 @@ export function ConversationList({
                 : "Nenhum resultado para este filtro."}
           </p>
         ) : (
-          <ul>
+          <ul data-lista-chats>
             {visible.map((c) => {
               const unread = c.unreadCount > 0;
               const active = selectedId === c.id;
@@ -632,6 +641,9 @@ export function ConversationList({
               );
             })}
           </ul>
+        )}
+        {enMensajes && (
+          <ResultadosMensajes query={query} multiChannel={multiChannel} onOpen={onOpenMessage!} />
         )}
       </div>
       </div>
