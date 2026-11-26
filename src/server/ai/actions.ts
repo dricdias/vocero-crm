@@ -34,6 +34,17 @@ const baseActions = [
     stage: z.string().min(1),
     reply: z.string().optional(),
   }),
+  /**
+   * Agentes por área — passar a conversa para outro agente. `agent` é o nome
+   * exato de um dos agentes que o prompt listou; o servidor resolve contra os
+   * reais e, se não achar, escala para uma pessoa.
+   */
+  z.object({
+    action: z.literal("transfer"),
+    ...fichaField,
+    agent: z.string().min(1),
+    reason: z.string().optional(),
+  }),
   z.object({
     action: z.literal("handoff"),
     ...fichaField,

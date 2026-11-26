@@ -406,6 +406,14 @@ export const conversation = pgTable(
      * origen del mensaje no basta, porque un recordatorio sale como operador.
      */
     lastTeamOutAt: timestamp("last_team_out_at"),
+    /**
+     * Agentes por área — qual agente atende esta conversa. NULL = o agente
+     * principal (`agent_profile`). Se o agente da área for apagado, volta ao
+     * principal sozinho.
+     */
+    agenteAreaId: text("agente_area_id").references(() => agenteArea.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -750,6 +758,59 @@ export const agentProfile = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("agent_profile_org_uq").on(t.organizationId)]
+);
+
+/**
+ * Agentes por área (Vendas, Financeiro…). O principal continua sendo o
+ * `agent_profile`: ele recebe as conversas novas, guarda o interruptor geral
+ * da IA, a saudação e a volta automática. Cada área tem só o que muda entre
+ * elas: nome, assunto que atende, tom, instruções e regras de escalonamento.
+ * A base de conhecimento é comum a todos.
+ */
+export const agenteArea = pgTable(
+  "agente_area",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    /** O que este agente atende: é o que os outros leem para decidir transferir. */
+    assunto: text("assunto").notNull(),
+    tom: text("tom"),
+    instrucoes: text("instrucoes"),
+    regrasEscalonamento: text("regras_escalonamento"),
+    /** Desligado: ninguém transfere para ele e as conversas dele voltam ao principal. */
+    ativo: boolean("ativo").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("agente_area_org_nome_uq").on(t.organizationId, t.nome)]
+);
+
+/**
+ * Cada transferência entre agentes, para o hilo da conversa mostrar quem
+ * passou para quem e por quê. Guarda os NOMES: o agente pode ser apagado e o
+ * histórico continua legível.
+ */
+export const agenteTransferencia = pgTable(
+  "agente_transferencia",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    deNome: text("de_nome").notNull(),
+    paraNome: text("para_nome").notNull(),
+    /** ia = o agente transferiu; equipe = alguém trocou no painel. */
+    origem: text("origem", { enum: ["ia", "equipe"] }).notNull(),
+    motivo: text("motivo"),
+    occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+  },
+  (t) => [index("agente_transferencia_conv_idx").on(t.organizationId, t.conversationId)]
 );
 
 export const kbEntry = pgTable(

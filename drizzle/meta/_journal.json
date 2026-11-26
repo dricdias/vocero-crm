@@ -225,6 +225,13 @@
       "when": 1795655850936,
       "tag": "0031_la_ia_vuelve_sola",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795724823422,
+      "tag": "0032_agentes_area",
+      "breakpoints": true
     }
   ]
 }

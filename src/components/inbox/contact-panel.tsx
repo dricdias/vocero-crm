@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { FichaPanel } from "@/components/ficha-panel";
+import { AgenteDaConversa } from "@/components/inbox/agente-da-conversa";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
 import { GroupModeControl } from "./group-mode-control";
 
@@ -385,6 +386,12 @@ export function ContactPanel({
               </div>
             )}
           </div>
+
+          <AgenteDaConversa
+            key={`agente-${conversation.id}`}
+            conversationId={conversation.id}
+            refreshKey={refreshKey}
+          />
 
           {conversation.evolutionGroup && <GroupModeControl key={conversation.id} conversationId={conversation.id} refreshKey={refreshKey} />}
 

@@ -20,11 +20,19 @@ import {
 } from "@/server/ai/actions";
 import { HANDOFF_BACKUP_ACK, matchesHandoffIntent } from "@/server/ai/handoff";
 import {
+  avisoDeTransferencia,
   buildAgentSystemPrompt,
   renderFichaParaModelo,
   TURN_FORMAT_REMINDER,
 } from "@/server/ai/prompts";
 import { upsertFicha } from "@/server/bot/ficha";
+import {
+  listarAgentesArea,
+  outrosAgentes,
+  perfilDoTurno,
+  resolverDestino,
+  transferirConversa,
+} from "@/server/ai/agentes";
 import {
   atendidoPorPersona,
   debidosVigentes,
@@ -145,7 +153,15 @@ export type TurnoLeido = { vistos: string[] };
  */
 export async function runAgentTurn(
   conversationId: string,
-  opciones: { debidos?: readonly string[] } = {}
+  opciones: {
+    debidos?: readonly string[];
+    /**
+     * Agentes por área — este turno é o do agente que acabou de receber a
+     * conversa. Ele não pode transferir de novo (sem pingue-pongue): se o
+     * assunto também não for dele, escala para uma pessoa.
+     */
+    transferido?: { de: string; motivo?: string | null };
+  } = {}
 ): Promise<TurnoLeido | undefined> {
   const db = getDb();
   const convRows = await db
@@ -300,10 +316,29 @@ export async function runAgentTurn(
           .limit(1)
       )[0]?.ficha;
 
+  // Agentes por área: quem atende esta conversa e para quem pode passar.
+  // Uma área apagada ou desligada devolve a conversa ao principal.
+  const areas = await listarAgentesArea(organizationId);
+  const area =
+    areas.find((a) => a.id === conversation.agenteAreaId && a.ativo) ?? null;
+  const perfil = perfilDoTurno(profile, area);
+  const destinos = opciones.transferido
+    ? []
+    : outrosAgentes(area?.id ?? null, profile.name, areas);
+
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge, group }),
+      content: buildAgentSystemPrompt({
+        profile: perfil,
+        kb,
+        stages,
+        agenda,
+        supportKnowledge,
+        group,
+        outrosAgentes: destinos,
+        assunto: area?.assunto ?? null,
+      }),
     },
     ...history
       .filter((m) => m.text)
@@ -328,6 +363,17 @@ export async function runAgentTurn(
             ),
           },
         ]),
+    ...(opciones.transferido
+      ? [
+          {
+            role: "system" as const,
+            content: avisoDeTransferencia(
+              opciones.transferido.de,
+              opciones.transferido.motivo
+            ),
+          },
+        ]
+      : []),
     // 029 — Lo último que lee el modelo: contestar con el JSON de la acción.
     { role: "system", content: TURN_FORMAT_REMINDER },
   ];
@@ -389,6 +435,32 @@ export async function runAgentTurn(
         action = degradeAction(action);
       }
     }
+  }
+
+  // Agentes por área — passa a conversa e o novo agente responde já, no
+  // mesmo turno: o cliente não fica esperando a próxima mensagem dele.
+  if (action.action === "transfer") {
+    const destino = opciones.transferido
+      ? null
+      : resolverDestino(action.agent, destinos);
+    if (!destino) {
+      await applyHandoff(conversationId, organizationId, "modelo");
+      return leido;
+    }
+    const ok = await transferirConversa({
+      organizationId,
+      conversationId,
+      para: destino,
+      deNome: perfil.name,
+      origem: "ia",
+      motivo: action.reason,
+    });
+    if (!ok) return leido;
+    const seguinte = await runAgentTurn(conversationId, {
+      ...opciones,
+      transferido: { de: perfil.name, motivo: action.reason },
+    });
+    return seguinte ?? leido;
   }
 
   if (action.action === "move_stage") {
