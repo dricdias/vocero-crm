@@ -5,21 +5,38 @@ import { z } from "zod";
  * El servidor valida cada acción contra sus allowlists (etapas de la org);
  * lo que no valida se degrada, nunca se ejecuta a ciegas.
  */
+/**
+ * Ficha del lead: cualquier acción puede traer lo que el cliente dijo de sí
+ * mismo en este turno («cidade», «servico», «orcamento»…). Va al lado de la
+ * acción y no como acción propia porque el turno admite UNA: si guardar un
+ * dato costara el turno, el modelo tendría que elegir entre anotar y contestar.
+ *
+ * Validación floja, igual que `PUT /api/bot/ficha`: lo que no sea un objeto se
+ * descarta (`catch`) en vez de tumbar la acción, y `normalizeFicha` filtra el
+ * resto al guardar. Un dato mal formado no puede costar la respuesta.
+ */
+const fichaField = {
+  ficha: z.record(z.string(), z.unknown()).optional().catch(undefined),
+};
+
 const baseActions = [
-  z.object({ action: z.literal("none") }),
-  z.object({ action: z.literal("reply"), text: z.string().min(1) }),
+  z.object({ action: z.literal("none"), ...fichaField }),
+  z.object({ action: z.literal("reply"), text: z.string().min(1), ...fichaField }),
   z.object({
     action: z.literal("update_lead"),
+    ...fichaField,
     note: z.string().min(1),
     reply: z.string().optional(),
   }),
   z.object({
     action: z.literal("move_stage"),
+    ...fichaField,
     stage: z.string().min(1),
     reply: z.string().optional(),
   }),
   z.object({
     action: z.literal("handoff"),
+    ...fichaField,
     reason: z.string().optional(),
     farewell: z.string().optional(),
   }),
@@ -38,10 +55,12 @@ const baseActions = [
 const agendaActions = [
   z.object({
     action: z.literal("offer_slots"),
+    ...fichaField,
     reply: z.string().optional(),
   }),
   z.object({
     action: z.literal("book_slot"),
+    ...fichaField,
     startUtc: z.string().min(1),
     reply: z.string().optional(),
   }),
