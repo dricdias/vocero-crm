@@ -47,6 +47,9 @@ const prefixes = {
   messageReaction: "rx",
   // 076 — la IA volvió sola a una conversación en pausa
   iaVuelta: "iav",
+  // agentes por área
+  agenteArea: "aga",
+  agenteTransferencia: "agt",
 } as const;
 
 export type IdKind = keyof typeof prefixes;

@@ -6,7 +6,7 @@ import { LOSS_REASON_LABEL, type LossReason, type StageChangeSource } from "./ty
 
 export type EventoHiloDto = {
   id: string;
-  tipo: "etapa" | "traspaso" | "vuelta";
+  tipo: "etapa" | "traspaso" | "vuelta" | "transferencia";
   texto: string;
   createdAt: string;
 };
@@ -43,6 +43,20 @@ export function textoEventoEtapa(e: {
       ? " · pelo agente"
       : "";
   return `${base}${motivo}${quien}`;
+}
+
+/**
+ * Agentes por área — «Ana passou a conversa para Financeiro: quer a segunda
+ * via do boleto» ou «Conversa passada para Financeiro pela equipe».
+ */
+export function textoTransferencia(t: {
+  deNome: string;
+  paraNome: string;
+  origem: "ia" | "equipe" | string;
+  motivo: string | null;
+}): string {
+  if (t.origem === "equipe") return `Conversa passada de ${t.deNome} para ${t.paraNome} pela equipe`;
+  return `${t.deNome} passou a conversa para ${t.paraNome}${t.motivo ? `: ${t.motivo}` : ""}`;
 }
 
 /** D1 — «La IA se pausó: el cliente pidió un humano». */

@@ -352,7 +352,11 @@ function GestosBurbuja({
  */
 function EventoHilo({ evento }: { evento: EventoHiloDto }) {
   const Icono =
-    evento.tipo === "etapa" ? ArrowRightLeft : evento.tipo === "vuelta" ? Bot : UserRoundCheck;
+    evento.tipo === "etapa"
+      ? ArrowRightLeft
+      : evento.tipo === "vuelta" || evento.tipo === "transferencia"
+        ? Bot
+        : UserRoundCheck;
   return (
     <div data-evento-id={evento.id} className="my-2 flex justify-center px-2">
       <span className="inline-flex max-w-full items-center gap-1.5 rounded-2xl border border-border bg-background/80 px-3 py-1 text-center text-[11.5px] text-text-2 shadow-sm">

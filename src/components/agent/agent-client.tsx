@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Cable, Plus, Sparkles, Trash2 } from "lucide-react";
 import { BrainStatusCard } from "@/components/agent/brain-status-card";
+import { AgentesAreaSection } from "@/components/agent/agentes-area";
 import {
   externalAnswerLabel,
   externalAnswering,
@@ -176,6 +177,7 @@ export function AgentClient() {
       <div className="grid gap-4 p-4 sm:gap-6 sm:p-6 lg:grid-cols-2">
         <ProfileSection profile={profile} onSave={saveProfile} />
         <KbSection entries={entries} kbSize={kbSize} onChanged={() => void refetch()} />
+        <AgentesAreaSection principalNome={profile.name} />
       </div>
     </div>
   );

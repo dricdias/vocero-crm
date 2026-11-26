@@ -1,7 +1,14 @@
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
-import { textoEventoEtapa, textoTraspaso, textoVuelta, type EventoHiloDto } from "@/lib/eventos-hilo";
+import {
+  textoEventoEtapa,
+  textoTransferencia,
+  textoTraspaso,
+  textoVuelta,
+  type EventoHiloDto,
+} from "@/lib/eventos-hilo";
+import { transferenciasDeConversa } from "@/server/ai/agentes";
 import { vueltasDeConversacion } from "@/server/inbox/reactivacion";
 
 /**
@@ -88,6 +95,16 @@ export async function eventosDeConversacion(
       tipo: "vuelta",
       texto: textoVuelta(v.motivo, v.horas),
       createdAt: v.occurredAt.toISOString(),
+    });
+  }
+
+  // Agentes por área: cada vez que a conversa passou de um agente para outro.
+  for (const t of await transferenciasDeConversa(organizationId, conversationId)) {
+    eventos.push({
+      id: t.id,
+      tipo: "transferencia",
+      texto: textoTransferencia(t),
+      createdAt: t.occurredAt.toISOString(),
     });
   }
 

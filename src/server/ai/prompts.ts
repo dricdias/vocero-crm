@@ -40,6 +40,11 @@ export function renderFichaParaModelo(
  * vista el modelo contestaba en texto plano: cada turno después del primero
  * gastaba un reintento para conseguir el JSON.
  */
+/** Agentes por área — o que o novo agente lê no turno logo após receber a conversa. */
+export function avisoDeTransferencia(de: string, motivo?: string | null): string {
+  return `Esta conversa acabou de ser transferida para você por ${de}${motivo ? ` (motivo: ${motivo})` : ""}. Apresente-se brevemente pelo seu nome e atenda o cliente a partir da última mensagem dele. Não transfira de volta.`;
+}
+
 export const TURN_FORMAT_REMINDER =
   'Responda agora com UM objeto JSON de ação (por exemplo {"action":"reply","text":"..."}), mesmo que suas mensagens anteriores apareçam como texto simples.';
 
@@ -58,6 +63,13 @@ export function buildAgentSystemPrompt(input: {
    * token en hablar de horarios: la agenda no existe aquí.
    */
   agenda?: boolean;
+  /**
+   * Agentes por área — para quem este agente pode transferir. Vazio (ou sem
+   * outros agentes): o prompt nem menciona transferência.
+   */
+  outrosAgentes?: { nome: string; assunto: string }[];
+  /** O assunto deste agente, quando ele é de uma área. */
+  assunto?: string | null;
 }): string {
   const { profile } = input;
   const stageNames = input.stages.map((s) => s.name).join(" | ");
@@ -74,8 +86,23 @@ export function buildAgentSystemPrompt(input: {
         "- Se o cliente quiser CANCELAR um agendamento → handoff: essa decisão não é sua.",
       ]
     : [];
+  const outros = input.outrosAgentes ?? [];
+  const transferLines = outros.length
+    ? [
+        '- {"action":"transfer","agent":"<nome exato de um agente abaixo>","reason":"..."} — passar a conversa para outro agente quando o assunto do cliente é dele e não seu. Não escreva nada ao cliente: o outro agente se apresenta e responde em seguida.',
+        "Outros agentes deste negócio (nome: o que atende):",
+        ...outros.map((o) => `  · ${o.nome}: ${o.assunto}`),
+      ]
+    : [];
+  const transferRules = outros.length
+    ? [
+        "- Se o cliente trouxer um assunto de outro agente da lista → transfer para ele, em vez de responder você mesmo.",
+        "- Se o cliente pedir uma PESSOA/humano → handoff, nunca transfer.",
+      ]
+    : [];
   return [
     `Você é "${profile.name}", o assistente de WhatsApp deste negócio. Responda SEMPRE em português do Brasil, com mensagens curtas e naturais para chat.`,
+    input.assunto ? `Sua área neste negócio: ${input.assunto}.` : null,
     profile.tone ? `Tom: ${profile.tone}` : null,
     profile.instructions ? `Instruções do negócio:\n${profile.instructions}` : null,
     profile.escalationRules
@@ -94,6 +121,7 @@ export function buildAgentSystemPrompt(input: {
       '- {"action":"move_stage","stage":"<nome exato da etapa>","reply":"..."} — mover o lead (se o cliente espera resposta, inclua reply).',
       '- {"action":"handoff","reason":"...","farewell":"..."} — escalar para um humano (farewell opcional para se despedir).',
       ...agendaLines,
+      ...transferLines,
       ...(input.group
         ? []
         : [
@@ -106,6 +134,7 @@ export function buildAgentSystemPrompt(input: {
       "- Se a pergunta NÃO está coberta pelo conhecimento → NÃO invente: responda que vai confirmar ou escale.",
       "- Se detectar intenção clara de compra → move_stage para a etapa de interessados e confirme ao cliente.",
       ...agendaRules,
+      ...transferRules,
       "- JSON puro, sem markdown nem texto adicional.",
     ].join("\n"),
   ]
