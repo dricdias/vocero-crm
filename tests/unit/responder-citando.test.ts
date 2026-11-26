@@ -1,4 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Este archivo prueba el envío por la API oficial (Graph). El job «completo»
+// del CI enciende EVOLUTION_GO, que desvía el envío a Evolution: se apaga aquí.
+beforeEach(() => vi.stubEnv("EVOLUTION_GO", ""));
+afterEach(() => vi.unstubAllEnvs());
 
 /**
  * 039 — Responder citando un mensaje: lo que entra con `context.id` se guarda

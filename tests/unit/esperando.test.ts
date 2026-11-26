@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   avisoEsperandoDeCookie,
   claveDeEspera,
@@ -28,6 +28,11 @@ import {
 const T0 = Date.parse("2026-11-23T15:00:00.000Z");
 const HORA = 3_600_000;
 const min = (n: number) => new Date(T0 + n * 60_000);
+
+// Estas reglas son las de la API oficial (ventana de 24 h). El job «completo»
+// del CI enciende EVOLUTION_GO; aquí se apaga y el caso Evolution va aparte.
+beforeEach(() => vi.stubEnv("EVOLUTION_GO", ""));
+afterEach(() => vi.unstubAllEnvs());
 
 const entra = (m: number): MensajeParaEspera => ({ direction: "in", status: "delivered", aiGenerated: false, createdAt: min(m) });
 const equipo = (m: number, status = "sent"): MensajeParaEspera => ({ direction: "out", status, aiGenerated: false, createdAt: min(m) });
@@ -114,6 +119,12 @@ describe("contestableHasta", () => {
     expect(contestableHasta("instagram", d).getTime() - T0).toBe(7 * 24 * HORA);
     expect(contestableHasta("messenger", d).getTime() - T0).toBe(7 * 24 * HORA);
     expect(contestableHasta("tiktok", d).getTime() - T0).toBe(48 * HORA);
+  });
+
+  it("WhatsApp por Evolution Go (sin ventana de 24 h): hasta el tope de 7 días", () => {
+    vi.stubEnv("EVOLUTION_GO", "on");
+    const d = new Date(T0);
+    expect(contestableHasta("whatsapp", d).getTime() - T0).toBe(VENTANA_MAXIMA_MS);
   });
   it("la consulta se acota a la ventana más larga (7 días)", () => {
     expect(VENTANA_MAXIMA_MS).toBe(7 * 24 * HORA);
