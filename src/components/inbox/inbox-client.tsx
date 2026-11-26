@@ -13,9 +13,12 @@ import type {
   QuotedMessageDto,
 } from "@/lib/types";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
+import { canalReacciona, MOTIVO_VENTANA_CERRADA, type ReaccionDto } from "@/lib/reacciones";
 import { ChannelBadge } from "@/components/channel-badge";
 import { useEvents } from "@/components/use-events";
 import { ConversationList } from "./conversation-list";
+import { useFijar } from "./use-fijar";
+import { PinHeaderButton } from "./pin-toggle";
 import { MessageThread } from "./message-thread";
 import { Composer } from "./composer";
 import {
@@ -113,6 +116,8 @@ export function InboxClient({
     // 064 — El menú y Ctrl+K toman la lista de aquí en vez de pedir otra.
     publicarLista(data.conversations);
   }, []);
+  // 070 — Chats fijados (de cada usuario).
+  const fijar = useFijar(conversations, setConversations, refetchConversations);
 
   // 064 — Los eventos en vivo recargan la lista juntos: una ráfaga de
   // mensajes es una petición, no una por evento, y nunca dos a la vez.
@@ -163,6 +168,23 @@ export function InboxClient({
       });
     },
     [refetchMessages, refetchNotas, refetchEventos]
+  );
+
+  // 079 — Mensaje al que saltar, elegido en el buscador de la Bandeja.
+  const [salto, setSalto] = useState<{ conversationId: string; messageId: string; nonce: number } | null>(null);
+  const abrirMensaje = useCallback(
+    (r: { conversationId: string; messageId: string }) => {
+      setSalto({ conversationId: r.conversationId, messageId: r.messageId, nonce: Date.now() });
+      if (selectedIdRef.current !== r.conversationId) select(r.conversationId);
+    },
+    [select]
+  );
+  const elegirConversacion = useCallback(
+    (id: string) => {
+      setSalto(null);
+      select(id);
+    },
+    [select]
   );
 
   /** 026 — Saca una conversación eliminada de todo lo que esta pestaña recuerda. */
@@ -228,6 +250,15 @@ export function InboxClient({
       // Un entrante nuevo puede crear/mover el lead: refresca el panel.
       setDetailRev((v) => v + 1);
     },
+    // 072 — Una reacción nueva (del cliente o de alguien del equipo).
+    onReactionUpdated: ({ conversationId, messageId, reactions }) => {
+      if (selectedIdRef.current !== conversationId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, reactions: reactions as ReaccionDto[] } : m
+        )
+      );
+    },
     onMessageMedia: ({ conversationId, messageId, media }) => {
       if (selectedIdRef.current !== conversationId) return;
       setMessages((prev) =>
@@ -283,6 +314,31 @@ export function InboxClient({
    * que cada pendiente se empareja con UN mensaje real (no por texto suelto:
    * mandar "hola" dos veces seguidas no debe borrar la segunda burbuja).
    */
+  // 072 — Reaccionar como equipo ("" la quita). Devuelve el motivo si falla.
+  const reaccionar = useCallback(
+    async (m: MessageDto, emoji: string): Promise<string | null> => {
+      const res = await fetch(
+        `/api/conversations/${m.conversationId}/messages/${m.id}/reaction`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        }
+      ).catch(() => null);
+      if (!res) return "Sem conexão com o servidor";
+      const data = (await res.json().catch(() => null)) as {
+        reactions?: ReaccionDto[];
+        error?: { message?: string };
+      } | null;
+      if (!res.ok) return data?.error?.message ?? "Não foi possível enviar a reação";
+      setMessages((prev) =>
+        prev.map((x) => (x.id === m.id ? { ...x, reactions: data?.reactions ?? [] } : x))
+      );
+      return null;
+    },
+    []
+  );
+
   const thread = useMemo(() => {
     const propios = pending.filter((p) => p.conversationId === selectedId);
     if (propios.length === 0) return messages;
@@ -378,7 +434,11 @@ export function InboxClient({
   );
 
   const patchConversation = useCallback(
-    async (patch: { aiEnabled?: boolean; reactivate?: boolean }) => {
+    async (patch: {
+      aiEnabled?: boolean;
+      reactivate?: boolean;
+      pauseFor?: "1h" | "manana" | "indefinida";
+    }) => {
       if (!selectedIdRef.current) return;
       await fetch(`/api/conversations/${selectedIdRef.current}`, {
         method: "PATCH",
@@ -426,12 +486,19 @@ export function InboxClient({
           selected && "max-md:hidden"
         )}
       >
+        {fijar.error && (
+          <p data-aviso-fijar role="status" className="border-b px-4 py-2.5 text-xs text-danger-text">
+            {fijar.error}
+          </p>
+        )}
         <ConversationList
           conversations={conversations}
           channels={channels}
           selectedId={selectedId}
-          onSelect={select}
+          onSelect={elegirConversacion}
+          onTogglePin={(c) => void fijar.toggle(c)}
           onSeeded={() => void refetchConversations()}
+          onOpenMessage={abrirMensaje}
         />
       </section>
 
@@ -488,6 +555,10 @@ export function InboxClient({
                   </p>
                 </div>
               </div>
+              <PinHeaderButton
+                pinned={Boolean(selected.pinnedAt)}
+                onToggle={() => void fijar.toggle(selected)}
+              />
               {!panelOpen && (
                 <button
                   onClick={() => togglePanel(true)}
@@ -533,6 +604,7 @@ export function InboxClient({
               }}
             >
               <MessageThread
+                irA={salto?.conversationId === selected.id ? salto : null}
                 messages={thread}
                 notas={notas}
                 eventos={eventos}
@@ -544,6 +616,10 @@ export function InboxClient({
                   if (res?.ok) setNotas((prev) => prev.filter((x) => x.id !== n.id));
                 }}
                 contactName={selected.contact.name}
+                // 072: reaccionar donde el canal lo permite, con la ventana
+                // estándar abierta (si no, los botones dicen por qué no).
+                onReact={canalReacciona(selected.channel) ? reaccionar : undefined}
+                reaccionBloqueada={selected.windowOpen ? null : MOTIVO_VENTANA_CERRADA}
                 // 039: citar solo donde el canal lo permite y se puede escribir
                 // texto libre (con la ventana cerrada solo salen plantillas).
                 onReply={
@@ -592,7 +668,12 @@ export function InboxClient({
       >
         {selected && (
           <div className="h-full w-[320px] max-xl:w-[min(320px,88vw)]">
+            {/* 068: `key` por conversación. Sin ella, el estado local (notas,
+                borrador de la ficha, confirmación de borrado) sobrevivía al
+                cambio de chat, y guardar en ese instante escribía las notas
+                del contacto anterior en el nuevo. */}
             <ContactPanel
+              key={selected.id}
               conversation={selected}
               refreshKey={detailRev}
               onPatchConversation={patchConversation}

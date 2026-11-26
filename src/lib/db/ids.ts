@@ -41,6 +41,12 @@ const prefixes = {
   quickReply: "qr",
   // 050 — notas internas del hilo
   conversationNote: "nota",
+  // 070 — chats fijados
+  conversationPin: "pin",
+  // 072 — reacciones a mensajes
+  messageReaction: "rx",
+  // 076 — la IA volvió sola a una conversación en pausa
+  iaVuelta: "iav",
 } as const;
 
 export type IdKind = keyof typeof prefixes;

@@ -116,3 +116,11 @@ export async function sendEvolutionMedia(
   const sent = await evolutionRequest(access, "/send/media", sentSchema, body);
   return `evo:${sent.Info.ID}`;
 }
+
+/** Reação (ou remoção, com `reaction` vazio) a uma mensagem de conversa individual. */
+export async function reactEvolutionMessage(
+  access: EvolutionAccess,
+  input: { number: string; id: string; reaction: string; fromMe: boolean },
+): Promise<void> {
+  await evolutionRequest(access, "/message/react", z.unknown(), input);
+}

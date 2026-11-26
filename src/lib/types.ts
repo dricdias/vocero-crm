@@ -1,6 +1,8 @@
 /** DTOs que viajan por la API interna (lado cliente). */
 
+import type { ReaccionDto } from "@/lib/reacciones";
 import type { Channel } from "@/lib/channels";
+import type { EsperaDto } from "@/lib/esperando";
 
 export type ConversationDto = {
   evolutionGroup?: boolean;
@@ -11,6 +13,8 @@ export type ConversationDto = {
   stageName: string | null;
   aiEnabled: boolean;
   handoffAt: string | null;
+  /** 076 — Fin de la pausa manual con duración; null = indefinida (o sin pausa). */
+  aiPausedUntil: string | null;
   handoffReason: string | null;
   lastInboundAt: string | null;
   lastMessageAt: string | null;
@@ -32,6 +36,13 @@ export type ConversationDto = {
    */
   composer: { media: boolean; structured: boolean; quoteReply: boolean };
   preview: string | null;
+  /**
+   * 077 — Si espera a una persona: desde cuándo y hasta cuándo se le puede
+   * contestar con texto libre. null = no espera a nadie. Lo calcula la lista
+   * (`server/inbox/esperando.ts`); la pestaña, el cintillo y el aviso leen
+   * esto mismo con `lib/esperando.ts`.
+   */
+  espera: EsperaDto | null;
   /** 018: el anuncio que abrió la conversación, para la marca de la lista. */
   anuncio: {
     headline: string | null;
@@ -39,6 +50,8 @@ export type ConversationDto = {
     /** `post` si fue una publicación y no un anuncio. */
     sourceType: string | null;
   } | null;
+  /** 070: cuándo lo fijó el usuario de la sesión; null o ausente = no fijado. */
+  pinnedAt?: string | null;
 };
 
 /** 018 — De qué anuncio llegó un contacto, como lo ve la bandeja. */
@@ -94,6 +107,10 @@ export type MessageDto = {
   quotable: boolean;
   /** 039 — El mensaje que cita, o null si no cita ninguno. */
   replyTo: QuotedMessageDto | null;
+  /** 072 — Tiene id en la plataforma: se le puede reaccionar. */
+  reactable?: boolean;
+  /** 072 — Reacciones del cliente y del equipo. */
+  reactions?: ReaccionDto[];
   createdAt: string;
 };
 

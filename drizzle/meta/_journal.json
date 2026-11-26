@@ -204,6 +204,27 @@
       "when": 1794859186012,
       "tag": "0028_team_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795655640823,
+      "tag": "0029_fijar_chats",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795655729757,
+      "tag": "0030_reacciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795655850936,
+      "tag": "0031_la_ia_vuelve_sola",
+      "breakpoints": true
     }
   ]
 }

@@ -376,7 +376,8 @@ export const conversation = pgTable(
     aiEnabled: boolean("ai_enabled").notNull().default(true),
     handoffAt: timestamp("handoff_at"),
     handoffReason: text("handoff_reason", {
-      // 008: manual_reply = el dueño respondió desde la app del teléfono.
+      // 008: manual_reply = una persona del negocio respondió (068: desde el
+      // teléfono o desde la Bandeja).
       // hostilidad = el lead se puso agresivo y el agente se retiró.
       enum: [
         "cliente",
@@ -390,6 +391,21 @@ export const conversation = pgTable(
     lastInboundAt: timestamp("last_inbound_at"),
     lastMessageAt: timestamp("last_message_at"),
     unreadCount: integer("unread_count").notNull().default(0),
+    /**
+     * 076 — Fin de una pausa manual de la IA con duración («1 hora», «hasta
+     * mañana»). NULL con la IA apagada = pausa indefinida. Al vencer no pasa
+     * nada solo: la IA vuelve cuando el cliente escribe (`reactivacion.ts`).
+     */
+    aiPausedUntil: timestamp("ai_paused_until"),
+    /**
+     * 076 — La última vez que una PERSONA del equipo le escribió al cliente,
+     * por cualquier camino: la Bandeja (texto, adjunto, plantilla, reenvío,
+     * también por la API v1) o el eco del teléfono en coexistencia. Lo
+     * automático (la IA, los recordatorios, lo que registra una integración)
+     * no cuenta. Es lo que mide «el equipo lleva N horas sin escribir»: el
+     * origen del mensaje no basta, porque un recordatorio sale como operador.
+     */
+    lastTeamOutAt: timestamp("last_team_out_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -400,6 +416,35 @@ export const conversation = pgTable(
       .where(sql`${t.isTest} = false`),
     index("conversation_org_last_idx").on(t.organizationId, t.lastMessageAt),
   ]
+);
+
+/**
+ * 076 — Cada vez que la IA volvió SOLA a una conversación en pausa.
+ *
+ * El hilo lo pinta («La IA volvió a atender (24 h sin respuesta del equipo)»)
+ * junto con la pausa que terminó: al volver, `handoff_at` se borra y sin esta
+ * fila el hilo ya no diría que hubo una persona. Solo ids, horas y motivos.
+ */
+export const iaVuelta = pgTable(
+  "ia_vuelta",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    /** sin_equipo = pasaron N horas sin que el equipo escribiera; pausa_vencida = terminó la pausa con fecha. */
+    motivo: text("motivo", { enum: ["sin_equipo", "pausa_vencida"] }).notNull(),
+    /** Las N horas del ajuste cuando volvió por `sin_equipo`. */
+    horas: integer("horas"),
+    /** El traspaso que terminó (`handoff_at`/`handoff_reason`), si había uno. */
+    pausadaDesde: timestamp("pausada_desde"),
+    motivoPausa: text("motivo_pausa"),
+    occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+  },
+  (t) => [index("ia_vuelta_org_conv_idx").on(t.organizationId, t.conversationId, t.occurredAt)]
 );
 
 export const message = pgTable(
@@ -694,6 +739,13 @@ export const agentProfile = pgTable(
     instructions: text("instructions"),
     escalationRules: text("escalation_rules"),
     greeting: text("greeting"),
+    /**
+     * 076 — Tras cuántas horas sin que el equipo escriba la IA vuelve sola a
+     * una conversación en pausa, cuando el cliente escribe. NULL = nunca.
+     * Sin default en la base a propósito: la instalación que actualiza queda
+     * en «nunca»; un perfil nuevo nace con 24 (`HORAS_REACTIVACION_NUEVAS`).
+     */
+    reactivateAfterHours: integer("reactivate_after_hours"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -1447,5 +1499,60 @@ export const conversationNote = pgTable(
   },
   (t) => [
     index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
+  ]
+);
+
+/** 070 — chats fixados (até 3 por pessoa da equipe). */
+export const conversationPin = pgTable(
+  "conversation_pin",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    pinnedAt: timestamp("pinned_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("conversation_pin_user_conv_uq").on(t.userId, t.conversationId),
+    index("conversation_pin_org_user_idx").on(t.organizationId, t.userId),
+  ]
+);
+
+/**
+ * 072 — Reacciones a un mensaje (👍 ❤️ …), del cliente o del equipo.
+ *
+ * Una por actor y mensaje: WhatsApp, Instagram y Messenger guardan UNA sola
+ * reacción del negocio por mensaje, así que el equipo es un solo actor
+ * (`user_id` dice quién la puso). Quitar la reacción borra la fila.
+ */
+export const messageReaction = pgTable(
+  "message_reaction",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    messageId: text("message_id")
+      .notNull()
+      .references(() => message.id, { onDelete: "cascade" }),
+    actor: text("actor", { enum: ["cliente", "equipo"] }).notNull(),
+    /** Quién del equipo la puso; null en las del cliente. */
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    emoji: text("emoji").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("message_reaction_message_actor_uq").on(t.messageId, t.actor),
+    index("message_reaction_conv_idx").on(t.organizationId, t.conversationId),
   ]
 );

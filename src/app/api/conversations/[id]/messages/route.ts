@@ -7,7 +7,9 @@ import { apiError, parseBody, withAuth } from "@/lib/api";
 import { getConversation, listMessages } from "@/server/inbox/queries";
 import { serializeMessage } from "@/server/inbox/ingest";
 import { resolverCitas } from "@/server/inbox/quotes";
+import { reaccionesDe } from "@/server/inbox/reacciones";
 import { SendError, sendStructured, sendText } from "@/server/inbox/send";
+import { pausarIaTrasEnvioDeLaBandeja } from "@/server/inbox/pausa-manual";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,11 @@ export const GET = withAuth(async (session, req: Request, ctx: Params) => {
     session.organizationId,
     messages.map((r) => r.message)
   );
+  // 072: e as reações, também numa consulta só.
+  const reacciones = await reaccionesDe(
+    session.organizationId,
+    messages.map((r) => r.message.id)
+  );
   return Response.json({
     messages: messages.map((r) =>
       serializeMessage(
@@ -38,7 +45,8 @@ export const GET = withAuth(async (session, req: Request, ctx: Params) => {
         r.media,
         r.message.replyToWaMessageId
           ? citas.get(r.message.replyToWaMessageId) ?? null
-          : null
+          : null,
+        reacciones.get(r.message.id) ?? []
       )
     ),
   });
@@ -125,6 +133,9 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
               contacts: data.contacts,
               replyToMessageId: data.replyToMessageId,
             });
+    // 068: contestó una persona; la IA se hace a un lado, igual que si lo
+    // hubiera hecho desde el teléfono. Solo tras un envío que salió.
+    await pausarIaTrasEnvioDeLaBandeja(session.organizationId, id);
     return Response.json({ messageId: result.messageId });
   } catch (err) {
     if (err instanceof SendError) {

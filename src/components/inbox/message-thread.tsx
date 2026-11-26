@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Check,
   ArrowRightLeft,
+  Bot,
   CheckCheck,
   Clock3,
   Copy,
@@ -38,6 +39,13 @@ import { formatBytes, mediaLabel } from "./helpers";
 import { ForwardDialog } from "./forward-dialog";
 import { LinkedText } from "./linked-text";
 import { QuoteBlock } from "./quote-block";
+import { emojiAlElegir, reaccionDelEquipo } from "@/lib/reacciones";
+import {
+  BotonReaccionar,
+  FilaReacciones,
+  ReaccionesBurbuja,
+  type AccionReaccion,
+} from "./reacciones";
 
 function StatusTicks({ status }: { status: MessageDto["status"] }) {
   const cls = "h-[13px] w-[13px]";
@@ -343,7 +351,8 @@ function GestosBurbuja({
  * línea discreta y centrada, no una burbuja. No se responde ni se reenvía.
  */
 function EventoHilo({ evento }: { evento: EventoHiloDto }) {
-  const Icono = evento.tipo === "etapa" ? ArrowRightLeft : UserRoundCheck;
+  const Icono =
+    evento.tipo === "etapa" ? ArrowRightLeft : evento.tipo === "vuelta" ? Bot : UserRoundCheck;
   return (
     <div data-evento-id={evento.id} className="my-2 flex justify-center px-2">
       <span className="inline-flex max-w-full items-center gap-1.5 rounded-2xl border border-border bg-background/80 px-3 py-1 text-center text-[11.5px] text-text-2 shadow-sm">
@@ -377,7 +386,12 @@ export function MessageThread({
   notas = [],
   onBorrarNota,
   eventos = [],
+  onReact,
+  reaccionBloqueada = null,
+  irA = null,
 }: {
+  /** 079 — Mensaje al que saltar (buscador de la Bandeja). `nonce` distingue dos saltos al mismo. */
+  irA?: { messageId: string; nonce: number } | null;
   messages: MessageDto[];
   /** 039: quién firma las citas del cliente. */
   contactName: string;
@@ -391,6 +405,13 @@ export function MessageThread({
   onBorrarNota?: (n: NotaDto) => void;
   /** 054 — Cambios de etapa y traspaso, intercalados por hora. */
   eventos?: EventoHiloDto[];
+  /**
+   * 072 — Reaccionar como equipo (`""` quita). Devuelve el motivo si falló.
+   * Ausente si el canal no permite reaccionar desde aquí.
+   */
+  onReact?: (m: MessageDto, emoji: string) => Promise<string | null>;
+  /** 072 — Por qué no se puede reaccionar ahora (ventana cerrada), o null. */
+  reaccionBloqueada?: string | null;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   // 045 — El hilo se queda abajo mientras crece (una foto o un audio que
@@ -403,6 +424,23 @@ export function MessageThread({
   const [notice, setNotice] = useState<string | null>(null);
   const [resaltado, setResaltado] = useState<string | null>(null);
   const resaltadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 072 — Si la reacción no sale (Meta, ventana), el motivo va en el aviso.
+  const reaccionar = (m: MessageDto, emoji: string) => {
+    void onReact?.(m, emoji).then((error) => {
+      if (error) setNotice(error);
+    });
+  };
+  /** 072 — La reacción de un mensaje, o undefined si no se le puede reaccionar. */
+  const accionReaccion = (m: MessageDto): AccionReaccion | undefined => {
+    if (!onReact || !m.reactable) return undefined;
+    const actual = reaccionDelEquipo(m.reactions);
+    return {
+      actual,
+      bloqueo: reaccionBloqueada,
+      onReact: (emoji) => reaccionar(m, emojiAlElegir(actual, emoji)),
+    };
+  };
 
   // 039: el clic en una cita lleva al original y lo resalta un momento.
   const irAlCitado = useCallback((id: string) => {
@@ -423,12 +461,43 @@ export function MessageThread({
     []
   );
 
+  // 079 — Saltar al mensaje que eligió el buscador. Espera a que el hilo lo
+  // traiga y deja un ancla: cargar notas o eventos no regresa al fondo; un
+  // mensaje nuevo, sí.
+  const anclaRef = useRef<{ messageId: string; largo: number } | null>(null);
+  const saltoHecho = useRef<number | null>(null);
+  useEffect(() => {
+    if (!irA || saltoHecho.current === irA.nonce) return;
+    if (!messages.some((m) => m.id === irA.messageId)) return;
+    saltoHecho.current = irA.nonce;
+    anclaRef.current = { messageId: irA.messageId, largo: messages.length };
+    setResaltado(irA.messageId);
+    if (resaltadoTimer.current) clearTimeout(resaltadoTimer.current);
+    resaltadoTimer.current = setTimeout(() => setResaltado(null), 2500);
+  }, [irA, messages]);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    const ancla = anclaRef.current;
+    if (ancla && messages.length <= ancla.largo) {
+      const destino = el.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(ancla.messageId)}"]`);
+      if (destino) {
+        el.scrollTop +=
+          destino.getBoundingClientRect().top -
+          el.getBoundingClientRect().top -
+          el.clientHeight / 2 +
+          destino.offsetHeight / 2;
+        pegadoAbajo.current = false;
+        return;
+      }
+    }
+    anclaRef.current = null;
     el.scrollTop = el.scrollHeight;
     pegadoAbajo.current = true;
-  }, [messages.length, notas.length, eventos.length, notice]);
+    // Sin `resaltado`: el clic en una cita (039) también resalta, y no debe
+    // devolver el hilo al fondo.
+  }, [messages.length, notas.length, eventos.length, notice, irA?.nonce]);
 
   // Sin esto, una conversación corta con una foto quedaba en el primer
   // mensaje: al bajar al final todavía cabía todo (scroll 0) y, cuando la foto
@@ -480,6 +549,7 @@ export function MessageThread({
               : undefined
           }
           onCopied={(ok) => setNotice(ok ? "Texto copiado" : "Não foi possível copiar o texto")}
+          reaccion={accionReaccion(menuDe)}
         />
       )}
       {(() => {
@@ -510,7 +580,9 @@ export function MessageThread({
         const puedeCitar = Boolean(onReply && m.quotable);
         const puedeReenviar = Boolean(onForwarded && claseReenvio(m));
         const textoCopiable = m.media ? m.media.caption : m.text;
-        const tieneMenu = puedeCitar || puedeReenviar || Boolean(textoCopiable);
+        const reaccion = accionReaccion(m);
+        const tieneMenu =
+          puedeCitar || puedeReenviar || Boolean(textoCopiable) || Boolean(reaccion);
 
         return (
           <div key={m.id}>
@@ -614,17 +686,36 @@ export function MessageThread({
                   </p>
                 )}
               </div>
+              {/* 072 — Las reacciones, pegadas bajo la burbuja. */}
+              <ReaccionesBurbuja
+                messageId={m.id}
+                reacciones={m.reactions ?? []}
+                out={out}
+                onQuitar={
+                  reaccion && !reaccionBloqueada && reaccion.actual
+                    ? () => reaccionar(m, "")
+                    : undefined
+                }
+              />
               </GestosBurbuja>
               {/* 059 · D5 — Con ratón, dos iconos al pasar por la burbuja. En
                   una pantalla táctil no se pintan: ahí se desliza o se
                   mantiene presionado (D6). */}
-              {(puedeCitar || puedeReenviar) && (
+              {(puedeCitar || puedeReenviar || reaccion) && (
                 <span
                   className={cn(
                     "hidden shrink-0 items-center [@media(hover:hover)]:flex",
                     out ? "flex-row-reverse" : "flex-row"
                   )}
                 >
+                  {reaccion && (
+                    <BotonReaccionar
+                      messageId={m.id}
+                      out={out}
+                      reaccion={reaccion}
+                      className={ICONO_ACCION}
+                    />
+                  )}
                   {puedeCitar && (
                     <button
                       type="button"
@@ -679,7 +770,8 @@ const ICONO_ACCION =
 
 /**
  * 059 · D6 — El menú de una burbuja al mantenerla presionada, abajo de la
- * pantalla: responder, reenviar y copiar el texto, según aplique.
+ * pantalla: responder, reenviar y copiar el texto, según aplique. 072: arriba,
+ * la fila de reacciones, como en WhatsApp.
  */
 function MenuMensaje({
   message,
@@ -687,12 +779,14 @@ function MenuMensaje({
   onReply,
   onForward,
   onCopied,
+  reaccion,
 }: {
   message: MessageDto;
   onClose: () => void;
   onReply?: () => void;
   onForward?: () => void;
   onCopied: (ok: boolean) => void;
+  reaccion?: AccionReaccion;
 }) {
   const texto = message.media ? message.media.caption : message.text;
   useEffect(() => {
@@ -735,6 +829,11 @@ function MenuMensaje({
         className="fixed inset-x-0 bottom-0 rounded-t-2xl border-t bg-card p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] text-card-foreground shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {reaccion && (
+          <div className="border-b border-border px-1 pb-2 pt-1">
+            <FilaReacciones reaccion={reaccion} onElegido={onClose} />
+          </div>
+        )}
         {onReply && item("Responder", Reply, onReply)}
         {onForward && item("Encaminhar", Forward, onForward)}
         {texto && item("Copiar texto", Copy, () => void copiar(texto))}
