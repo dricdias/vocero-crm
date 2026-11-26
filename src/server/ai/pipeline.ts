@@ -21,8 +21,10 @@ import {
 import { HANDOFF_BACKUP_ACK, matchesHandoffIntent } from "@/server/ai/handoff";
 import {
   buildAgentSystemPrompt,
+  renderFichaParaModelo,
   TURN_FORMAT_REMINDER,
 } from "@/server/ai/prompts";
+import { upsertFicha } from "@/server/bot/ficha";
 import {
   atendidoPorPersona,
   debidosVigentes,
@@ -278,10 +280,30 @@ export async function runAgentTurn(
   const previousQuery = history.filter((m) => m.direction === "in" && m.id !== lastInbound.id).at(-1)?.text ?? "";
   const supportKnowledge = renderAgiSupport(support, lastInbound.text ?? "", previousQuery);
 
+  // En un grupo el contacto es el grupo: no hay un lead al que hacerle ficha.
+  const group =
+    conversation.channel === "whatsapp" &&
+    /@g\.us$/.test(conversation.channelThreadRef ?? "");
+  const fichaAtual = group
+    ? null
+    : (
+        await db
+          .select({ ficha: schema.contact.ficha })
+          .from(schema.contact)
+          .where(
+            scoped(
+              schema.contact.organizationId,
+              organizationId,
+              eq(schema.contact.id, conversation.contactId)
+            )
+          )
+          .limit(1)
+      )[0]?.ficha;
+
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge, group: conversation.channel === "whatsapp" && /@g\.us$/.test(conversation.channelThreadRef ?? "") }),
+      content: buildAgentSystemPrompt({ profile, kb, stages, agenda, supportKnowledge, group }),
     },
     ...history
       .filter((m) => m.text)
@@ -296,6 +318,16 @@ export async function runAgentTurn(
     ...(mapaDeHuecos
       ? [{ role: "system" as const, content: mapaDeHuecos }]
       : []),
+    ...(group
+      ? []
+      : [
+          {
+            role: "system" as const,
+            content: renderFichaParaModelo(
+              fichaAtual as Record<string, unknown> | null | undefined
+            ),
+          },
+        ]),
     // 029 — Lo último que lee el modelo: contestar con el JSON de la acción.
     { role: "system", content: TURN_FORMAT_REMINDER },
   ];
@@ -312,6 +344,17 @@ export async function runAgentTurn(
   }
 
   let action: AgentActionType = result.data;
+
+  // La ficha va antes que la acción: varias ramas terminan el turno con
+  // `return`, y lo que el cliente contó de sí no depende de lo que se conteste.
+  if (!group && action.ficha && Object.keys(action.ficha).length) {
+    await guardarFichaDoAgente(
+      organizationId,
+      conversation.contactId,
+      conversationId,
+      action.ficha
+    );
+  }
 
   // 015 — Agenda. Un fallo del motor degrada el turno (el agente responde sin
   // agendar), nunca lo tumba: quedarse callado es peor que no agendar.
@@ -525,6 +568,29 @@ async function moveLeadToStage(
     // perdida, la puerta lo rechaza y el lead se queda donde está — mejor eso
     // que un motivo inventado.
   });
+}
+
+/**
+ * La ficha que el agente fue descubriendo, por la misma puerta que el cerebro
+ * externo y el dueño (`upsertFicha`: merge, cotas y alcance por organización).
+ * Un fallo aquí no tumba el turno: el cliente sigue recibiendo su respuesta.
+ */
+async function guardarFichaDoAgente(
+  organizationId: string,
+  contactId: string,
+  conversationId: string,
+  ficha: Record<string, unknown>
+): Promise<void> {
+  try {
+    const res = await upsertFicha({ organizationId, contactId, ficha });
+    if (!res) return;
+    publish(organizationId, {
+      type: "conversation.updated",
+      data: { conversation: { id: conversationId } },
+    });
+  } catch (err) {
+    console.error(`[agente] no se pudo guardar la ficha de ${contactId}:`, err);
+  }
 }
 
 async function appendLeadNote(

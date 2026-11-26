@@ -19,6 +19,22 @@ export function renderKb(entries: KbEntry[]): string {
 }
 
 /**
+ * Lo que la ficha del lead ya sabe, para el final del turno (es estado de
+ * AHORA, como el mapa de huecos). Sin ella el modelo vuelve a preguntar la
+ * ciudad que el cliente dijo hace 30 mensajes, fuera de la ventana de 20.
+ */
+export function renderFichaParaModelo(
+  ficha: Record<string, unknown> | null | undefined
+): string {
+  const linhas = Object.entries(ficha ?? {})
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .map(([k, v]) => `- ${k}: ${String(v)}`);
+  return linhas.length
+    ? `FICHA DO LEAD (o que já se sabe deste cliente; não pergunte de novo):\n${linhas.join("\n")}`
+    : "FICHA DO LEAD: ainda vazia.";
+}
+
+/**
  * 029 — Va al final de los mensajes del turno, después del historial. Las
  * respuestas anteriores del agente llegan como texto plano, y con ellas a la
  * vista el modelo contestaba en texto plano: cada turno después del primero
@@ -78,6 +94,12 @@ export function buildAgentSystemPrompt(input: {
       '- {"action":"move_stage","stage":"<nome exato da etapa>","reply":"..."} — mover o lead (se o cliente espera resposta, inclua reply).',
       '- {"action":"handoff","reason":"...","farewell":"..."} — escalar para um humano (farewell opcional para se despedir).',
       ...agendaLines,
+      ...(input.group
+        ? []
+        : [
+            'Em QUALQUER ação você pode incluir "ficha": {"chave":"valor"} com dados que o cliente disse sobre si nesta conversa e que ainda não estão na ficha, ou que ele corrigiu. Ex.: {"action":"reply","text":"...","ficha":{"nome":"Ana","cidade":"Orlando","servico":"limpeza de piscina"}}.',
+            '- Chaves curtas em minúsculas, sem acento, com _ (nome, cidade, servico, orcamento, prazo, como_conheceu…). Valores curtos. Só o que o cliente disse: nunca suponha nem invente. Sem dado novo, omita "ficha".',
+          ]),
       "Regras rígidas:",
       "- Toda mensagem do cliente que não seja um encerramento recebe resposta: uma saudação, uma mensagem curta, estranha ou confusa, ou um «oi, teste» são respondidos (cumprimente e ofereça ajuda). Nunca suponha que é um teste ou um erro.",
       "- Se o cliente pedir para falar com uma pessoa/humano/atendente → handoff.",
