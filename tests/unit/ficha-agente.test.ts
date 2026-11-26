@@ -179,7 +179,7 @@ describe("a ficha no turno do agente", () => {
     turno(conversacion(), { cidade: "Orlando" });
     await runAgentTurn("cv_1");
 
-    const mensagens = chatJson.mock.calls[0][1] as { role: string; content: string }[];
+    const mensagens = chatJson.mock.calls[0]![1] as { role: string; content: string }[];
     expect(mensagens.some((m) => m.content.includes("- cidade: Orlando"))).toBe(true);
     expect(upsertFicha).not.toHaveBeenCalled();
   });
@@ -210,7 +210,7 @@ describe("a ficha no turno do agente", () => {
     );
     await runAgentTurn("cv_1");
     expect(upsertFicha).not.toHaveBeenCalled();
-    const mensagens = chatJson.mock.calls[0][1] as { content: string }[];
+    const mensagens = chatJson.mock.calls[0]![1] as { content: string }[];
     expect(mensagens.some((m) => m.content.startsWith("FICHA DO LEAD"))).toBe(false);
   });
 });
