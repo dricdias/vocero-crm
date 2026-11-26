@@ -156,6 +156,8 @@ describe("a ficha no turno do agente", () => {
     upsertFicha.mockReset();
     upsertFicha.mockResolvedValue({ ficha: {} });
     vi.stubEnv("OPENROUTER_API_TOKEN", "token-test");
+    // O job «completo» do CI liga a agenda, que lê ofertas do banco simulado.
+    vi.stubEnv("AGENDA", "");
   });
 
   it("salva a ficha que vem junto com a resposta, e a resposta sai igual", async () => {
