@@ -145,8 +145,8 @@ describe("lib/esperando", () => {
     expect(minutosDeEspera(min(10).toISOString(), min(7).getTime())).toBe(0);
     expect(textoMinutos(65)).toBe("1 h 05 min");
     expect(textoMinutos(180)).toBe("3 h");
-    expect(textoCintillo(1, 3)).toBe("1 cliente espera a una persona · lleva 3 min");
-    expect(textoCintillo(3, 42)).toBe("3 clientes esperan a una persona · el que más lleva: 42 min");
+    expect(textoCintillo(1, 3)).toBe("1 cliente esperando uma pessoa · há 3 min");
+    expect(textoCintillo(3, 42)).toBe("3 clientes esperando uma pessoa · o mais antigo: há 42 min");
   });
 
   it("esperasDe ordena de la que más lleva a la que menos y deja fuera a las que no esperan", () => {
@@ -162,8 +162,8 @@ describe("lib/esperando", () => {
     expect(nuevasParaAvisar(esperas, vistas)).toEqual([]);
     const otraVez = esperasDe([conv("a", 2)], min(20).getTime());
     expect(nuevasParaAvisar(otraVez, vistas).map((e) => e.id)).toEqual(["a"]);
-    expect(textoAviso(nuevas)).toBe("Cliente a lleva 20 min esperando a una persona");
-    expect(textoAviso([...nuevas, ...nuevas])).toBe("2 clientes llevan más de 15 min esperando a una persona");
+    expect(textoAviso(nuevas)).toBe("Cliente a está há 20 min esperando uma pessoa");
+    expect(textoAviso([...nuevas, ...nuevas])).toBe("2 clientes estão há mais de 15 min esperando uma pessoa");
   });
 });
 

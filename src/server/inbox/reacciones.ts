@@ -101,7 +101,7 @@ export async function reaccionesDe(
     lista.push({
       emoji: f.r.emoji,
       actor: f.r.actor,
-      nombre: f.r.actor === "equipo" ? (f.usuario ?? "Tu equipo") : (f.contacto ?? null),
+      nombre: f.r.actor === "equipo" ? (f.usuario ?? "Sua equipe") : (f.contacto ?? null),
     });
     out.set(f.r.messageId, lista);
   }
@@ -291,21 +291,21 @@ export async function reaccionar(input: {
       )
     )
     .limit(1);
-  if (!fila) throw new ReaccionError("not_found", "Mensaje no encontrado");
+  if (!fila) throw new ReaccionError("not_found", "Mensagem não encontrada");
   const { message, conversation, contact } = fila;
 
   // Guardrail del Laboratorio: jamás toca la API real.
   if (conversation.isTest) {
     throw new ReaccionError(
       "sandbox_violation",
-      "Conversación de prueba del Laboratorio: el envío real está prohibido"
+      "Conversa de teste do Laboratório: o envio real é proibido"
     );
   }
   if (!canalReacciona(conversation.channel)) {
-    throw new ReaccionError("reaction_unavailable", "Este canal no permite reaccionar");
+    throw new ReaccionError("reaction_unavailable", "Este canal não permite reagir");
   }
   if (!esReaccionable(message)) {
-    throw new ReaccionError("reaction_unavailable", "A este mensaje no se le puede reaccionar");
+    throw new ReaccionError("reaction_unavailable", "Não é possível reagir a esta mensagem");
   }
   // Fork pt-BR: com o Evolution Go o WhatsApp não tem janela de 24 h.
   const evolution =
@@ -341,11 +341,11 @@ export async function reaccionar(input: {
     }
   } else if (conversation.channel === "whatsapp") {
     const credentials = await getCredentialsByOrg(input.organizationId);
-    if (!credentials) throw new ReaccionError("not_connected", "No hay número de WhatsApp conectado");
+    if (!credentials) throw new ReaccionError("not_connected", "Não há número de WhatsApp conectado");
     if (credentials.status === "reconnect_required") {
       throw new ReaccionError(
         "reconnect_required",
-        "El token de WhatsApp expiró: reconecta el número en Configuración"
+        "O token do WhatsApp expirou: reconecte o número em Configurações"
       );
     }
     const destinatario = destinatarioMeta(
@@ -355,7 +355,7 @@ export async function reaccionar(input: {
     if (!destinatario) {
       throw new ReaccionError(
         "meta_error",
-        "El contacto no tiene teléfono ni identidad de WhatsApp utilizable"
+        "O contato não tem telefone nem identidade de WhatsApp utilizável"
       );
     }
     try {
@@ -381,23 +381,23 @@ export async function reaccionar(input: {
     const channel = conversation.channel as "instagram" | "messenger";
     const etiqueta = channel === "instagram" ? "Instagram" : "Messenger";
     if (!isChannelEnabled(channel)) {
-      throw new ReaccionError("not_connected", `El canal de ${etiqueta} está desactivado en esta instancia`);
+      throw new ReaccionError("not_connected", `O canal ${etiqueta} está desativado nesta instância`);
     }
     const creds =
       channel === "instagram"
         ? await getInstagramCredentialsByOrg(input.organizationId)
         : await getMessengerCredentialsByOrg(input.organizationId);
-    if (!creds) throw new ReaccionError("not_connected", `No hay cuenta de ${etiqueta} conectada`);
+    if (!creds) throw new ReaccionError("not_connected", `Não há conta do ${etiqueta} conectada`);
     if (creds.status === "reconnect_required") {
       throw new ReaccionError(
         "reconnect_required",
-        `El token de ${etiqueta} expiró: reconecta la cuenta en Configuración`
+        `O token do ${etiqueta} expirou: reconecte a conta em Configurações`
       );
     }
     if (creds.source !== "zernio") {
       throw new ReaccionError(
         "reaction_unavailable",
-        `${etiqueta} conectado con app propia de Meta no permite reaccionar desde el CRM`
+        `${etiqueta} conectado com app próprio da Meta não permite reagir pelo CRM`
       );
     }
     try {
@@ -415,13 +415,13 @@ export async function reaccionar(input: {
           else await markMessengerReconnectRequired(input.organizationId);
           throw new ReaccionError(
             "reconnect_required",
-            `El token de ${etiqueta} expiró o fue revocado: reconecta la cuenta`
+            `O token do ${etiqueta} expirou ou foi revogado: reconecte a conta`
           );
         }
         if (err.status === 0 || err.status >= 500) {
           throw new ReaccionError(
             "meta_unavailable",
-            `${etiqueta} no está disponible en este momento; intenta de nuevo`
+            `${etiqueta} não está disponível agora; tente de novo`
           );
         }
         throw new ReaccionError("meta_error", err.message);

@@ -18,7 +18,6 @@ import { leerConfigDespacho } from "@/server/brains/config";
 import type { FilaDespacho } from "@/server/dispatch/outbox";
 import { isWindowOpen, windowExpiresAt } from "@/server/inbox/window";
 import { windowMsFor } from "@/server/channels/capabilities";
-import { atencionHumanaPara } from "@/server/brains/atencion-humana";
 
 /**
  * 021 — Entrega de un despacho al cerebro: leer la ráfaga, armar el evento y
@@ -232,13 +231,6 @@ export async function construirEvento(
     fila.organizationId,
     conv.id,
     fila.messageIds ?? []
-  );
-
-  // 076 — Si una persona atendió y la IA no ha vuelto a hablar desde entonces.
-  const humanAttention = await atencionHumanaPara(
-    fila.organizationId,
-    conv,
-    messages.map((m) => m.id)
   );
 
   return armarEvento({

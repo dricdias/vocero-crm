@@ -34,12 +34,12 @@ export function EsperandoCard({ inicial }: { inicial: AvisoEsperandoDto }) {
       <CardHeader>
         <CardTitle>Clientes esperando</CardTitle>
         <CardDescription>
-          Qué ves dentro de la app cuando un cliente espera a una persona. Es solo para ti: el resto del
-          equipo no cambia.
+          O que você vê dentro do app quando um cliente espera uma pessoa. Vale só para você: o resto da
+          equipe não muda.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div role="radiogroup" aria-label="Qué ves cuando un cliente espera" className="space-y-2">
+        <div role="radiogroup" aria-label="O que você vê quando um cliente espera" className="space-y-2">
           {MODOS_ESPERANDO.map((modo) => {
             const elegido = datos.modo === modo;
             return (
@@ -74,14 +74,14 @@ export function EsperandoCard({ inicial }: { inicial: AvisoEsperandoDto }) {
         {datos.modo !== "nada" && (
           <div className="flex items-start justify-between gap-4 border-t pt-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold">Sonido del aviso</p>
-              <p className="text-xs text-text-3">Suena cuando un cliente pasa de 15 minutos esperando.</p>
+              <p className="text-sm font-semibold">Som do aviso</p>
+              <p className="text-xs text-text-3">Toca quando um cliente passa de 15 minutos esperando.</p>
             </div>
             <Switch
               size="sm"
               checked={datos.sonido}
               onCheckedChange={(v) => guardar({ sonido: v })}
-              label="Sonido del aviso de clientes esperando"
+              label="Som do aviso de clientes esperando"
             />
           </div>
         )}

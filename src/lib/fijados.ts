@@ -6,7 +6,7 @@
 export const LIMITE_FIJADOS = 3;
 
 export const MENSAJE_LIMITE_FIJADOS =
-  "Solo puedes fijar 3 chats. Desfija uno para fijar este.";
+  "Você só pode fixar 3 conversas. Desafixe uma para fixar esta.";
 
 /**
  * Los fijados arriba, el más reciente primero; el resto queda en el orden en

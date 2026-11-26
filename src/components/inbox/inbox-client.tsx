@@ -325,12 +325,12 @@ export function InboxClient({
           body: JSON.stringify({ emoji }),
         }
       ).catch(() => null);
-      if (!res) return "Sin conexión con el servidor";
+      if (!res) return "Sem conexão com o servidor";
       const data = (await res.json().catch(() => null)) as {
         reactions?: ReaccionDto[];
         error?: { message?: string };
       } | null;
-      if (!res.ok) return data?.error?.message ?? "No se pudo enviar la reacción";
+      if (!res.ok) return data?.error?.message ?? "Não foi possível enviar a reação";
       setMessages((prev) =>
         prev.map((x) => (x.id === m.id ? { ...x, reactions: data?.reactions ?? [] } : x))
       );

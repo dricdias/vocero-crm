@@ -14,7 +14,7 @@ export const GET = withAuth(async (session, req: Request) => {
     return apiError(400, "consulta_corta", `Escribe al menos ${BUSQUEDA_MIN_CARACTERES} caracteres`);
   }
   if (q.length > BUSQUEDA_MAX_CARACTERES) {
-    return apiError(400, "consulta_larga", "La búsqueda es demasiado larga");
+    return apiError(400, "consulta_larga", "A busca é longa demais");
   }
   return Response.json({ resultados: await buscarMensajes(session.organizationId, q) });
 });

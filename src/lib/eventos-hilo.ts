@@ -58,8 +58,8 @@ export function textoTraspaso(motivo: string | null): string {
  */
 export function textoVuelta(motivo: string, horas: number | null): string {
   if (motivo === "sin_equipo" && horas) {
-    return `La IA volvió a atender (${horas} h sin respuesta del equipo)`;
+    return `A IA voltou a atender (${horas} h sem resposta da equipe)`;
   }
-  if (motivo === "pausa_vencida") return "La IA volvió a atender (terminó la pausa)";
-  return "La IA volvió a atender";
+  if (motivo === "pausa_vencida") return "A IA voltou a atender (a pausa terminou)";
+  return "A IA voltou a atender";
 }

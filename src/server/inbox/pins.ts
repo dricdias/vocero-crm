@@ -50,7 +50,7 @@ export async function pinConversation(
   conversationId: string
 ): Promise<{ pinnedAt: Date }> {
   if (!(await fijable(organizationId, conversationId))) {
-    throw new PinError(404, "not_found", "Conversación no encontrada");
+    throw new PinError(404, "not_found", "Conversa não encontrada");
   }
   return getDb().transaction(async (tx) => {
     await tx.execute(
@@ -108,7 +108,7 @@ export async function unpinConversation(
   conversationId: string
 ): Promise<void> {
   if (!(await fijable(organizationId, conversationId))) {
-    throw new PinError(404, "not_found", "Conversación no encontrada");
+    throw new PinError(404, "not_found", "Conversa não encontrada");
   }
   await getDb()
     .delete(schema.conversationPin)

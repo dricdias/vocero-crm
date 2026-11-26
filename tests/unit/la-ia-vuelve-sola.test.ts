@@ -137,7 +137,7 @@ describe("valores por defecto y textos", () => {
   });
 
   it("el hilo dice por qué volvió", () => {
-    expect(textoVuelta("sin_equipo", 24)).toBe("La IA volvió a atender (24 h sin respuesta del equipo)");
-    expect(textoVuelta("pausa_vencida", null)).toBe("La IA volvió a atender (terminó la pausa)");
+    expect(textoVuelta("sin_equipo", 24)).toBe("A IA voltou a atender (24 h sem resposta da equipe)");
+    expect(textoVuelta("pausa_vencida", null)).toBe("A IA voltou a atender (a pausa terminou)");
   });
 });

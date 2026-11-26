@@ -36,7 +36,7 @@ export function FilaReacciones({
   const bloqueada = !!reaccion.bloqueo;
   return (
     <div>
-      <div role="group" aria-label="Reaccionar" className="flex items-center justify-between gap-0.5">
+      <div role="group" aria-label="Reagir" className="flex items-center justify-between gap-0.5">
         {REACCIONES_RAPIDAS.map((emoji) => {
           const puesta = reaccion.actual === emoji;
           return (
@@ -44,8 +44,8 @@ export function FilaReacciones({
               key={emoji}
               type="button"
               aria-pressed={puesta}
-              aria-label={puesta ? `Quitar reacción ${emoji}` : `Reaccionar con ${emoji}`}
-              title={reaccion.bloqueo ?? (puesta ? "Quitar tu reacción" : `Reaccionar con ${emoji}`)}
+              aria-label={puesta ? `Remover reação ${emoji}` : `Reagir com ${emoji}`}
+              title={reaccion.bloqueo ?? (puesta ? "Remover sua reação" : `Reagir com ${emoji}`)}
               disabled={bloqueada}
               data-reaccionar={emoji}
               onClick={() => elegir(emoji)}
@@ -62,8 +62,8 @@ export function FilaReacciones({
           <button
             type="button"
             aria-pressed
-            aria-label={`Quitar reacción ${reaccion.actual}`}
-            title="Quitar tu reacción"
+            aria-label={`Remover reação ${reaccion.actual}`}
+            title="Remover sua reação"
             disabled={bloqueada}
             data-reaccionar={reaccion.actual}
             onClick={() => elegir(reaccion.actual!)}
@@ -76,11 +76,11 @@ export function FilaReacciones({
           disabled={bloqueada}
           onSelect={elegir}
           triggerContent={<Plus className="h-4 w-4" strokeWidth={2} />}
-          triggerLabel="Más reacciones"
-          triggerTitle={reaccion.bloqueo ?? "Más reacciones"}
+          triggerLabel="Mais reações"
+          triggerTitle={reaccion.bloqueo ?? "Mais reações"}
           triggerClassName="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-text-2 hover:text-foreground disabled:opacity-40"
           panelClassName="fixed inset-x-3 top-1/2 z-[60] mx-auto w-auto max-w-[360px] -translate-y-1/2"
-          optionLabel="Reaccionar con"
+          optionLabel="Reagir com"
         />
       </div>
       {reaccion.bloqueo && (
@@ -175,8 +175,8 @@ export function BotonReaccionar({
         ref={boton}
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        aria-label="Reaccionar"
-        title="Reaccionar"
+        aria-label="Reagir"
+        title="Reagir"
         aria-haspopup="dialog"
         aria-expanded={abierto}
         data-boton-reaccionar={messageId}
@@ -189,7 +189,7 @@ export function BotonReaccionar({
           <div
             ref={panel}
             role="dialog"
-            aria-label="Reaccionar al mensaje"
+            aria-label="Reagir à mensagem"
             data-panel-reaccionar={messageId}
             style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, width: ANCHO }}
             className="fixed z-50 rounded-full border border-border-strong bg-popover px-1.5 py-1 text-popover-foreground shadow-pop"
@@ -252,8 +252,8 @@ export function ReaccionesBurbuja({
             data-reaccion={g.emoji}
             data-actor="equipo"
             onClick={onQuitar}
-            aria-label={`${g.emoji} de ${quien}. Toca para quitar tu reacción`}
-            title={`${quien} · toca para quitarla`}
+            aria-label={`${g.emoji} de ${quien}. Toque para remover sua reação`}
+            title={`${quien} · toque para remover`}
             className={cn(clase, "hover:bg-secondary")}
           >
             {contenido}

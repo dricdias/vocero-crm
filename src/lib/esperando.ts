@@ -74,8 +74,8 @@ export function textoMinutos(minutos: number): string {
 export function textoCintillo(total: number, minutosDelMasAntiguo: number): string {
   const lleva = textoMinutos(minutosDelMasAntiguo);
   return total === 1
-    ? `1 cliente espera a una persona · lleva ${lleva}`
-    : `${total} clientes esperan a una persona · el que más lleva: ${lleva}`;
+    ? `1 cliente esperando uma pessoa · há ${lleva}`
+    : `${total} clientes esperando uma pessoa · o mais antigo: há ${lleva}`;
 }
 
 export type Espera = {
@@ -127,9 +127,9 @@ export function nuevasParaAvisar(
 export function textoAviso(nuevas: readonly Espera[], umbral = UMBRAL_AVISO_MIN): string {
   if (nuevas.length === 1) {
     const e = nuevas[0]!;
-    return `${e.nombre} lleva ${textoMinutos(e.minutos)} esperando a una persona`;
+    return `${e.nombre} está há ${textoMinutos(e.minutos)} esperando uma pessoa`;
   }
-  return `${nuevas.length} clientes llevan más de ${umbral} min esperando a una persona`;
+  return `${nuevas.length} clientes estão há mais de ${umbral} min esperando uma pessoa`;
 }
 
 /* ---- Lo que ya se le avisó a cada persona, en este navegador ---- */
@@ -171,17 +171,17 @@ export type ModoEsperando = (typeof MODOS_ESPERANDO)[number];
 
 export const ETIQUETA_MODO_ESPERANDO: Record<ModoEsperando, { titulo: string; cuando: string }> = {
   todo: {
-    titulo: "Cintillo y aviso a los 15 min",
+    titulo: "Faixa e aviso aos 15 min",
     cuando:
-      "Arriba de cualquier pantalla ves cuántos clientes esperan, y te avisamos cuando uno pasa de 15 minutos.",
+      "No topo de qualquer tela você vê quantos clientes esperam, e avisamos quando um passa de 15 minutos.",
   },
   solo_aviso: {
-    titulo: "Solo el aviso de los 15 min",
-    cuando: "Sin cintillo: solo te avisamos cuando un cliente pasa de 15 minutos esperando.",
+    titulo: "Só o aviso aos 15 min",
+    cuando: "Sem faixa: só avisamos quando um cliente passa de 15 minutos esperando.",
   },
   nada: {
     titulo: "Nada",
-    cuando: "Ni cintillo ni aviso. Quién espera sigue en la pestaña «Esperando» de la Bandeja.",
+    cuando: "Nem faixa nem aviso. Quem espera continua na aba «Esperando» da Caixa de entrada.",
   },
 };
 

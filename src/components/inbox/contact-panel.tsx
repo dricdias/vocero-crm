@@ -40,18 +40,18 @@ type DuracionPausa = "1h" | "manana" | "indefinida";
 /** 076 — Las tres duraciones de la pausa manual. */
 const OPCIONES_PAUSA: { valor: DuracionPausa; etiqueta: string }[] = [
   { valor: "1h", etiqueta: "1 hora" },
-  { valor: "manana", etiqueta: "Hasta mañana" },
+  { valor: "manana", etiqueta: "Até amanhã" },
   { valor: "indefinida", etiqueta: "Indefinida" },
 ];
 
 /** «En pausa hasta las 15:30», «… hasta mañana, 09:00» o «En pausa». */
 function textoPausaHasta(iso: string | null): string {
-  if (!iso) return "En pausa";
+  if (!iso) return "Em pausa";
   const fin = new Date(iso);
-  if (fin.getTime() <= Date.now()) return "En pausa · vuelve cuando el cliente escriba";
-  const hora = fin.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+  if (fin.getTime() <= Date.now()) return "Em pausa · volta quando o cliente escrever";
+  const hora = fin.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
   const mismoDia = fin.toDateString() === new Date().toDateString();
-  return mismoDia ? `En pausa hasta las ${hora}` : `En pausa hasta mañana, ${hora}`;
+  return mismoDia ? `Em pausa até ${hora}` : `Em pausa até amanhã, ${hora}`;
 }
 
 export function ContactPanel({

@@ -30,7 +30,7 @@ export function agruparReacciones(reacciones: readonly ReaccionDto[]): GrupoReac
   for (const r of reacciones) {
     const g = grupos.get(r.emoji) ?? { emoji: r.emoji, cuantos: 0, nombres: [], delEquipo: false };
     g.cuantos++;
-    g.nombres.push(r.nombre ?? (r.actor === "equipo" ? "Tu equipo" : "Cliente"));
+    g.nombres.push(r.nombre ?? (r.actor === "equipo" ? "Sua equipe" : "Cliente"));
     if (r.actor === "equipo") g.delEquipo = true;
     grupos.set(r.emoji, g);
   }
@@ -88,4 +88,4 @@ export function canalReacciona(channel: Channel): boolean {
   return channel === "whatsapp" || channel === "instagram" || channel === "messenger";
 }
 
-export const MOTIVO_VENTANA_CERRADA = "Ventana de 24 horas cerrada: no se puede reaccionar";
+export const MOTIVO_VENTANA_CERRADA = "Janela de 24 horas fechada: não é possível reagir";

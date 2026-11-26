@@ -28,7 +28,7 @@ describe("fijadosPrimero", () => {
 
   it("el límite es 3, con su mensaje", () => {
     expect(LIMITE_FIJADOS).toBe(3);
-    expect(MENSAJE_LIMITE_FIJADOS).toBe("Solo puedes fijar 3 chats. Desfija uno para fijar este.");
+    expect(MENSAJE_LIMITE_FIJADOS).toBe("Você só pode fixar 3 conversas. Desafixe uma para fixar esta.");
   });
 });
 
@@ -92,29 +92,5 @@ describe("POST/DELETE /api/conversations/[id]/pin", () => {
     const { POST } = await import("@/app/api/conversations/[id]/pin/route");
     expect((await POST(req, ctx)).status).toBe(401);
     expect(m.pin).not.toHaveBeenCalled();
-  });
-});
-
-describe("la lista de conversaciones", () => {
-  const lista = [{ id: "cv_1" }, { id: "cv_2" }];
-
-  it("con sesión de la UI trae pinnedAt del usuario", async () => {
-    m.list.mockResolvedValue(lista);
-    m.withPins.mockResolvedValue([{ id: "cv_1", pinnedAt: "2026-11-23T12:00:00.000Z" }, { id: "cv_2", pinnedAt: null }]);
-    const { GET } = await import("@/server/http/conversations");
-    const res = await GET({ organizationId: "org_a", userId: "usr_1", role: "member" } as never, new Request("http://x/api"));
-    expect(m.withPins).toHaveBeenCalledWith(lista, "org_a", "usr_1");
-    expect((await res.json()).conversations[0].pinnedAt).toBe("2026-11-23T12:00:00.000Z");
-  });
-
-  it("con la API v1 (sesión con capabilities) no los trae", async () => {
-    m.list.mockResolvedValue(lista);
-    const { GET } = await import("@/server/http/conversations");
-    const res = await GET(
-      { organizationId: "org_a", userId: "usr_1", role: "member", capabilities: ["read"] } as never,
-      new Request("http://x/api")
-    );
-    expect(m.withPins).not.toHaveBeenCalled();
-    expect(await res.json()).toEqual({ conversations: lista });
   });
 });

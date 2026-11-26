@@ -10,7 +10,7 @@ type Params = { params: Promise<{ id: string; messageId: string }> };
 /** 072 — `""` quita la reacción del equipo; un emoji la pone o la cambia. */
 const schema = z
   .object({
-    emoji: z.string().max(64).refine(emojiValido, "debe ser un emoji o vacío para quitarla"),
+    emoji: z.string().max(64).refine(emojiValido, "deve ser um emoji, ou vazio para remover"),
   })
   .strict();
 

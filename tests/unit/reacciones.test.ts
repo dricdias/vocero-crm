@@ -34,7 +34,7 @@ describe("072 — agruparReacciones", () => {
       { emoji: "😂", actor: "cliente", nombre: null },
       { emoji: "😂", actor: "equipo", nombre: null },
     ]);
-    expect(grupos[0]!.nombres).toEqual(["Cliente", "Tu equipo"]);
+    expect(grupos[0]!.nombres).toEqual(["Cliente", "Sua equipe"]);
   });
 });
 

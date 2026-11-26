@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** 070 — Texto de la acción, igual en la fila y en la cabecera. */
 export function etiquetaFijar(pinned: boolean) {
-  return pinned ? "Desfijar chat" : "Fijar chat";
+  return pinned ? "Desafixar conversa" : "Fixar conversa";
 }
 
 /** Chincheta junto a la hora de un chat fijado. */
@@ -14,7 +14,7 @@ export function PinMark({ pinned }: { pinned: boolean }) {
   return (
     <Pin
       data-fijado
-      aria-label="Chat fijado"
+      aria-label="Conversa fixada"
       className="h-3 w-3 shrink-0 rotate-45 fill-current text-text-3"
       strokeWidth={1.8}
     />
@@ -82,7 +82,7 @@ export function PinHeaderButton({
       ) : (
         <Pin className="h-3.5 w-3.5" strokeWidth={1.8} />
       )}
-      <span className="max-sm:sr-only">{pinned ? "Desfijar" : "Fijar"}</span>
+      <span className="max-sm:sr-only">{pinned ? "Desafixar" : "Fixar"}</span>
     </button>
   );
 }

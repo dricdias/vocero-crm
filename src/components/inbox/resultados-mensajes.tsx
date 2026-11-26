@@ -77,16 +77,16 @@ export function ResultadosMensajes({
   }, [q]);
 
   return (
-    <section aria-label="Mensajes encontrados" data-resultados-mensajes>
-      <TituloSeccion>Mensajes</TituloSeccion>
+    <section aria-label="Mensagens encontradas" data-resultados-mensajes>
+      <TituloSeccion>Mensagens</TituloSeccion>
       {estado.fase === "cargando" ? (
-        <p className="px-4 py-3 text-xs text-text-3">Buscando en los mensajes…</p>
+        <p className="px-4 py-3 text-xs text-text-3">Buscando nas mensagens…</p>
       ) : estado.fase === "error" ? (
         <p role="alert" className="px-4 py-3 text-xs text-danger-text">
-          No se pudo buscar en los mensajes. Intenta de nuevo.
+          Não foi possível buscar nas mensagens. Tente de novo.
         </p>
       ) : estado.resultados.length === 0 ? (
-        <p className="px-4 py-3 text-xs text-text-3">Ningún mensaje contiene «{estado.q}».</p>
+        <p className="px-4 py-3 text-xs text-text-3">Nenhuma mensagem contém «{estado.q}».</p>
       ) : (
         <ul>
           {estado.resultados.map((r) => (

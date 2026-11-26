@@ -80,8 +80,8 @@ export function useFijar(
         body?.error?.code === "pin_limit"
           ? MENSAJE_LIMITE_FIJADOS
           : fijar
-            ? "No se pudo fijar el chat. Intenta de nuevo."
-            : "No se pudo desfijar el chat. Intenta de nuevo."
+            ? "Não foi possível fixar a conversa. Tente de novo."
+            : "Não foi possível desafixar a conversa. Tente de novo."
       );
       // Algo no cuadró (otra pestaña, el tope): el servidor manda.
       void refetch();

@@ -91,7 +91,7 @@ export function AvisoEsperando({
     // Con la pestaña de fondo y permiso dado, también un aviso del sistema.
     if (document.visibilityState !== "visible" && permisoAvisos() === "granted") {
       void mostrarAvisoSistema({
-        titulo: "Esperando a una persona",
+        titulo: "Esperando uma pessoa",
         cuerpo: textoAviso(nuevas),
         tag: "esperando",
         url: urlParaAtender(nuevas),
@@ -112,8 +112,8 @@ export function AvisoEsperando({
       type="button"
       onClick={() => guardarAvisoEsperando({ ...ajuste, sonido: !sonido })}
       aria-pressed={sonido}
-      aria-label={sonido ? "Sonido del aviso «Esperando»: activado" : "Sonido del aviso «Esperando»: apagado"}
-      title={sonido ? "Apagar el sonido de este aviso (solo para ti)" : "Encender el sonido de este aviso"}
+      aria-label={sonido ? "Som do aviso «Esperando»: ligado" : "Som do aviso «Esperando»: desligado"}
+      title={sonido ? "Desligar o som deste aviso (só para você)" : "Ligar o som deste aviso"}
       data-esperando-sonido
       className="shrink-0 rounded-md p-1 opacity-80 hover:bg-black/5 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-white/10"
     >
@@ -146,13 +146,13 @@ export function AvisoEsperando({
             data-esperando-ver
             className="shrink-0 rounded-md px-2 py-0.5 font-semibold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Ver quién espera
+            Ver quem está esperando
           </Link>
           {botonSonido}
           <button
             type="button"
             onClick={() => router.push(URL_AJUSTE_ESPERANDO)}
-            title="Elegir qué ves de este aviso (solo para ti)"
+            title="Escolher o que você vê deste aviso (só para você)"
             data-esperando-ocultar
             className="shrink-0 rounded-md px-2 py-0.5 text-[12.5px] font-semibold opacity-80 hover:bg-black/5 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-white/10"
           >
@@ -190,7 +190,7 @@ export function AvisoEsperando({
             <button
               type="button"
               onClick={() => setAviso(null)}
-              aria-label="Cerrar el aviso"
+              aria-label="Fechar o aviso"
               className="shrink-0 rounded-md p-1 text-text-3 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="h-4 w-4" strokeWidth={2} />
@@ -215,10 +215,10 @@ export function AvisoEsperando({
               onClick={() => setAviso(null)}
               className="rounded-md px-3 py-1.5 text-[13px] font-semibold text-text-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Cerrar
+              Fechar
             </button>
             <span className="ml-auto flex items-center gap-1 text-[12px] text-text-3">
-              {sonido ? "Con sonido" : "Sin sonido"}
+              {sonido ? "Com som" : "Sem som"}
               {botonSonido}
             </span>
           </div>
