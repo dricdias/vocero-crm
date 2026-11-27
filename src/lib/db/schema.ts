@@ -795,6 +795,14 @@ export const agenteArea = pgTable(
     regrasEscalonamento: text("regras_escalonamento"),
     /** Desligado: ninguém transfere para ele e as conversas dele voltam ao principal. */
     ativo: boolean("ativo").notNull().default(true),
+    /**
+     * Para onde vai o aviso de «atendimento humano» das conversas deste
+     * agente: o JID de um grupo ou o telefone (só dígitos) de uma pessoa.
+     * NULL = o grupo geral da equipe. Sai pelo número principal.
+     */
+    avisoDestino: text("aviso_destino"),
+    /** Nome do grupo ou da pessoa, para a tela. */
+    avisoNome: text("aviso_nome"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

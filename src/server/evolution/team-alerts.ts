@@ -98,6 +98,32 @@ export async function sendTeamGroupText(access: EvolutionAccess, groupJid: strin
   await evolutionRequest(access, "/send/text", sentSchema, { number: groupJid, text, formatJid: false });
 }
 
+/** Telefone em dígitos com DDI: o aviso vai para o privado de uma pessoa. */
+export const PHONE_DEST_RE = /^\d{10,15}$/;
+
+/**
+ * Aviso para o destino escolhido: o grupo da equipe ou, no caso de um agente
+ * de área, o grupo ou a pessoa dele.
+ */
+export async function sendTeamText(access: EvolutionAccess, destino: string, text: string): Promise<void> {
+  if (GROUP_JID_RE.test(destino)) return sendTeamGroupText(access, destino, text);
+  if (!PHONE_DEST_RE.test(destino)) throw new Error("Destino de aviso inválido");
+  await evolutionRequest(access, "/send/text", sentSchema, { number: destino, text });
+}
+
+/**
+ * Agentes por área — para onde vai o aviso de uma conversa: o destino do
+ * agente que atende (se ligado e com destino), senão o grupo geral.
+ */
+export function destinoDoAviso(
+  groupJid: string,
+  area: { nome: string | null; ativo: boolean | null; avisoDestino: string | null } | null,
+): { destino: string; agente: string | null } {
+  if (!area?.nome || !area.ativo) return { destino: groupJid, agente: null };
+  const proprio = area.avisoDestino && (GROUP_JID_RE.test(area.avisoDestino) || PHONE_DEST_RE.test(area.avisoDestino));
+  return { destino: proprio ? area.avisoDestino! : groupJid, agente: area.nome };
+}
+
 /* ------------------------------------------------------------------ */
 /* Textos                                                              */
 /* ------------------------------------------------------------------ */
@@ -122,10 +148,13 @@ export function handoffAlertText(input: {
   reason: string | null;
   lastMessage: string | null;
   link: string;
+  /** Agentes por área: o agente que atendia. */
+  agente?: string | null;
 }): string {
   const lines = [
     "🙋 *Atendimento humano*",
     `Cliente: ${who(input.contact)}`,
+    ...(input.agente ? [`Agente: ${input.agente}`] : []),
     `Motivo: ${(input.reason && HANDOFF_LABELS[input.reason]) || "A IA pausou"}`,
   ];
   const last = excerpt(input.lastMessage);
@@ -139,10 +168,12 @@ export function reminderText(input: {
   minutes: number;
   lastMessage: string | null;
   link: string;
+  agente?: string | null;
 }): string {
   const lines = [
     `⏰ *Sem resposta há ${input.minutes} min*`,
     `Cliente: ${who(input.contact)}`,
+    ...(input.agente ? [`Agente: ${input.agente}`] : []),
   ];
   const last = excerpt(input.lastMessage);
   if (last) lines.push(`Última mensagem: "${last}"`);
@@ -239,6 +270,8 @@ async function release(
     .where(eq(schema.teamAlertState.conversationId, conversationId));
 }
 
+const ag = schema.agenteArea;
+
 async function sweepHandoffs(org: ActiveOrg, access: EvolutionAccess, baseUrl: string, now: Date): Promise<void> {
   const c = schema.conversation;
   const st = schema.teamAlertState;
@@ -252,10 +285,12 @@ async function sweepHandoffs(org: ActiveOrg, access: EvolutionAccess, baseUrl: s
       phone: schema.contact.phone,
       identity: schema.contact.waIdentity,
       alerted: st.alertedHandoffAt,
+      area: { nome: ag.nome, ativo: ag.ativo, avisoDestino: ag.avisoDestino },
     })
     .from(c)
     .innerJoin(schema.contact, eq(schema.contact.id, c.contactId))
     .leftJoin(st, eq(st.conversationId, c.id))
+    .leftJoin(ag, eq(ag.id, c.agenteAreaId))
     .where(
       scoped(
         c.organizationId,
@@ -270,7 +305,8 @@ async function sweepHandoffs(org: ActiveOrg, access: EvolutionAccess, baseUrl: s
     )
     .limit(PER_SWEEP);
   for (const row of rows) {
-    if (!row.handoffAt || isTeamGroupIdentity(row.identity, org.groupJid)) continue;
+    const { destino, agente } = destinoDoAviso(org.groupJid, row.area);
+    if (!row.handoffAt || isTeamGroupIdentity(row.identity, org.groupJid) || isTeamGroupIdentity(row.identity, destino)) continue;
     if (!(await claim(org.organizationId, row.id, "alertedHandoffAt", row.handoffAt))) continue;
     try {
       const text = handoffAlertText({
@@ -278,8 +314,9 @@ async function sweepHandoffs(org: ActiveOrg, access: EvolutionAccess, baseUrl: s
         reason: row.reason,
         lastMessage: await lastInboundText(org.organizationId, row.id),
         link: conversationLink(baseUrl, row.id),
+        agente,
       });
-      await sendTeamGroupText(access, org.groupJid, text);
+      await sendTeamText(access, destino, text);
     } catch (err) {
       await release(row.id, "alertedHandoffAt", row.alerted);
       throw err;
@@ -301,10 +338,12 @@ async function sweepReminders(org: ActiveOrg, access: EvolutionAccess, baseUrl: 
       phone: schema.contact.phone,
       identity: schema.contact.waIdentity,
       reminded: st.remindedInboundAt,
+      area: { nome: ag.nome, ativo: ag.ativo, avisoDestino: ag.avisoDestino },
     })
     .from(c)
     .innerJoin(schema.contact, eq(schema.contact.id, c.contactId))
     .leftJoin(st, eq(st.conversationId, c.id))
+    .leftJoin(ag, eq(ag.id, c.agenteAreaId))
     .where(
       scoped(
         c.organizationId,
@@ -323,7 +362,8 @@ async function sweepReminders(org: ActiveOrg, access: EvolutionAccess, baseUrl: 
     )
     .limit(PER_SWEEP);
   for (const row of rows) {
-    if (!row.lastInboundAt || isTeamGroupIdentity(row.identity, org.groupJid)) continue;
+    const { destino, agente } = destinoDoAviso(org.groupJid, row.area);
+    if (!row.lastInboundAt || isTeamGroupIdentity(row.identity, org.groupJid) || isTeamGroupIdentity(row.identity, destino)) continue;
     if (!(await claim(org.organizationId, row.id, "remindedInboundAt", row.lastInboundAt))) continue;
     try {
       const minutes = Math.max(org.reminderMinutes, Math.floor((now.getTime() - row.lastInboundAt.getTime()) / 60_000));
@@ -332,8 +372,9 @@ async function sweepReminders(org: ActiveOrg, access: EvolutionAccess, baseUrl: 
         minutes,
         lastMessage: await lastInboundText(org.organizationId, row.id),
         link: conversationLink(baseUrl, row.id),
+        agente,
       });
-      await sendTeamGroupText(access, org.groupJid, text);
+      await sendTeamText(access, destino, text);
     } catch (err) {
       await release(row.id, "remindedInboundAt", row.reminded);
       throw err;

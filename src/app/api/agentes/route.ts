@@ -47,6 +47,8 @@ export const POST = withAuth(async (session, req: Request) => {
         instrucoes: body.data.instrucoes || null,
         regrasEscalonamento: body.data.regrasEscalonamento || null,
         ativo: body.data.ativo ?? true,
+        avisoDestino: body.data.avisoDestino || null,
+        avisoNome: body.data.avisoDestino ? body.data.avisoNome || null : null,
       })
       .returning();
     return Response.json({ agente: agenteAreaDto(criado!) }, { status: 201 });

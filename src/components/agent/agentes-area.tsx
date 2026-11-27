@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil, Plus, Smartphone, Trash2, Users } from "lucide-react";
+import {
+  BellRing,
+  Pencil,
+  Plus,
+  Smartphone,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { EvolutionConexao } from "@/components/settings/evolution-conexao";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,9 +39,17 @@ type AgenteArea = {
   ativo: boolean;
   /** Número próprio (Evolution Go): estado, ou null sem número. */
   numero?: "connected" | "reconnect_required" | null;
+  /** Grupo (JID) ou telefone que recebe os avisos deste agente; null = o grupo geral. */
+  avisoDestino: string | null;
+  avisoNome: string | null;
 };
 
 type Rascunho = Omit<AgenteArea, "id" | "ativo" | "numero">;
+type CampoTexto =
+  "nome" | "assunto" | "tom" | "instrucoes" | "regrasEscalonamento";
+
+/** Avisos da equipe: se estão ligados e os grupos do número principal. */
+type Avisos = { ligados: boolean; grupos: { jid: string; name: string }[] };
 
 const VAZIO: Rascunho = {
   nome: "",
@@ -42,7 +57,12 @@ const VAZIO: Rascunho = {
   tom: "",
   instrucoes: "",
   regrasEscalonamento: "",
+  avisoDestino: null,
+  avisoNome: null,
 };
+
+const PESSOA = "__pessoa__";
+const GRUPO_RE = /^\d+(?:-\d+)?@g\.us$/;
 
 export function AgentesAreaSection({
   principalNome,
@@ -57,6 +77,8 @@ export function AgentesAreaSection({
   const [numerosProprios, setNumerosProprios] = useState(false);
   /** O agente com o painel «Número próprio» aberto. */
   const [numeroAberto, setNumeroAberto] = useState<string | null>(null);
+  /** null = Evolution Go desligado: não há avisos pelo WhatsApp. */
+  const [avisos, setAvisos] = useState<Avisos | null>(null);
 
   const carregar = useCallback(async () => {
     const r = await fetch("/api/agentes")
@@ -69,6 +91,20 @@ export function AgentesAreaSection({
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  // Os grupos saem do número principal, o mesmo que manda os avisos.
+  useEffect(() => {
+    if (!numerosProprios) return;
+    void fetch("/api/settings/team-alerts")
+      .then((x) => (x.ok ? x.json() : null))
+      .catch(() => null)
+      .then((d) =>
+        setAvisos({
+          ligados: Boolean(d?.settings?.enabled),
+          grupos: (d?.groups ?? []) as Avisos["grupos"],
+        }),
+      );
+  }, [numerosProprios]);
 
   async function salvar(
     id: string | null,
@@ -143,6 +179,7 @@ export function AgentesAreaSection({
         {editando === "novo" && (
           <FormAgente
             inicial={VAZIO}
+            avisos={avisos}
             onCancelar={() => setEditando(null)}
             onSalvar={async (d) => {
               if (await salvar(null, d)) setEditando(null);
@@ -169,7 +206,10 @@ export function AgentesAreaSection({
                   tom: a.tom ?? "",
                   instrucoes: a.instrucoes ?? "",
                   regrasEscalonamento: a.regrasEscalonamento ?? "",
+                  avisoDestino: a.avisoDestino,
+                  avisoNome: a.avisoNome,
                 }}
+                avisos={avisos}
                 onCancelar={() => setEditando(null)}
                 onSalvar={async (d) => {
                   if (await salvar(a.id, d)) setEditando(null);
@@ -195,6 +235,12 @@ export function AgentesAreaSection({
                         {a.numero === "connected"
                           ? "conectado"
                           : "aguardando o telefone"}
+                      </p>
+                    )}
+                    {a.avisoDestino && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <BellRing className="h-3.5 w-3.5" />
+                        Avisos para {a.avisoNome ?? a.avisoDestino}
                       </p>
                     )}
                   </div>
@@ -260,16 +306,58 @@ export function AgentesAreaSection({
 
 function FormAgente({
   inicial,
+  avisos,
   onSalvar,
   onCancelar,
 }: {
   inicial: Rascunho;
+  avisos: Avisos | null;
   onSalvar: (d: Rascunho) => Promise<void>;
   onCancelar: () => void;
 }) {
   const [form, setForm] = useState(inicial);
   const [salvando, setSalvando] = useState(false);
-  const campo = (k: keyof Rascunho) => ({
+  // "" = grupo geral, um JID = grupo, PESSOA = telefone digitado.
+  const [modoAviso, setModoAviso] = useState(
+    !inicial.avisoDestino
+      ? ""
+      : GRUPO_RE.test(inicial.avisoDestino)
+        ? inicial.avisoDestino
+        : PESSOA,
+  );
+  const [telefone, setTelefone] = useState(
+    inicial.avisoDestino && !GRUPO_RE.test(inicial.avisoDestino)
+      ? inicial.avisoDestino
+      : "",
+  );
+  const digitos = telefone.replace(/\D/g, "");
+  const telefoneInvalido =
+    modoAviso === PESSOA && (digitos.length < 10 || digitos.length > 15);
+  // O grupo salvo pode ter saído da lista (o número saiu dele): continua visível.
+  const grupos =
+    avisos &&
+    modoAviso &&
+    modoAviso !== PESSOA &&
+    !avisos.grupos.some((g) => g.jid === modoAviso)
+      ? [
+          { jid: modoAviso, name: inicial.avisoNome ?? modoAviso },
+          ...avisos.grupos,
+        ]
+      : (avisos?.grupos ?? []);
+
+  function comAviso(d: Rascunho): Rascunho {
+    if (!avisos) return d;
+    if (!modoAviso) return { ...d, avisoDestino: null, avisoNome: null };
+    if (modoAviso === PESSOA)
+      return { ...d, avisoDestino: digitos, avisoNome: `+${digitos}` };
+    return {
+      ...d,
+      avisoDestino: modoAviso,
+      avisoNome: grupos.find((g) => g.jid === modoAviso)?.name ?? null,
+    };
+  }
+
+  const campo = (k: CampoTexto) => ({
     value: form[k] ?? "",
     onChange: (e: { target: { value: string } }) =>
       setForm({ ...form, [k]: e.target.value }),
@@ -327,14 +415,57 @@ function FormAgente({
           {...campo("regrasEscalonamento")}
         />
       </div>
+      {avisos && (
+        <div className="space-y-1.5">
+          <Label htmlFor="ag-aviso">Avisos de atendimento humano</Label>
+          <select
+            id="ag-aviso"
+            value={modoAviso}
+            onChange={(e) => setModoAviso(e.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="">Grupo geral da equipe</option>
+            {grupos.map((g) => (
+              <option key={g.jid} value={g.jid}>
+                Grupo: {g.name}
+              </option>
+            ))}
+            <option value={PESSOA}>Uma pessoa (WhatsApp)</option>
+          </select>
+          {modoAviso === PESSOA && (
+            <Input
+              aria-label="Telefone de quem recebe os avisos"
+              placeholder="Com DDI e DDD, ex.: 5511999990000"
+              inputMode="tel"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
+          )}
+          <p className="text-[12px] text-text-3">
+            {avisos.ligados
+              ? "Quando este agente passar a conversa para uma pessoa, o aviso e o lembrete vão para cá, pelo número principal."
+              : "Os avisos só saem com os avisos da equipe ligados em Configurações → WhatsApp."}
+          </p>
+          {telefoneInvalido && (
+            <p className="text-[12px] text-destructive">
+              Digite o telefone com DDI e DDD (10 a 15 dígitos).
+            </p>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <Button
           size="sm"
-          disabled={salvando || !form.nome.trim() || !form.assunto.trim()}
+          disabled={
+            salvando ||
+            !form.nome.trim() ||
+            !form.assunto.trim() ||
+            telefoneInvalido
+          }
           onClick={async () => {
             setSalvando(true);
             try {
-              await onSalvar(form);
+              await onSalvar(comAviso(form));
             } finally {
               setSalvando(false);
             }

@@ -32,6 +32,10 @@ export const PUT = withAuth(async (session, req: Request, ctx: Params) => {
           regrasEscalonamento: d.regrasEscalonamento || null,
         }),
         ...(d.ativo !== undefined && { ativo: d.ativo }),
+        ...(d.avisoDestino !== undefined && {
+          avisoDestino: d.avisoDestino || null,
+          avisoNome: d.avisoDestino ? d.avisoNome || null : null,
+        }),
         updatedAt: new Date(),
       })
       .where(alcance(session.organizationId, id))
