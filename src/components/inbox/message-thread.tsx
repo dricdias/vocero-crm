@@ -657,9 +657,16 @@ export function MessageThread({
                   {m.aiGenerated && (
                     <span
                       className="inline-flex items-center gap-0.5 text-[10px] font-medium text-brand-ink"
-                      title="Resposta gerada por IA"
+                      title={
+                        m.agenteNome
+                          ? `Resposta gerada por IA, agente ${m.agenteNome}`
+                          : "Resposta gerada por IA"
+                      }
                     >
                       <Sparkles className="h-3 w-3" strokeWidth={1.7} /> IA
+                      {m.agenteNome && (
+                        <span className="max-w-[140px] truncate">· {m.agenteNome}</span>
+                      )}
                     </span>
                   )}
                   {m.origin === "manual" && (

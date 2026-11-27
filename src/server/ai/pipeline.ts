@@ -325,6 +325,9 @@ export async function runAgentTurn(
   const destinos = opciones.transferido
     ? []
     : outrosAgentes(area?.id ?? null, profile.name, areas);
+  // Com agentes de área, cada balão da IA diz quem respondeu. Sem eles, nada
+  // muda: o «IA» de sempre.
+  const assinatura = areas.length > 0 ? perfil.name : null;
 
   const messages: ChatMessage[] = [
     {
@@ -422,7 +425,7 @@ export async function runAgentTurn(
                 startUtc: action.startUtc,
                 confirmation: action.reply,
               });
-        await deliverReply(conversation, turn.text);
+        await deliverReply(conversation, turn.text, assinatura);
         if (turn.ok) {
           publish(organizationId, {
             type: "conversation.updated",
@@ -474,7 +477,7 @@ export async function runAgentTurn(
         data: { conversation: { id: conversationId } },
       });
       if (action.reply) {
-        await deliverReply(conversation, action.reply);
+        await deliverReply(conversation, action.reply, assinatura);
       }
       return leido;
     }
@@ -484,16 +487,16 @@ export async function runAgentTurn(
     case "none":
       return leido;
     case "reply":
-      await deliverReply(conversation, action.text);
+      await deliverReply(conversation, action.text, assinatura);
       return leido;
     case "update_lead": {
       await appendLeadNote(organizationId, conversation.contactId, action.note);
-      if (action.reply) await deliverReply(conversation, action.reply);
+      if (action.reply) await deliverReply(conversation, action.reply, assinatura);
       return leido;
     }
     case "handoff": {
       if (action.farewell) {
-        await deliverReply(conversation, action.farewell);
+        await deliverReply(conversation, action.farewell, assinatura);
       }
       await applyHandoff(conversationId, organizationId, "modelo");
       return leido;
@@ -507,10 +510,12 @@ type Conversation = typeof schema.conversation.$inferSelect;
 /** Entrega la respuesta: envío real o persistencia sandbox (is_test). */
 async function deliverReply(
   conversation: Conversation,
-  text: string
+  text: string,
+  /** Agentes por área: o nome que aparece no balão. */
+  agenteNome: string | null = null
 ): Promise<void> {
   if (conversation.isTest) {
-    await persistTestOutbound(conversation, text);
+    await persistTestOutbound(conversation, text, agenteNome);
     return;
   }
   try {
@@ -519,6 +524,7 @@ async function deliverReply(
       organizationId: conversation.organizationId,
       text,
       aiGenerated: true,
+      ...(agenteNome ? { agenteNome } : {}),
     });
   } catch (err) {
     if (err instanceof SendError && err.code === "window_closed") {
@@ -567,7 +573,8 @@ async function acknowledgeHandoff(conversation: Conversation): Promise<void> {
 /** Mensaje saliente del sandbox: se persiste, JAMÁS toca la API (FR-031). */
 async function persistTestOutbound(
   conversation: Conversation,
-  text: string
+  text: string,
+  agenteNome: string | null = null
 ): Promise<void> {
   const db = getDb();
   await db.insert(schema.message).values({
@@ -579,6 +586,7 @@ async function persistTestOutbound(
     text,
     status: "sent",
     aiGenerated: true,
+    agenteNome,
     origin: "ai",
   });
   await db

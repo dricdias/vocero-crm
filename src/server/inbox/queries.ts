@@ -70,11 +70,19 @@ export async function listConversations(
     limit 1
   )`;
 
+  // Agentes por área: o nome da área que atende, se estiver ligada.
+  const agenteSql = sql<string | null>`(
+    select a.nome from agente_area a
+    where a.id = ${schema.conversation.agenteAreaId}
+      and a.ativo = true
+  )`;
+
   const rows = await db
     .select({
       conversation: schema.conversation,
       contact: schema.contact,
       preview: previewSql,
+      agenteNome: agenteSql,
       stageName: stageSql,
       anuncio: anuncioDeLista,
       // 077: desde cuándo espera a una persona. Las subconsultas solo corren
@@ -104,7 +112,8 @@ export async function listConversations(
       r.preview,
       r.stageName,
       aAnuncioDeLista(r.anuncio),
-      esperaConVentana(r.conversation, aFecha(r.esperaDesde), { ahora })
+      esperaConVentana(r.conversation, aFecha(r.esperaDesde), { ahora }),
+      r.agenteNome ?? null
     )
   );
 }
@@ -173,7 +182,9 @@ export function serializeConversation(
    * sola conversación (el PATCH) lo deja en null: la Bandeja relee la lista
    * con el evento que publica.
    */
-  espera: EsperaDto | null = null
+  espera: EsperaDto | null = null,
+  /** Agentes por área — só a lista calcula. */
+  agenteNome: string | null = null
 ): ConversationDto {
   const caps = capabilitiesFor(c.channel);
   // 024: la extensión humana solo existe en los canales que la declaran.
@@ -213,6 +224,7 @@ export function serializeConversation(
     },
     preview,
     espera,
+    agenteNome,
     anuncio,
   };
 }

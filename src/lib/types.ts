@@ -43,6 +43,11 @@ export type ConversationDto = {
    * esto mismo con `lib/esperando.ts`.
    */
   espera: EsperaDto | null;
+  /**
+   * Agentes por área — o agente de área que atende; null = o principal.
+   * Só a lista calcula (para o filtro «Agente»).
+   */
+  agenteNome?: string | null;
   /** 018: el anuncio que abrió la conversación, para la marca de la lista. */
   anuncio: {
     headline: string | null;
@@ -100,6 +105,8 @@ export type MessageDto = {
   /** Motivo del fallo en lenguaje llano cuando status = "failed". */
   error: string | null;
   aiGenerated: boolean;
+  /** Agentes por área — o agente de IA que escreveu (null = só «IA»). */
+  agenteNome?: string | null;
   /** 008 — Origen del saliente (en entrantes viene 'operator' y se ignora). */
   origin: "ai" | "operator" | "manual" | "template";
   media: MessageMediaDto | null;
