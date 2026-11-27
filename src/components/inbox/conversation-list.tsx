@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Clock3, Hourglass, Inbox, Megaphone, SlidersHorizontal, Search, Sparkles, UserRound, X } from "lucide-react";
+import { Bot, Clock3, Hourglass, Inbox, Megaphone, SlidersHorizontal, Search, Sparkles, UserRound, X } from "lucide-react";
 import type { ConversationDto } from "@/lib/types";
 import { etiquetaDeOrigen, titularDeOrigen } from "@/lib/anuncios";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
@@ -98,6 +98,9 @@ function InboxEmptyState({
   );
 }
 
+/** Valor do filtro «Agente» para as conversas do principal (o nome não vem na lista). */
+const AGENTE_PRINCIPAL = "__principal__";
+
 export function ConversationList({
   conversations: conversationsProp,
   channels,
@@ -126,6 +129,8 @@ export function ConversationList({
   const ahora = useReloj();
   const [soloPorVencer, setSoloPorVencer] = useState(false);
   const [soloAnuncios, setSoloAnuncios] = useState(false);
+  // Agentes por área: "all", PRINCIPAL ou o nome da área.
+  const [agente, setAgente] = useState<string>("all");
   const [menuFiltros, setMenuFiltros] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   // El menú se cierra al hacer clic fuera o con Escape.
@@ -221,7 +226,9 @@ export function ConversationList({
       matchesQuery(query, {
         text: [c.contact.name],
         phone: c.contact.phone,
-      }) && (stage === "all" || c.stageName === stage)
+      }) &&
+      (stage === "all" || c.stageName === stage) &&
+      (agente === "all" || (c.agenteNome ?? AGENTE_PRINCIPAL) === agente)
   );
   // La bandeja elegida es el filtro de AFUERA: "Todas" y "No leídas" cuentan
   // dentro de ella, no sobre la suma de los dos canales.
@@ -255,9 +262,14 @@ export function ConversationList({
     { id: "unread", label: "Não lidas", count: unreadCount },
     { id: "esperando", label: "Esperando", count: esperando.length },
   ];
-  const nFiltros = (stage !== "all" ? 1 : 0) + (soloPorVencer ? 1 : 0) + (soloAnuncios ? 1 : 0);
+  const nFiltros =
+    (stage !== "all" ? 1 : 0) +
+    (agente !== "all" ? 1 : 0) +
+    (soloPorVencer ? 1 : 0) +
+    (soloAnuncios ? 1 : 0);
   function limpiarFiltros() {
     setStage("all");
+    setAgente("all");
     setSoloPorVencer(false);
     setSoloAnuncios(false);
   }
@@ -271,6 +283,12 @@ export function ConversationList({
   for (const c of conversations) {
     if (c.stageName && !stages.includes(c.stageName)) stages.push(c.stageName);
   }
+  // Agentes por área presentes na bandeja. Só com algum o filtro aparece.
+  const agentes: string[] = [];
+  for (const c of conversations) {
+    if (c.agenteNome && !agentes.includes(c.agenteNome)) agentes.push(c.agenteNome);
+  }
+  agentes.sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   function clearQuery() {
     if (inputRef.current) inputRef.current.value = "";
@@ -425,6 +443,28 @@ export function ConversationList({
                     </select>
                   </label>
                 )}
+                {(agentes.length > 0 || agente !== "all") && (
+                  <label className="block space-y-1">
+                    <span className="kicker text-text-3">Agente</span>
+                    <select
+                      value={agente}
+                      onChange={(e) => setAgente(e.target.value)}
+                      aria-label="Filtrar pelo agente que atende"
+                      className={cn(
+                        "w-full rounded-md border border-border-strong bg-background px-2 py-1.5 text-[13px]",
+                        FOCO_SEPARADO
+                      )}
+                    >
+                      <option value="all">Todos os agentes</option>
+                      <option value={AGENTE_PRINCIPAL}>Agente principal</option>
+                      {agentes.map((a) => (
+                        <option key={a} value={a}>
+                          {a}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 {/* Como antes: sin ninguna, la casilla no aparece (salvo que esté marcada). */}
                 {(venciendo.length > 0 || soloPorVencer) && (
                   <label className="flex cursor-pointer items-center gap-2 text-[13px]">
@@ -450,7 +490,7 @@ export function ConversationList({
                     <span className="font-mono text-[11px] text-text-3">{deAnuncios.length}</span>
                   </label>
                 )}
-                {stages.length === 0 && venciendo.length === 0 && deAnuncios.length === 0 && nFiltros === 0 && (
+                {stages.length === 0 && agentes.length === 0 && venciendo.length === 0 && deAnuncios.length === 0 && nFiltros === 0 && (
                   <p className="text-[13px] text-text-3">Ainda não há nada para filtrar.</p>
                 )}
                 {nFiltros > 0 && (
@@ -471,6 +511,12 @@ export function ConversationList({
           <div className="flex flex-wrap gap-1.5 pb-2.5">
             {stage !== "all" && (
               <FiltroPuesto texto={`Etapa: ${stage}`} onQuitar={() => setStage("all")} />
+            )}
+            {agente !== "all" && (
+              <FiltroPuesto
+                texto={`Agente: ${agente === AGENTE_PRINCIPAL ? "principal" : agente}`}
+                onQuitar={() => setAgente("all")}
+              />
             )}
             {soloPorVencer && (
               <FiltroPuesto texto="A vencer" onQuitar={() => setSoloPorVencer(false)} />
@@ -586,6 +632,15 @@ export function ConversationList({
                               }}
                             />
                             {c.stageName}
+                          </span>
+                        )}
+                        {c.agenteNome && (
+                          <span
+                            title={`Atendida pelo agente ${c.agenteNome}`}
+                            className="inline-flex max-w-[140px] items-center gap-1 truncate rounded-full border border-border-strong bg-chip px-2 py-0.5 text-[11px] font-medium text-text-2"
+                          >
+                            <Bot className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                            <span className="truncate">{c.agenteNome}</span>
                           </span>
                         )}
                         {porVencer(c) && (

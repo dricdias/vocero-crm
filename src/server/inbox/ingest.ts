@@ -612,6 +612,7 @@ export function serializeMessage(
     /** Motivo del fallo, ya traducido a algo accionable (`describeSendError`). */
     error: m.error,
     aiGenerated: m.aiGenerated,
+    agenteNome: m.agenteNome ?? null,
     origin: m.origin,
     media: media
       ? {

@@ -197,7 +197,10 @@ describe("transferência entre agentes no turno", () => {
     });
     expect(h.sendText).toHaveBeenCalledTimes(1);
     expect(h.sendText).toHaveBeenCalledWith(
-      expect.objectContaining({ text: "Oi, aqui é o Financeiro! Já te mando a segunda via." })
+      expect.objectContaining({
+        text: "Oi, aqui é o Financeiro! Já te mando a segunda via.",
+        agenteNome: "Financeiro",
+      })
     );
 
     const segundo = mensagensDa(1);
@@ -222,6 +225,8 @@ describe("transferência entre agentes no turno", () => {
     turno();
     await runAgentTurn("cv_1");
     expect(mensagensDa(0)[0]!.content).not.toMatch(/transfer/);
+    // Sem agentes de área o balão continua só «IA».
+    expect(h.sendText.mock.calls[0]![0]).not.toHaveProperty("agenteNome");
   });
 
   it("uma área desligada devolve a conversa ao principal", async () => {
@@ -230,6 +235,8 @@ describe("transferência entre agentes no turno", () => {
     turno(conversacion({ agenteAreaId: "aga_fin" }));
     await runAgentTurn("cv_1");
     expect(mensagensDa(0)[0]!.content).toMatch(/Você é "Ana"/);
+    // Com áreas cadastradas, o balão do principal leva o nome dele.
+    expect(h.sendText).toHaveBeenCalledWith(expect.objectContaining({ agenteNome: "Ana" }));
   });
 });
 

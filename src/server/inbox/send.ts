@@ -440,6 +440,8 @@ async function persistOutbound(input: {
   status: "pending" | "sent" | "failed";
   error?: string | null;
   aiGenerated?: boolean;
+  /** Agentes por área: quem da IA escreveu. */
+  agenteNome?: string | null;
   origin: "ai" | "operator";
   mediaAssetId?: string | null;
   media?: typeof schema.mediaAsset.$inferSelect | null;
@@ -460,6 +462,7 @@ async function persistOutbound(input: {
       status: input.status,
       error: input.error ?? null,
       aiGenerated: input.aiGenerated ?? false,
+      agenteNome: input.aiGenerated ? (input.agenteNome ?? null) : null,
       origin: input.origin,
       mediaAssetId: input.mediaAssetId ?? null,
       replyToWaMessageId: input.cita?.message.waMessageId ?? null,
@@ -489,6 +492,8 @@ export async function sendText(input: {
   organizationId: string;
   text: string;
   aiGenerated?: boolean;
+  /** Agentes por área: o nome do agente que escreveu, para o balão. */
+  agenteNome?: string | null;
   /** 039: id local del mensaje al que se responde citando. */
   replyToMessageId?: string;
 }): Promise<SendResult> {
@@ -580,6 +585,7 @@ export async function sendText(input: {
       ? "pending"
       : "sent",
     aiGenerated: input.aiGenerated,
+    agenteNome: input.agenteNome,
     origin: input.aiGenerated ? "ai" : "operator",
     cita,
   });

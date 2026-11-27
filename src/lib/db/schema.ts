@@ -478,6 +478,12 @@ export const message = pgTable(
     error: text("error"),
     aiGenerated: boolean("ai_generated").notNull().default(false),
     /**
+     * Agentes por área — o nome do agente de IA que escreveu (Financeiro,
+     * Vendas…). Guardado como texto: o balão continua certo mesmo se o agente
+     * for renomeado ou apagado depois. NULL = sem agentes de área na época.
+     */
+    agenteNome: text("agente_nome"),
+    /**
      * 008 — Origen del saliente: IA (bot), operador del CRM, manual desde la
      * app de WhatsApp Business del teléfono (echo), o plantilla. En entrantes
      * queda el default y la UI lo ignora.
