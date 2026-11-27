@@ -16,8 +16,10 @@ import {
 import {
   deleteEvolution,
   getEvolutionByOrg,
+  getEvolutionDoAgente,
   saveEvolution,
   setEvolutionStatus,
+  tokenEmUso,
 } from "./credentials";
 import { evolutionEnabled } from "./flag";
 
@@ -26,9 +28,22 @@ const configSchema = z.object({
   token: z.string().trim().min(1).max(4096),
 });
 const actionSchema = z.object({ action: z.enum(["qr", "status"]) });
+/** O número principal da org (Configurações → WhatsApp). */
 export async function evolutionSettings(
   session: SessionContext,
   req: Request,
+): Promise<Response> {
+  return evolutionSettingsDoNumero(session, req, null);
+}
+
+/**
+ * O mesmo fluxo para o número principal (`agenteAreaId` null) ou para o
+ * número próprio de um agente de área. Quem chama confere que o agente é da org.
+ */
+export async function evolutionSettingsDoNumero(
+  session: SessionContext,
+  req: Request,
+  agenteAreaId: string | null,
 ): Promise<Response> {
   if (!evolutionEnabled()) return new Response(null, { status: 404 });
   if (!canConfigure(session.role))
@@ -39,13 +54,14 @@ export async function evolutionSettings(
     );
   if (req.method === "PUT" || req.method === "DELETE")
     return withWhatsappConnectionLock(session.organizationId, () =>
-      handleSettings(session, req),
+      handleSettings(session, req, agenteAreaId),
     );
-  return handleSettings(session, req);
+  return handleSettings(session, req, agenteAreaId);
 }
 async function handleSettings(
   session: SessionContext,
   req: Request,
+  agenteAreaId: string | null,
 ): Promise<Response> {
   if (!evolutionEnabled()) return new Response(null, { status: 404 });
   if (!canConfigure(session.role))
@@ -55,9 +71,12 @@ async function handleSettings(
       "Somente o administrador pode configurar o WhatsApp",
     );
   const org = session.organizationId;
+  const lerNumero = () =>
+    agenteAreaId ? getEvolutionDoAgente(org, agenteAreaId) : getEvolutionByOrg(org);
+  const qual = { agenteAreaId };
   try {
     if (req.method === "GET") {
-      const creds = await getEvolutionByOrg(org);
+      const creds = await lerNumero();
       return Response.json({
         connection: creds
           ? {
@@ -70,7 +89,7 @@ async function handleSettings(
     }
     if (req.method === "DELETE") {
       // Desvincula SOLO el CRM; no cierra la sesión del teléfono ni borra el historial.
-      await deleteEvolution(org);
+      await deleteEvolution(org, agenteAreaId);
       return Response.json({ ok: true });
     }
     if (req.method === "PUT") {
@@ -82,7 +101,19 @@ async function handleSettings(
           "provider_conflict",
           "Desconecte a Meta antes de ativar o Evolution Go",
         );
+      if (agenteAreaId && !(await getEvolutionByOrg(org)))
+        return apiError(
+          409,
+          "principal_required",
+          "Conecte primeiro o número principal em Configurações → WhatsApp",
+        );
       const access = body.data;
+      if (await tokenEmUso(org, access.token, agenteAreaId))
+        return apiError(
+          409,
+          "token_in_use",
+          "Esta instância já está ligada a outro número do CRM. Crie uma instância nova no Evolution Go para este agente.",
+        );
       const status = await getEvolutionStatus(access);
       const webhookToken = randomBytes(32).toString("hex");
       // Guardar antes del connect: los primeros eventos ya deben poder resolverse.
@@ -91,6 +122,7 @@ async function handleSettings(
         ...access,
         webhookToken,
         connected: status.Connected && status.LoggedIn,
+        agenteAreaId,
       });
       try {
         await evolutionRequest(
@@ -103,7 +135,7 @@ async function handleSettings(
           },
         );
       } catch {
-        await setEvolutionStatus(org, false);
+        await setEvolutionStatus(org, false, qual);
         return apiError(
           502,
           "webhook_failed",
@@ -114,7 +146,7 @@ async function handleSettings(
     }
     const body = await parseBody(req, actionSchema);
     if (!body.ok) return body.response;
-    const creds = await getEvolutionByOrg(org);
+    const creds = await lerNumero();
     if (!creds)
       return apiError(
         409,
@@ -139,7 +171,7 @@ async function handleSettings(
     }
     const status = await getEvolutionStatus(creds);
     const connected = status.Connected && status.LoggedIn;
-    await setEvolutionStatus(org, connected);
+    await setEvolutionStatus(org, connected, qual);
     return Response.json({ connected, name: status.Name ?? null });
   } catch (error) {
     return apiError(

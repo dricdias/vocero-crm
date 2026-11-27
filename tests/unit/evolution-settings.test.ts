@@ -13,6 +13,8 @@ vi.mock("@/server/evolution/credentials", () => ({
   saveEvolution: mocks.save,
   deleteEvolution: mocks.remove,
   setEvolutionStatus: mocks.status,
+  getEvolutionDoAgente: mocks.get,
+  tokenEmUso: async () => false,
 }));
 vi.mock("@/server/whatsapp/credentials", () => ({
   getCredentialsByOrg: mocks.meta,
@@ -126,7 +128,7 @@ describe("configuración Evolution Go", () => {
       req("PUT", { baseUrl: "https://evo.example", token: "secret" }),
     );
     expect(res.status).toBe(502);
-    expect(mocks.status).toHaveBeenCalledWith("org_1", false);
+    expect(mocks.status).toHaveBeenCalledWith("org_1", false, { agenteAreaId: null });
     expect(await res.text()).not.toContain('"secret"');
   });
   it("un QR que requiere passkey da una acción clara sin exponer su URL", async () => {
@@ -153,11 +155,11 @@ describe("configuración Evolution Go", () => {
       req("POST", { action: "status" }),
     );
     expect(await res.json()).toMatchObject({ connected: false });
-    expect(mocks.status).toHaveBeenCalledWith("org_1", false);
+    expect(mocks.status).toHaveBeenCalledWith("org_1", false, { agenteAreaId: null });
   });
   it("desvincular solo borra credenciales del tenant", async () => {
     expect((await evolutionSettings(session, req("DELETE"))).status).toBe(200);
-    expect(mocks.remove).toHaveBeenCalledWith("org_1");
+    expect(mocks.remove).toHaveBeenCalledWith("org_1", null);
     expect(mocks.request).not.toHaveBeenCalled();
   });
 });

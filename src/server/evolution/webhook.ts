@@ -161,11 +161,13 @@ export async function processEvolutionEvent(
     event.event === "ConnectFailure" ||
     event.event === "TemporaryBan"
   ) {
-    await setEvolutionStatus(creds.organizationId, event.event === "Connected");
+    await setEvolutionStatus(creds.organizationId, event.event === "Connected", { linhaId: creds.id });
     return;
   }
   if (event.event === "Message") {
     const parsed = messageSchema.safeParse(event.data);
+    // O bot de grupos é o número principal: o número de um agente não atende grupos.
+    if (creds.agenteAreaId && parsed.success && parsed.data.Info.IsGroup) return;
     let botJids: string[] = [];
     let allMessages = false;
     const bot = groupBotJid();
@@ -196,6 +198,8 @@ export async function processEvolutionEvent(
           evolutionCipher: encrypted.cipher,
           evolutionIv: encrypted.iv,
           evolutionTag: encrypted.tag,
+          // O anexo se baixa pela mesma instância que o recebeu.
+          evolutionLinhaId: creds.id,
         },
       });
     }
@@ -203,6 +207,7 @@ export async function processEvolutionEvent(
       await ingestInboundMessage({
         organizationId: creds.organizationId,
         ...incoming,
+        evolutionLinha: { id: creds.id, agenteAreaId: creds.agenteAreaId ?? null },
       });
   }
   if (event.event === "Receipt") {

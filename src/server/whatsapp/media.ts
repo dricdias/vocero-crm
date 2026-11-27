@@ -1,6 +1,6 @@
 import { decryptSecret } from "@/lib/crypto";
 import { z } from "zod";
-import { getEvolutionByOrg } from "@/server/evolution/credentials";
+import { getEvolutionDaLinha } from "@/server/evolution/credentials";
 import { evolutionRequest } from "@/server/evolution/client";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -235,8 +235,9 @@ export async function ensureAssetAvailable(
   try {
     let downloaded: {data: Buffer; mimeType: string | null; fileSize: number};
     if (asset.waMediaId.startsWith("evo:")) {
-      const creds = await getEvolutionByOrg(organizationId);
-      const payload = z.object({evolutionCipher: z.string(), evolutionIv: z.string(), evolutionTag: z.string()}).safeParse(asset.payload);
+      const payload = z.object({evolutionCipher: z.string(), evolutionIv: z.string(), evolutionTag: z.string(), evolutionLinhaId: z.string().optional()}).safeParse(asset.payload);
+      // Baixa pela instância que recebeu o anexo (anexos antigos: a principal).
+      const creds = await getEvolutionDaLinha(organizationId, payload.success ? payload.data.evolutionLinhaId : null);
       if (!creds || !payload.success) return null;
       const result = await evolutionRequest(creds, "/message/downloadmedia", z.object({base64: z.string().max(140_000_000)}), {message: z.record(z.string(), z.unknown()).parse(JSON.parse(decryptSecret({cipher: payload.data.evolutionCipher, iv: payload.data.evolutionIv, tag: payload.data.evolutionTag})))});
       const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(result.base64);

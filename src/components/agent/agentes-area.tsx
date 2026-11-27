@@ -1,9 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Pencil, Plus, Smartphone, Trash2, Users } from "lucide-react";
+import { EvolutionConexao } from "@/components/settings/evolution-conexao";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -23,9 +30,11 @@ type AgenteArea = {
   instrucoes: string | null;
   regrasEscalonamento: string | null;
   ativo: boolean;
+  /** Número próprio (Evolution Go): estado, ou null sem número. */
+  numero?: "connected" | "reconnect_required" | null;
 };
 
-type Rascunho = Omit<AgenteArea, "id" | "ativo">;
+type Rascunho = Omit<AgenteArea, "id" | "ativo" | "numero">;
 
 const VAZIO: Rascunho = {
   nome: "",
@@ -35,24 +44,36 @@ const VAZIO: Rascunho = {
   regrasEscalonamento: "",
 };
 
-export function AgentesAreaSection({ principalNome }: { principalNome: string }) {
+export function AgentesAreaSection({
+  principalNome,
+}: {
+  principalNome: string;
+}) {
   const [agentes, setAgentes] = useState<AgenteArea[] | null>(null);
   /** id em edição, "novo" para o formulário de criação, null fechado. */
   const [editando, setEditando] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  /** Número próprio só existe com o Evolution Go ligado. */
+  const [numerosProprios, setNumerosProprios] = useState(false);
+  /** O agente com o painel «Número próprio» aberto. */
+  const [numeroAberto, setNumeroAberto] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     const r = await fetch("/api/agentes")
       .then((x) => (x.ok ? x.json() : null))
       .catch(() => null);
     setAgentes(r?.agentes ?? []);
+    setNumerosProprios(Boolean(r?.numerosProprios));
   }, []);
 
   useEffect(() => {
     void carregar();
   }, [carregar]);
 
-  async function salvar(id: string | null, dados: Partial<AgenteArea>): Promise<boolean> {
+  async function salvar(
+    id: string | null,
+    dados: Partial<AgenteArea>,
+  ): Promise<boolean> {
     setErro(null);
     const res = await fetch(id ? `/api/agentes/${id}` : "/api/agentes", {
       method: id ? "PUT" : "POST",
@@ -61,7 +82,11 @@ export function AgentesAreaSection({ principalNome }: { principalNome: string })
     }).catch(() => null);
     if (!res?.ok) {
       const corpo = await res?.json().catch(() => null);
-      setErro(corpo?.error?.message ?? corpo?.message ?? "Não foi possível salvar. Tente de novo.");
+      setErro(
+        corpo?.error?.message ??
+          corpo?.message ??
+          "Não foi possível salvar. Tente de novo.",
+      );
       return false;
     }
     await carregar();
@@ -71,13 +96,16 @@ export function AgentesAreaSection({ principalNome }: { principalNome: string })
   async function apagar(a: AgenteArea) {
     if (
       !window.confirm(
-        `Apagar o agente ${a.nome}? As conversas dele voltam para ${principalNome}.`
+        `Apagar o agente ${a.nome}? As conversas dele voltam para ${principalNome}.` +
+          (a.numero ? " O número próprio dele será desvinculado do CRM." : ""),
       )
     ) {
       return;
     }
     setErro(null);
-    const res = await fetch(`/api/agentes/${a.id}`, { method: "DELETE" }).catch(() => null);
+    const res = await fetch(`/api/agentes/${a.id}`, { method: "DELETE" }).catch(
+      () => null,
+    );
     if (!res?.ok) setErro("Não foi possível apagar. Tente de novo.");
     await carregar();
   }
@@ -89,13 +117,20 @@ export function AgentesAreaSection({ principalNome }: { principalNome: string })
           <div>
             <CardTitle>Agentes por área</CardTitle>
             <CardDescription>
-              {principalNome} recebe as conversas novas. Quando o assunto é de uma área (vendas,
-              financeiro…), ele passa a conversa para o agente dela, no mesmo número, e esse
-              agente responde na hora. Todos usam a mesma base de conhecimento.
+              {principalNome} recebe as conversas novas. Quando o assunto é de
+              uma área (vendas, financeiro…), ele passa a conversa para o agente
+              dela, no mesmo número, e esse agente responde na hora. Todos usam
+              a mesma base de conhecimento.
+              {numerosProprios &&
+                " Um agente também pode ter um WhatsApp próprio: quem escreve nesse número já cai com ele."}
             </CardDescription>
           </div>
           {editando !== "novo" && (
-            <Button size="sm" variant="outline" onClick={() => setEditando("novo")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditando("novo")}
+            >
               <Plus className="mr-1 h-4 w-4" />
               Novo agente
             </Button>
@@ -120,7 +155,8 @@ export function AgentesAreaSection({ principalNome }: { principalNome: string })
         ) : agentes.length === 0 && editando !== "novo" ? (
           <div className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
             <Users className="mx-auto mb-2 h-6 w-6" strokeWidth={1.7} />
-            Nenhum agente de área ainda. Hoje {principalNome} atende tudo sozinho.
+            Nenhum agente de área ainda. Hoje {principalNome} atende tudo
+            sozinho.
           </div>
         ) : (
           agentes.map((a) =>
@@ -140,46 +176,81 @@ export function AgentesAreaSection({ principalNome }: { principalNome: string })
                 }}
               />
             ) : (
-              <div
-                key={a.id}
-                className="flex flex-wrap items-start justify-between gap-3 rounded-lg border p-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">
-                    {a.nome}
-                    {!a.ativo && (
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">
-                        desligado
-                      </span>
+              <div key={a.id} className="rounded-lg border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {a.nome}
+                      {!a.ativo && (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">
+                          desligado
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{a.assunto}</p>
+                    {a.numero && (
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <Smartphone className="h-3.5 w-3.5" />
+                        Número próprio ·{" "}
+                        {a.numero === "connected"
+                          ? "conectado"
+                          : "aguardando o telefone"}
+                      </p>
                     )}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{a.assunto}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={a.ativo}
+                      label={`Agente ${a.nome} ligado`}
+                      onCheckedChange={(ativo) => void salvar(a.id, { ativo })}
+                    />
+                    {numerosProprios && (
+                      <Button
+                        size="icon"
+                        variant={numeroAberto === a.id ? "secondary" : "ghost"}
+                        aria-label={`Número próprio de ${a.nome}`}
+                        aria-expanded={numeroAberto === a.id}
+                        onClick={() =>
+                          setNumeroAberto(numeroAberto === a.id ? null : a.id)
+                        }
+                      >
+                        <Smartphone className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Editar ${a.nome}`}
+                      onClick={() => setEditando(a.id)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Apagar ${a.nome}`}
+                      onClick={() => void apagar(a)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={a.ativo}
-                    label={`Agente ${a.nome} ligado`}
-                    onCheckedChange={(ativo) => void salvar(a.id, { ativo })}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    aria-label={`Editar ${a.nome}`}
-                    onClick={() => setEditando(a.id)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    aria-label={`Apagar ${a.nome}`}
-                    onClick={() => void apagar(a)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {numeroAberto === a.id && (
+                  <div className="mt-3 space-y-3 border-t pt-3">
+                    <p className="text-sm text-muted-foreground">
+                      Crie uma instância nova no Evolution Go para o número de{" "}
+                      {a.nome} e cole aqui o token dela. Quem escrever nesse
+                      número cai direto com {a.nome}, e as respostas saem por
+                      ele.
+                    </p>
+                    <EvolutionConexao
+                      endpoint={`/api/agentes/${a.id}/whatsapp`}
+                      onChange={carregar}
+                    />
+                  </div>
+                )}
               </div>
-            )
+            ),
           )
         )}
       </CardContent>
@@ -200,7 +271,8 @@ function FormAgente({
   const [salvando, setSalvando] = useState(false);
   const campo = (k: keyof Rascunho) => ({
     value: form[k] ?? "",
-    onChange: (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value }),
+    onChange: (e: { target: { value: string } }) =>
+      setForm({ ...form, [k]: e.target.value }),
   });
 
   return (
@@ -208,11 +280,19 @@ function FormAgente({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="ag-nome">Nome</Label>
-          <Input id="ag-nome" placeholder="ex.: Financeiro" {...campo("nome")} />
+          <Input
+            id="ag-nome"
+            placeholder="ex.: Financeiro"
+            {...campo("nome")}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ag-tom">Tom (opcional)</Label>
-          <Input id="ag-tom" placeholder="Vazio = o mesmo do principal" {...campo("tom")} />
+          <Input
+            id="ag-tom"
+            placeholder="Vazio = o mesmo do principal"
+            {...campo("tom")}
+          />
         </div>
       </div>
       <div className="space-y-1.5">
@@ -223,8 +303,8 @@ function FormAgente({
           {...campo("assunto")}
         />
         <p className="text-[12px] text-text-3">
-          É isso que os outros agentes leem para decidir passar a conversa para ele. Seja
-          específico.
+          É isso que os outros agentes leem para decidir passar a conversa para
+          ele. Seja específico.
         </p>
       </div>
       <div className="space-y-1.5">
@@ -237,7 +317,9 @@ function FormAgente({
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="ag-escalonamento">Regras de escalonamento (opcional)</Label>
+        <Label htmlFor="ag-escalonamento">
+          Regras de escalonamento (opcional)
+        </Label>
         <Textarea
           id="ag-escalonamento"
           rows={2}

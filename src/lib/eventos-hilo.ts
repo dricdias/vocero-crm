@@ -52,10 +52,11 @@ export function textoEventoEtapa(e: {
 export function textoTransferencia(t: {
   deNome: string;
   paraNome: string;
-  origem: "ia" | "equipe" | string;
+  origem: "ia" | "equipe" | "numero" | string;
   motivo: string | null;
 }): string {
   if (t.origem === "equipe") return `Conversa passada de ${t.deNome} para ${t.paraNome} pela equipe`;
+  if (t.origem === "numero") return `O cliente escreveu no número de ${t.paraNome}, que assumiu a conversa`;
   return `${t.deNome} passou a conversa para ${t.paraNome}${t.motivo ? `: ${t.motivo}` : ""}`;
 }
 
