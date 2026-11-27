@@ -3,6 +3,8 @@ import { canConfigure } from "@/lib/auth/roles";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { listarAgentesArea } from "@/server/ai/agentes";
+import { numerosDosAgentes } from "@/server/evolution/credentials";
+import { evolutionEnabled } from "@/server/evolution/flag";
 import { agenteAreaDto, agenteAreaSchema, nomeRepetido } from "./schema";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +14,15 @@ const MAX_AREAS = 10;
 
 /** Agentes por área — a lista da tela Agente. */
 export const GET = withAuth(async (session) => {
-  const areas = await listarAgentesArea(session.organizationId);
-  return Response.json({ agentes: areas.map(agenteAreaDto) });
+  const [areas, numeros] = await Promise.all([
+    listarAgentesArea(session.organizationId),
+    numerosDosAgentes(session.organizationId),
+  ]);
+  return Response.json({
+    // Número próprio por agente só existe com o Evolution Go.
+    numerosProprios: evolutionEnabled(),
+    agentes: areas.map((a) => ({ ...agenteAreaDto(a), numero: numeros.get(a.id) ?? null })),
+  });
 });
 
 export const POST = withAuth(async (session, req: Request) => {

@@ -28,7 +28,7 @@ import {
   markMessengerReconnectRequired,
 } from "@/server/messenger/credentials";
 import { reactZernioMessage, type ZernioEvent } from "@/server/zernio";
-import { getEvolutionByOrg } from "@/server/evolution/credentials";
+import { getEvolutionDaLinha } from "@/server/evolution/credentials";
 import { reactEvolutionMessage } from "@/server/evolution/client";
 import { findZernioConnection } from "@/server/zernio/conexiones";
 
@@ -309,7 +309,9 @@ export async function reaccionar(input: {
   }
   // Fork pt-BR: com o Evolution Go o WhatsApp não tem janela de 24 h.
   const evolution =
-    conversation.channel === "whatsapp" ? await getEvolutionByOrg(input.organizationId) : null;
+    conversation.channel === "whatsapp"
+      ? await getEvolutionDaLinha(input.organizationId, conversation.evolutionLinhaId)
+      : null;
   if (!evolution && !replyWindow(conversation.channel, conversation.lastInboundAt).standardOpen) {
     throw new ReaccionError("window_closed", MOTIVO_VENTANA_CERRADA);
   }

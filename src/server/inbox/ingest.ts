@@ -25,6 +25,7 @@ import {
 import { registrarAnuncioDeOrigen } from "@/server/attribution/store";
 import { onLeadActivity } from "@/server/inbox/lead-activity";
 import { maybeRunAgentTurn } from "@/server/ai/trigger";
+import { assumirPeloNumero } from "@/server/ai/agentes";
 import { pausarIaPorRespuestaManual } from "@/server/inbox/pausa-manual";
 import { devolverALaIaSiToca } from "@/server/inbox/reactivacion";
 import { registrarReaccionWhatsApp } from "@/server/inbox/reacciones";
@@ -453,6 +454,11 @@ export async function ingestInboundMessage(input: {
   threadRef?: string | null;
   /** 016/018: el anuncio que abrió la conversación, ya normalizado por el canal. */
   anuncio?: AnuncioDeOrigen | null;
+  /**
+   * Evolution Go com vários números — por qual número chegou. Se for o
+   * número próprio de um agente, a conversa passa para ele.
+   */
+  evolutionLinha?: { id: string; agenteAreaId: string | null } | null;
 }): Promise<void> {
   const db = getDb();
   const { organizationId } = input;
@@ -466,6 +472,10 @@ export async function ingestInboundMessage(input: {
     contact.id,
     { channel: contact.channel, threadRef: input.threadRef ?? null }
   );
+
+  if (input.evolutionLinha) {
+    await registrarLinha(organizationId, conversation, input.evolutionLinha);
+  }
 
   // 016/018 — Si el mensaje viene de un anuncio, capturar su origen ANTES del
   // dedup de mensaje: es idempotente por sí mismo (el primer anuncio gana) y
@@ -634,4 +644,37 @@ export function serializeMessage(
     reactions,
     createdAt: (m.waTimestamp ?? m.createdAt).toISOString(),
   };
+}
+
+/**
+ * Evolution Go com vários números — guarda o número em que o cliente escreveu
+ * (a resposta sai por ele) e, se for o número de um agente de área, entrega a
+ * conversa a esse agente antes do turno da IA. Idempotente: um reenvio do
+ * mesmo evento não muda nada.
+ */
+async function registrarLinha(
+  organizationId: string,
+  conversation: typeof schema.conversation.$inferSelect,
+  linha: { id: string; agenteAreaId: string | null }
+): Promise<void> {
+  if (conversation.evolutionLinhaId !== linha.id) {
+    await getDb()
+      .update(schema.conversation)
+      .set({ evolutionLinhaId: linha.id })
+      .where(
+        and(
+          eq(schema.conversation.organizationId, organizationId),
+          eq(schema.conversation.id, conversation.id)
+        )
+      );
+    conversation.evolutionLinhaId = linha.id;
+  }
+  if (linha.agenteAreaId) {
+    await assumirPeloNumero({
+      organizationId,
+      conversationId: conversation.id,
+      agenteAtualId: conversation.agenteAreaId,
+      agenteDoNumeroId: linha.agenteAreaId,
+    });
+  }
 }

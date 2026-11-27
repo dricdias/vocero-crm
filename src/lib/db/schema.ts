@@ -414,6 +414,13 @@ export const conversation = pgTable(
     agenteAreaId: text("agente_area_id").references(() => agenteArea.id, {
       onDelete: "set null",
     }),
+    /**
+     * Evolution Go com vários números — o número em que o cliente escreveu
+     * por último. A resposta sai por ele. NULL = o número principal.
+     */
+    evolutionLinhaId: text("evolution_linha_id").references(() => evolutionCredentials.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -812,7 +819,8 @@ export const agenteTransferencia = pgTable(
     deNome: text("de_nome").notNull(),
     paraNome: text("para_nome").notNull(),
     /** ia = o agente transferiu; equipe = alguém trocou no painel. */
-    origem: text("origem", { enum: ["ia", "equipe"] }).notNull(),
+    /** numero = o cliente escreveu no número próprio do agente. */
+    origem: text("origem", { enum: ["ia", "equipe", "numero"] }).notNull(),
     motivo: text("motivo"),
     occurredAt: timestamp("occurred_at").notNull().defaultNow(),
   },
@@ -1402,6 +1410,12 @@ export const dispatch = pgTable(
 export const evolutionCredentials = pgTable("evolution_credentials", {
   id: text("id").primaryKey(),
   organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  /**
+   * Número próprio de um agente de área. NULL = o número principal da org.
+   * Apagar o agente desvincula o número do CRM (a sessão do telefone segue
+   * no Evolution Go).
+   */
+  agenteAreaId: text("agente_area_id").references(() => agenteArea.id, { onDelete: "cascade" }),
   baseUrl: text("base_url").notNull(),
   tokenCipher: text("token_cipher").notNull(),
   tokenIv: text("token_iv").notNull(),
@@ -1410,7 +1424,12 @@ export const evolutionCredentials = pgTable("evolution_credentials", {
   status: text("status", { enum: ["connected", "reconnect_required"] }).notNull().default("reconnect_required"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [uniqueIndex("evolution_credentials_org_uq").on(t.organizationId), uniqueIndex("evolution_credentials_hook_uq").on(t.webhookHash)]);
+}, (t) => [
+  // Um número principal por org e no máximo um número por agente.
+  uniqueIndex("evolution_credentials_org_uq").on(t.organizationId).where(sql`${t.agenteAreaId} is null`),
+  uniqueIndex("evolution_credentials_agente_uq").on(t.agenteAreaId),
+  uniqueIndex("evolution_credentials_hook_uq").on(t.webhookHash),
+]);
 
 /** Preferencia compartida por los atendimientos de un mismo grupo. */
 export const evolutionGroupSettings = pgTable("evolution_group_settings", {

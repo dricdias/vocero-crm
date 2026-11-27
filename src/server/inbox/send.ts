@@ -1,4 +1,4 @@
-import { getEvolutionByOrg, setEvolutionStatus, type EvolutionCredentials } from "@/server/evolution/credentials";
+import { getEvolutionDaLinha, setEvolutionStatus, type EvolutionCredentials } from "@/server/evolution/credentials";
 import { sendEvolutionText, sendEvolutionMedia, EvolutionError } from "@/server/evolution/client";
 import { evolutionGroupTarget } from "@/server/evolution/groups";
 import { and, eq } from "drizzle-orm";
@@ -312,7 +312,8 @@ async function prepareSend(
   const caps = capabilitiesFor(row.conversation.channel);
   // Fork pt-BR: a janela de 24 h é regra da API oficial da Meta. Pelo
   // Evolution Go não existe janela, então o envio não passa por essa porta.
-  const evolution = await getEvolutionByOrg(organizationId);
+  // Com vários números, a resposta sai pelo número em que o cliente escreveu.
+  const evolution = await getEvolutionDaLinha(organizationId, row.conversation.evolutionLinhaId);
   if (
     !evolution &&
     caps.windowMs !== null &&
@@ -1008,7 +1009,7 @@ async function callEvolutionSend(target: SendTarget, operation: () => Promise<st
   try { return await operation(); }
   catch (error) {
     if (error instanceof EvolutionError && (error.status === 401 || error.status === 403)) {
-      await setEvolutionStatus(target.evolution!.organizationId, false);
+      await setEvolutionStatus(target.evolution!.organizationId, false, { linhaId: target.evolution!.id });
       throw new SendError("reconnect_required", error.message);
     }
     throw new SendError("meta_unavailable", "O Evolution Go não confirmou o envio; verifique a conexão antes de tentar novamente");

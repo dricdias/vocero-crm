@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ASSUNTO_PRINCIPAL,
+  assumirPeloNumero,
   outrosAgentes,
   perfilDoTurno,
   resolverDestino,
@@ -298,5 +299,31 @@ describe("regras dos agentes por área", () => {
     expect(
       textoTransferencia({ deNome: "Ana", paraNome: "Financeiro", origem: "equipe", motivo: null })
     ).toBe("Conversa passada de Ana para Financeiro pela equipe");
+  });
+});
+
+describe("cliente escreve no número próprio de um agente", () => {
+  const base = { organizationId: "org_1", conversationId: "cv_1", agenteDoNumeroId: "aga_fin" };
+  beforeEach(() => {
+    h.selectQueue.length = 0;
+    h.updates.length = 0;
+  });
+
+  it("a conversa passa para o agente do número", async () => {
+    // Por dentro do módulo: a lista de áreas e o nome do principal vêm do banco.
+    h.selectQueue.push([financeiro], [{ name: "Ana" }]);
+    await assumirPeloNumero({ ...base, agenteAtualId: null });
+    expect(h.updates).toContainEqual(expect.objectContaining({ agenteAreaId: "aga_fin" }));
+  });
+
+  it("se já está com ele, não muda nada", async () => {
+    await assumirPeloNumero({ ...base, agenteAtualId: "aga_fin" });
+    expect(h.updates).toHaveLength(0);
+  });
+
+  it("agente desligado: quem atende continua", async () => {
+    h.selectQueue.push([{ ...financeiro, ativo: false }]);
+    await assumirPeloNumero({ ...base, agenteAtualId: null });
+    expect(h.updates).toHaveLength(0);
   });
 });

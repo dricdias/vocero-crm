@@ -29,7 +29,8 @@ vi.mock("@/lib/db", async (original) => ({
   }),
 }));
 vi.mock("@/server/evolution/credentials", () => ({
-  getEvolutionByOrg: m.evo,
+  // Sem linha na conversa, a resposta sai pelo número principal.
+  getEvolutionDaLinha: (org: string) => m.evo(org),
   setEvolutionStatus: m.status,
 }));
 vi.mock("@/server/evolution/client", async (original) => ({
@@ -143,7 +144,7 @@ describe("envío por Evolution en la puerta real del CRM", () => {
     await expect(sendText(input)).rejects.toMatchObject({
       code: "reconnect_required",
     });
-    expect(m.status).toHaveBeenCalledWith("org_1", false);
+    expect(m.status).toHaveBeenCalledWith("org_1", false, expect.objectContaining({}));
     expect(m.graph).not.toHaveBeenCalled();
     expect(m.insert).not.toHaveBeenCalled();
   });

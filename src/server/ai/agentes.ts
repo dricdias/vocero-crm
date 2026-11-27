@@ -108,7 +108,7 @@ export async function transferirConversa(input: {
   conversationId: string;
   para: { id: string | null; nome: string };
   deNome: string;
-  origem: "ia" | "equipe";
+  origem: "ia" | "equipe" | "numero";
   motivo?: string | null;
 }): Promise<boolean> {
   const db = getDb();
@@ -154,4 +154,38 @@ export async function transferenciasDeConversa(
       )
     )
     .orderBy(asc(schema.agenteTransferencia.occurredAt));
+}
+
+/**
+ * O cliente escreveu no número próprio de um agente: a conversa passa a ser
+ * dele (se estiver ligado). Escrever no número principal não muda nada: quem
+ * já atende continua.
+ */
+export async function assumirPeloNumero(input: {
+  organizationId: string;
+  conversationId: string;
+  agenteAtualId: string | null;
+  agenteDoNumeroId: string;
+}): Promise<void> {
+  if (input.agenteAtualId === input.agenteDoNumeroId) return;
+  const areas = await listarAgentesArea(input.organizationId);
+  const para = areas.find((a) => a.id === input.agenteDoNumeroId && a.ativo);
+  if (!para) return;
+  const atual = areas.find((a) => a.id === input.agenteAtualId && a.ativo);
+  let deNome = atual?.nome;
+  if (!deNome) {
+    const [principal] = await getDb()
+      .select({ name: schema.agentProfile.name })
+      .from(schema.agentProfile)
+      .where(scoped(schema.agentProfile.organizationId, input.organizationId))
+      .limit(1);
+    deNome = principal?.name ?? "Agente principal";
+  }
+  await transferirConversa({
+    organizationId: input.organizationId,
+    conversationId: input.conversationId,
+    para: { id: para.id, nome: para.nome },
+    deNome,
+    origem: "numero",
+  });
 }
