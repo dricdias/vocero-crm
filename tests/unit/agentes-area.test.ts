@@ -104,6 +104,8 @@ const financeiro: AgenteArea = {
   instrucoes: "Nunca prometa desconto.",
   regrasEscalonamento: null,
   ativo: true,
+  avisoDestino: null,
+  avisoNome: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

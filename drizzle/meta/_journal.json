@@ -246,6 +246,13 @@
       "when": 1795747420368,
       "tag": "0034_numero_por_agente",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795748559391,
+      "tag": "0035_aviso_por_agente",
+      "breakpoints": true
     }
   ]
 }

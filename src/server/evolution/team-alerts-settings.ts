@@ -13,7 +13,7 @@ import {
   getTeamAlertSettings,
   listTeamGroups,
   saveTeamAlertSettings,
-  sendTeamGroupText,
+  sendTeamText,
 } from "./team-alerts";
 
 const putSchema = z
@@ -26,7 +26,15 @@ const putSchema = z
   .strict()
   .refine((v) => !v.enabled || v.groupJid !== null, { message: "Escolha o grupo da equipe" });
 
-const postSchema = z.object({ action: z.literal("test"), groupJid: z.string().regex(GROUP_JID_RE) }).strict();
+/** Teste: o grupo geral ou o destino de um agente de área (grupo ou telefone). */
+const postSchema = z
+  .object({
+    action: z.literal("test"),
+    groupJid: z.string().regex(GROUP_JID_RE).optional(),
+    destino: z.string().regex(/^(?:\d+(?:-\d+)?@g\.us|\d{10,15})$/).optional(),
+  })
+  .strict()
+  .refine((v) => Boolean(v.groupJid ?? v.destino), { message: "Escolha para onde mandar o teste" });
 
 /** GET: configuração + grupos do número · PUT: salvar (admin) · POST: mensagem de teste (admin). */
 export async function teamAlertsSettings(session: SessionContext, req: Request): Promise<Response> {
@@ -66,7 +74,7 @@ export async function teamAlertsSettings(session: SessionContext, req: Request):
     const body = await parseBody(req, postSchema);
     if (!body.ok) return body.response;
     try {
-      await sendTeamGroupText(access, body.data.groupJid, TEST_TEXT);
+      await sendTeamText(access, (body.data.groupJid ?? body.data.destino)!, TEST_TEXT);
     } catch {
       return apiError(502, "send_failed", "O teste não foi enviado. Confira se o número do CRM está no grupo e conectado.");
     }
